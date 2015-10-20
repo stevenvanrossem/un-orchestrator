@@ -64,4 +64,9 @@
 		<implementation type="dpdk" uri="/home/nf_repository/dpdk/example" cores="1" location="local"/>
 	</network-function>
 	
+	<network-function name="bridge1" num-ports="2" description="ubuntu">
+		<!-- Only a docker implementation is available for this network function -->
+		<implementation type="kvm" uri="compute_controller/plugins/kvm-libvirt/nf_repository/ovs-ovsdbkvm_usvhost_vnf.xml"/>
+	</network-function>
+	
 </network-functions>
