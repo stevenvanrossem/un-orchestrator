@@ -20,6 +20,9 @@ file="$1_$2"
 echo "[stopNF] Executing command: '"sudo docker kill `cat $file`"'"
 sudo docker kill `cat $file`
 
+echo "[stopNF] Executing command: '"sudo docker rm `cat $file`"'"
+sudo docker rm `cat $file`
+
 #docker kill returns 0 in case of success
 retVal=`echo $?`
 

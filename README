@@ -1,5 +1,5 @@
 # Universal Node Repository Summary
-This repository contains the current implementation of the Universal Node and is divided three sub-portions.
+This repository contains the current implementation of the Universal Node and is divided in three sub-portions.
 Please check individual README's in each sub-package.
 
 ## Universal Node orchestrator

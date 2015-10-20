@@ -29,6 +29,8 @@ OVSManager::OVSManager()
 {
 
 	char user[64] = "";
+	
+	int i = 0;
 
 	c = new commands();/*create a new object commands*/
 
@@ -45,7 +47,9 @@ OVSManager::OVSManager()
 	nc_ssh_pref(NC_SSH_AUTH_INTERACTIVE, 2);*/
 
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Insert the user name for the OFConfig server:",MODULE_NAME);
-	scanf("%s", user);
+	i = scanf("%s", user);
+	if(i < 0)
+		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error scanf.");
 
 	/*connect to a of-config server*/
 	c->cmd_connect(user);

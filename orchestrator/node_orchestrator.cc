@@ -21,6 +21,7 @@ struct MHD_Daemon *http_daemon = NULL;
 */
 bool parse_command_line(int argc, char *argv[],int *rest_port, char **nffg_file_name,int *core_mask, char **ports_file_name);
 bool usage(void);
+bool doChecks(void);
 
 /**
 *	Implementations
@@ -58,6 +59,9 @@ int main(int argc, char *argv[])
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Root permissions are required to run %s\n",argv[0]);
 		exit(EXIT_FAILURE);	
 	}
+	
+	if(!doChecks())
+		exit(EXIT_FAILURE);	
 	
 	int core_mask;
 	int rest_port;
@@ -242,3 +246,32 @@ bool usage(void)
 	
 	return false;
 }
+
+/**
+*	This function checks if the UN is properly configured.
+*/
+bool doChecks(void)
+{
+#ifdef VSWITCH_IMPLEMENTATION_XDPD
+	switch(OFP_VERSION)
+	{
+		case OFP_12:
+			break;
+		default:
+			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "The orchestrator cannot be run with the current configuration.");
+			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "xDPd is only supported with Openflow 1.2.");
+			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Please change the configuration through 'ccmake .'");
+			return false;
+	}
+#endif
+
+#if (defined(VSWITCH_IMPLEMENTATION_OVSDB) || defined(VSWITCH_IMPLEMENTATION_OVS) || defined(VSWITCH_IMPLEMENTATION_OVSDPDK)) && defined(ENABLE_DOCKER)
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "The orchestrator cannot be run with the current configuration.");
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Docker containers are not supported with OvS.");
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Please change the configuration through 'ccmake .'");
+	return false;
+#endif
+
+	return true;
+}
+

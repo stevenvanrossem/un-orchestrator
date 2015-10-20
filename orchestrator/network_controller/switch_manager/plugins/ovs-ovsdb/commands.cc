@@ -637,6 +637,8 @@ void commands::add_ports(int rnumber, string p, uint64_t dnumber, int nf, int s)
 	const char *ptr, *json;
 	char read_buf[4096];
 	
+	ssize_t r = 0;
+	
 	locale loc;	
 	
 	bool flag = false;
@@ -852,7 +854,9 @@ void commands::add_ports(int rnumber, string p, uint64_t dnumber, int nf, int s)
 		}
 	}
 			
-	read(s, read_buf, 4096);
+	r = read(s, read_buf, 4096);
+		
+	read_buf[r-1] = '\0';
 		
 	string myString1(read_buf);
 		
@@ -1101,6 +1105,8 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int s){
 	const char *ptr, *json;
 	char read_buf[4096];
 	
+	ssize_t r = 0;
+	
 	locale loc;	
 	
 	bool flag = false;
@@ -1341,7 +1347,9 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int s){
 			}
 		}
 			
-		read(s, read_buf, 4096);
+		r = read(s, read_buf, 4096);
+		
+		read_buf[r-1] = '\0';
 		
 		string myString1(read_buf);
 		
@@ -1424,6 +1432,8 @@ void commands::cmd_editconfig_NFPorts_delete(DestroyNFportsIn dnpi, int s){
 	
 	const char *ptr, *json;
 	char read_buf[4096];
+	
+	ssize_t r = 0;
 	
 	locale loc;	
 	
@@ -1573,7 +1583,9 @@ void commands::cmd_editconfig_NFPorts_delete(DestroyNFportsIn dnpi, int s){
 			}
 		}
 			
-		read(s, read_buf, 4096);
+		r = read(s, read_buf, 4096);
+		
+		read_buf[r-1] = '\0';
 		
 		string myString1(read_buf);
 		
@@ -1687,6 +1699,8 @@ void commands::cmd_add_virtual_link(string vrt, string trv, char ifac[64], uint6
 	
 	const char *ptr, *json;
 	char read_buf[4096];
+	
+	ssize_t r = 0;
 	
 	locale loc;	
 	
@@ -1882,7 +1896,9 @@ void commands::cmd_add_virtual_link(string vrt, string trv, char ifac[64], uint6
 		}
 	}
 			
-	read(s, read_buf, 4096);
+	r = read(s, read_buf, 4096);
+		
+	read_buf[r-1] = '\0';
 		
 	string myString1(read_buf);
 		
@@ -1990,6 +2006,8 @@ void commands::cmd_delete_virtual_link(uint64_t dpi, uint64_t idp, int s){
 	
 	const char *ptr, *json;
 	char read_buf[4096];
+	
+	ssize_t r = 0;
 	
 	locale loc;	
 	
@@ -2136,7 +2154,9 @@ void commands::cmd_delete_virtual_link(uint64_t dpi, uint64_t idp, int s){
 		}
 	}
 			
-	read(s, read_buf, 4096);
+	r = read(s, read_buf, 4096);
+		
+	read_buf[r-1] = '\0';
 		
 	string myString1(read_buf);
 		

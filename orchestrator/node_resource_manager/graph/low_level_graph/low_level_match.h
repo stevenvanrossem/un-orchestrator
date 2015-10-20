@@ -6,9 +6,12 @@
 #include <inttypes.h>
 #include <ostream>
 
-//#include <rofl/common/cunixenv.h>
-//#include <rofl/common/cdaemon.h>
-//#include <rofl/common/cparams.h>
+/*
+IVANO: these include should be useless
+#include <rofl/platform/unix/cunixenv.h>
+#include <rofl/platform/unix/cdaemon.h>
+#include <rofl/common/cparams.h>
+*/
 
 //#include <rofl/common/ciosrv.h>
 #include <rofl/common/logging.h>
