@@ -508,8 +508,3 @@ bool Libvirt::stopNF(StopNFIn sni)
 	return true;
 }
 
-bool Libvirt::interact(string name, string command)
-{
-	return true;
-}
-

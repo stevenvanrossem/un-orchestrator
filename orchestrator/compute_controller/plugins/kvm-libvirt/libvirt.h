@@ -94,8 +94,6 @@ public:
 	
 	bool startNF(StartNFIn sni);
 	bool stopNF(StopNFIn sni);
-	
-	bool interact(string name, string command);
 };
 
 #endif //LIBVIRT_H_
