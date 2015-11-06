@@ -50,11 +50,13 @@ public:
 	
 #ifdef ENABLE_DIRECT_VM2VM
 	/**
-	*	@brief: Execute a given command on the execution environment.
+	*	@brief: Execute a given command, specific for a network function, 
+	*		on the execution environment
 	*
-	*	@param: command to be executed.
+	*	@param: name of the network function involved in the command
+	*	@param: command to be executed
 	*/
-	virtual bool executeSpecificCommand(string command) = 0;
+	virtual bool executeSpecificCommand(string name, string command) = 0;
 #endif
 		
 	/**

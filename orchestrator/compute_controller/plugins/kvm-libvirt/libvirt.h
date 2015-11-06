@@ -83,6 +83,15 @@ private:
 	*	@brief: Custom error handler
 	*/
 	static void customErrorFunc(void *userdata, virErrorPtr err);
+#else
+	
+	/**
+	*	@brief: Send a given command on given TCP port
+	*
+	*	@param: tcpport		TCP port to be used to send the command
+	*	@param:	command		command to be sent
+	*/
+	bool sendCommand(string tcpport, char *command);
 #endif
 
 public:
@@ -94,6 +103,11 @@ public:
 	
 	bool startNF(StartNFIn sni);
 	bool stopNF(StopNFIn sni);
+	
+#ifdef ENABLE_DIRECT_VM2VM
+	bool executeSpecificCommand(string name, string command);
+#endif
+
 };
 
 #endif //LIBVIRT_H_

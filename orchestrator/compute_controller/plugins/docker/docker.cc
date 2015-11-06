@@ -82,3 +82,15 @@ unsigned int Docker::convertNetmask(string netmask)
 	
 	return slash;
 }
+
+#ifdef ENABLE_DIRECT_VM2VM
+bool Docker::executeSpecificCommand(string command)
+{
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "It is not possible to send generic commands to the Docker environment");
+	
+	assert(0);
+
+	return false;
+}
+#endif
+

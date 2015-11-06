@@ -61,3 +61,14 @@ bool Dpdk::stopNF(StopNFIn sni)
 
 }
 
+#ifdef ENABLE_DIRECT_VM2VM
+bool Dpdk::executeSpecificCommand(string command)
+{
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "It is not possible to send generic commands to the DPDK environment");
+	
+	assert(0);
+
+	return false;
+}
+#endif
+

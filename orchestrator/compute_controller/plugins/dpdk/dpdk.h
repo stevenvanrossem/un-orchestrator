@@ -20,6 +20,15 @@ public:
 	
 	bool startNF(StartNFIn sni);
 	bool stopNF(StopNFIn sni);
+	
+#ifdef ENABLE_DIRECT_VM2VM
+	/**
+	*	@brief: Execute a given command on the execution environment.
+	*
+	*	@param: command to be executed.
+	*/
+	bool executeSpecificCommand(string command);
+#endif
 };
 
 #endif //DPDK_H_
