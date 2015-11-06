@@ -471,6 +471,9 @@ bool Libvirt::stopNF(StopNFIn sni)
 	string tcpport = monitor.find(vm_name)->second;
 	char *command= QUIT_COMMAND;
 		
+	//remove the tcp port from the monitor
+	monitor.erase(vm_name);
+		
 	return sendCommand(tcpport, command);
 #endif	
 	return true;
@@ -517,12 +520,15 @@ bool Libvirt::sendCommand(string tcpport, char *command)
 
 #ifdef ENABLE_DIRECT_VM2VM
 //XXX This makes sense only in case of KVM_IVSHMEM. The check has already been done at compile time.
-bool Libvirt::executeSpecificCommand(string name, string command)
+bool Libvirt::executeSpecificCommand(uint64_t lsiID, string name, string command)
 {
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Sending command '%s' to the virtual machine", command.c_str());
 
-	assert(monitor.count(name) != 0);
+	char *vm_name = new char[64];
+	sprintf(vm_name, "%" PRIu64 "_%s", lsiID, name.c_str());
 
-	return sendCommand(monitor.find(name)->second, (char*)command.c_str());
+	assert(monitor.count(vm_name) != 0);
+
+	return sendCommand(monitor.find(vm_name)->second, (char*)command.c_str());
 }
 #endif

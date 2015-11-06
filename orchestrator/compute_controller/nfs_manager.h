@@ -53,10 +53,12 @@ public:
 	*	@brief: Execute a given command, specific for a network function, 
 	*		on the execution environment
 	*
-	*	@param: name of the network function involved in the command
-	*	@param: command to be executed
+	*	@paran: lsiID	ID of the lsi to which the network function involved in
+	*					the command is attached
+	*	@param: name	name of the network function involved in the command
+	*	@param: command	command to be executed
 	*/
-	virtual bool executeSpecificCommand(string name, string command) = 0;
+	virtual bool executeSpecificCommand(uint64_t lsiID, string name, string command) = 0;
 #endif
 		
 	/**

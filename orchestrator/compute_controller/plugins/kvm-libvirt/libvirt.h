@@ -105,7 +105,7 @@ public:
 	bool stopNF(StopNFIn sni);
 	
 #ifdef ENABLE_DIRECT_VM2VM
-	bool executeSpecificCommand(string name, string command);
+	bool executeSpecificCommand(uint64_t lsiID, string name, string command);
 #endif
 
 };

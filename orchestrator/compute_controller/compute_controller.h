@@ -203,6 +203,14 @@ public:
 	*/
 	static nf_manager_ret_t retrieveAllAvailableNFs();
 #endif
+
+#ifdef ENABLE_DIRECT_VM2VM
+	/**
+	*	@brief: Executes a given command, related to a given network function, through the hypervisor
+	*/
+	bool executeSpecificCommand(string nf_name, string command);
+#endif
+
 };
 
 #endif //COMPUTE_CONTROLLER_H_

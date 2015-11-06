@@ -523,6 +523,31 @@ bool ComputeController::startNF(string nf_name, list<string> namesOfPortsOnTheSw
 	return true;
 }
 
+#ifdef ENABLE_DIRECT_VM2VM
+bool ComputeController::executeSpecificCommand(string nf_name, string command)
+{
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Executing the command '\'%s\'' on the NF \"%s\"",command.c_str(),nf_name.c_str());
+	
+	if(nfs.count(nf_name) == 0)
+	{
+		assert(0);
+		logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "Unknown NF with name \"%s\"",nf_name.c_str());
+		return false;
+	}
+
+	NF *nf = nfs[nf_name];
+	NFsManager *nfsManager = nf->getSelectedDescription();
+	
+	if(!nfsManager->executeSpecificCommand(lsiID,nf_name,command))
+	{
+		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An error occurred while executing the command '\'%s\'' the NF \"%s\"",command.c_str(),nf_name.c_str());
+		return false;
+	}
+	
+	return true;
+}
+#endif
+
 void ComputeController::stopAll()
 {
 	for(map<string, NF*>::iterator nf = nfs.begin(); nf != nfs.end(); nf++)
