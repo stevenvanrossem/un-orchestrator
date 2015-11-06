@@ -47,6 +47,15 @@ public:
 	*	@param: cli	Description of the network function to be stopped
 	*/
 	virtual bool stopNF(StopNFIn sni) = 0;
+	
+#ifdef ENABLE_DIRECT_VM2VM
+	/**
+	*	@brief: Execute a given command on the execution environment.
+	*
+	*	@param: command to be executed.
+	*/
+	virtual bool executeSpecificCommand(string command) = 0;
+#endif
 		
 	/**
 	*	@brief: set the description of the network function to be handled by the manager
