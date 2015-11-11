@@ -690,7 +690,7 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 			network_functions[i->first] = ports;
 
 			//Prepare the structure representing the new L3-LSI
-			LSI *lsi = new LSI(NULL, NULL, dummyPhyPorts, network_functions,virtual_links,nf_types);
+			LSI *lsi = new LSI("", "", dummyPhyPorts, network_functions,virtual_links,nf_types);
 
 			CreateLsiOut *clo = NULL;
 			try {
@@ -698,7 +698,7 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 				//No ports will be attached to the LSI at this moment
 				map<string,list<string> > netFunctionsPortsName;
 
-				CreateLsiIn cli(NULL,NULL, lsi->getPhysicalPortsName(),nf_types,netFunctionsPortsName,lsi->getVirtualLinksRemoteLSI());
+				CreateLsiIn cli("","", lsi->getPhysicalPortsName(),nf_types,netFunctionsPortsName,lsi->getVirtualLinksRemoteLSI());
 
 				clo = switchManager.createLsi(cli);
 
@@ -709,20 +709,6 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 				map<string,unsigned int> physicalPorts = clo->getPhysicalPorts();
 				if(!physicalPorts.empty()) {
 					logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Non required physical ports have been attached to the l3-lsi");
-					delete(clo);
-					throw GraphManagerException();
-				}
-
-				map<string,map<string, unsigned int> > nfsports = clo->getNetworkFunctionsPorts();
-				if(!nfsports.empty()) {
-					logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Non required nf ports have been attached to the l3-lsi");
-					delete(clo);
-					throw GraphManagerException();
-				}
-
-				list<pair<unsigned int, unsigned int> > vlinks = clo->getVirtualLinks();
-				if(!vlinks.empty()) {
-					logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Non required vlinks have been attached to the l3-lsi");
 					delete(clo);
 					throw GraphManagerException();
 				}
