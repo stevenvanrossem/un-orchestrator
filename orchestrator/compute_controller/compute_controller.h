@@ -39,6 +39,9 @@
 #ifdef ENABLE_NATIVE
 	#include "plugins/native/native.h"
 #endif
+
+#include "plugins/internal/internal.h"
+
 //[+] Add here other implementations for the execution environment
 
 using namespace std;

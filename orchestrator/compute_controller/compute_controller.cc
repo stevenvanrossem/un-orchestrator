@@ -367,6 +367,12 @@ void ComputeController::checkSupportedDescriptions() {
 
 		NF *current = nf->second;
 
+		/*
+		 * skip this check for internal NFs because they already have an implementation
+		 */
+		if(current->getSelectedDescription() != NULL)
+			continue;
+
 		list<Description*> descriptions = current->getAvailableDescriptions();
 
 		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "%d descriptions available for NF \"%s\".", descriptions.size(), nf->first.c_str());
@@ -553,6 +559,33 @@ NFsManager* ComputeController::selectNFImplementation(list<Description*> descrip
 
 bool ComputeController::selectImplementation()
 {
+
+	map<string, NF*> &internalNFs = new map<string, NF*>;
+
+	/**
+	 * search for internal network functions
+	 */
+
+
+	for(map<string, NF*>::iterator nf = nfs.begin(); nf != nfs.end(); nf++){
+		NF &current = nf->second;
+
+		string prefix = "of_bridge";
+
+		if(!current.name.compare(0, prefix.length(), prefix)){
+			/*
+			 * We do not need to call the name-resolver
+			 * The UN already knows how to implement it
+			 */
+			internalNFs.insert(*nf);
+
+			Internal *i = new Internal();
+
+			current.setSelectedDescription(i);
+		}
+	}
+
+
 	/**
 	 * set boolean `supported` in each supported network function
 	 */
