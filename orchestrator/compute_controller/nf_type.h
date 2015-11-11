@@ -19,6 +19,7 @@ typedef enum{
 #ifdef ENABLE_NATIVE
 	,NATIVE
 #endif
+	,INTERNAL
 	//[+] Add here other implementations for the execution environment
 	}nf_t;
 
@@ -41,7 +42,8 @@ public:
 		else if(type == NATIVE)
 			return string("native");
 #endif		
-
+		else if(type == INTERNAL)
+					return string("internal");
 		//[+] Add here other implementations for the execution environment
 
 		assert(0);
@@ -64,6 +66,8 @@ public:
 		else if(type == NATIVE)
 			return 3;
 #endif
+		else if(type == INTERNAL)
+					return 4;
 
 		//[+] Add here other implementations for the execution environment
 
@@ -83,6 +87,7 @@ public:
 #ifdef ENABLE_NATIVE
 		|| type == "native"
 #endif
+		|| type == "internal"
 		)
 			return true;
 	

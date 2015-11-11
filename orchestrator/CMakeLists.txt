@@ -236,6 +236,8 @@ SET(SOURCES
 	compute_controller/startNF_in.h
 	compute_controller/stopNF_in.h
 	
+	compute_controller/plugins/internal/internal.h
+	
 	node_resource_manager/rest_server/rest_server.h
 	node_resource_manager/rest_server/rest_server.cc
 	node_resource_manager/rest_server/match_parser.h

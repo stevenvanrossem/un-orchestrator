@@ -79,11 +79,6 @@ public:
 	*					by the node orchestrator through the virtual switch
 	*/
 	virtual void checkPhysicalInterfaces(set<CheckPhysicalPortsIn> cppi) = 0;
-	
-	/**
-	 * virtual destructor is needed
-	 */
-	virtual ~SwitchManager();
 
 };
 

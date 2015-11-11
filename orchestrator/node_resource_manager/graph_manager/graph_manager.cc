@@ -588,9 +588,10 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 	*		0) check the validity of the graph
 	*		1) create the Openflow controller for the tenant LSI
 	*		2) select an implementation for each NF of the graph
-	*		3) create the LSI, with the proper ports
-	*		4) start the NFs
-	*		5) download the rules in LSI-0 and tenant-LSI
+	*		3) deploy internal NFs
+	*		4) create the tenant LSI, with the proper ports
+	*		5) start the regular NFs
+	*		6) download the rules in LSI-0 and tenant-LSI
 	*/
 	
 	/**
@@ -645,8 +646,9 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 	/**
 	*	2) Select an implementation for each network function of the graph
 	*/
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "2) Select an implementation for each NF of the graph");	
-	if(!computeController->selectImplementation())
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "2) Select an implementation for each NF of the graph");
+	map<string, NF*> *internalNFs = computeController->selectImplementation();
+	if(internalNFs == NULL)
 	{
 		//This is an internal error
 		delete(computeController);
@@ -654,10 +656,106 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 		computeController = NULL;
 		controller = NULL;
 		throw GraphManagerException();
-	}	
+	}
+
+
+	/**
+	*	3) Deploy internal NFs
+	*/
+
+	map<string, uint64_t> ofBridgeIDs;
+
+	for(map<string, NF*>::iterator i = internalNFs->begin(); i != internalNFs->end(); i++){
+
+		string prefix = "of_bridge";
+		if(!i->first.compare(0, prefix.length(), prefix)){
+			/*
+			 * internal open flow bridge was found
+			 * create the level3 LSI without any port!!
+			 */
+
+			//The L3-LSI is not connected to physical ports, but just the tenant LSI
+			//through virtual links
+			map<string,string> dummyPhyPorts;
+
+			//Virtual links will be created later
+			vector<VLink> virtual_links;
+
+			//Just 1 type of NF for this LSI
+			map<string,nf_t>  nf_types;
+			nf_types[i->first] = INTERNAL;
+
+			list<unsigned int> ports;
+			map<string, list<unsigned int> > network_functions;
+			network_functions[i->first] = ports;
+
+			//Prepare the structure representing the new L3-LSI
+			LSI *lsi = new LSI(NULL, NULL, dummyPhyPorts, network_functions,virtual_links,nf_types);
+
+			CreateLsiOut *clo = NULL;
+			try {
+
+				//No ports will be attached to the LSI at this moment
+				map<string,list<string> > netFunctionsPortsName;
+
+				CreateLsiIn cli(NULL,NULL, lsi->getPhysicalPortsName(),nf_types,netFunctionsPortsName,lsi->getVirtualLinksRemoteLSI());
+
+				clo = switchManager.createLsi(cli);
+
+				lsi->setDpid(clo->getDpid());
+
+				ofBridgeIDs[i->first] = clo->getDpid();
+
+				map<string,unsigned int> physicalPorts = clo->getPhysicalPorts();
+				if(!physicalPorts.empty()) {
+					logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Non required physical ports have been attached to the l3-lsi");
+					delete(clo);
+					throw GraphManagerException();
+				}
+
+				map<string,map<string, unsigned int> > nfsports = clo->getNetworkFunctionsPorts();
+				if(!nfsports.empty()) {
+					logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Non required nf ports have been attached to the l3-lsi");
+					delete(clo);
+					throw GraphManagerException();
+				}
+
+				list<pair<unsigned int, unsigned int> > vlinks = clo->getVirtualLinks();
+				if(!vlinks.empty()) {
+					logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Non required vlinks have been attached to the l3-lsi");
+					delete(clo);
+					throw GraphManagerException();
+				}
+
+				delete(clo);
+
+
+			} catch (SwitchManagerException& e) {
+				logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "%s",e.what());
+				switchManager.destroyLsi(lsi->getDpid());
+				if(clo != NULL)
+					delete(clo);
+				delete(graph);
+				delete(lsi);
+				delete(computeController);
+				delete(controller);
+				graph = NULL;
+				lsi = NULL;
+				computeController = NULL;
+				controller = NULL;
+				throw GraphManagerException();
+			}
+
+		} //end if(of_bridge function)
+
+		//[+] Add here other implementations for the internal network functions
+
+	}
+
+
 		
 	/**
-	*	3) Create the LSI
+	*	4) Create the tenant LSI
 	*/
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "3) Create the LSI");
 	

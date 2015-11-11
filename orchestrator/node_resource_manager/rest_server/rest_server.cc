@@ -572,8 +572,10 @@ int RestServer::createGraphFromFile(string toBeCreated)
 #ifdef UNIFY_NFFG
 		firstTime = false;
 #endif
-	}catch (...)
+	}catch (exception& e)
 	{
+		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Exception %s was thrown during the creation of the graph!", e.what());
+
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An error occurred during the creation of the graph!");
 		return 0;
 	}

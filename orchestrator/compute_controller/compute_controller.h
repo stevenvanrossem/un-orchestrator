@@ -139,17 +139,9 @@ public:
 	nf_manager_ret_t retrieveDescription(string nf);
 	
 	/**
-	*	@brief: For each NF, select an implementation. Currently, if a Docker implementation 
-	*	is available and Docker is running with the LXC engine, Docker is selected.
-	*	Otherwise, a DPDK implementation is selected. Only in case Docker and DPDK
-	*	implementations are not available, it selects a KVM implementation (if KVM is
-	*	running and a KVM implementation is available).
-	*	Summarizing, the priority of the implementations is the following 
-	*		- Docker
-	*		- DPDK
-	*		- KVM
+	*	@brief: For each NF, select an implementation.
 	*/
-	bool selectImplementation();
+	map<string, NF*>* selectImplementation();
 	
 #ifdef UNIFY_NFFG
 	/**
