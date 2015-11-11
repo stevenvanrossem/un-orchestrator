@@ -39,7 +39,7 @@ and type the following commands:
 	; Create makefile scripts based on the previously selected options
 	$ cmake .
 
-	; Compile and create the executables
+	; Compile and create the executable
 	$ make
      
 # How to run the name-resolver

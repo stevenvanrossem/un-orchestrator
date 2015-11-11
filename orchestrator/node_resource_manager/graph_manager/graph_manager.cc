@@ -54,7 +54,7 @@ GraphManager::GraphManager(int core_mask,string portsFileName) :
 
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Creating the LSI-0...");
 
-	//The three following strunctures are empty. No NF and no virtual link is attached.	
+	//The three following structures are empty. No NF and no virtual link is attached.
 	map<string, list<unsigned int> > dummy_network_functions;
 	vector<VLink> dummy_virtual_links;
 	map<string,nf_t>  nf_types;
@@ -77,7 +77,7 @@ GraphManager::GraphManager(int core_mask,string portsFileName) :
 		{
 			if(!lsi->setPhysicalPortID(it->first,it->second))
 			{
-				logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An unknow physical interface \"%s\" has been attached to the lsi-0",it->first.c_str());
+				logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An unknown physical interface \"%s\" has been attached to the lsi-0",it->first.c_str());
 				delete(clo);
 				throw GraphManagerException();
 			}
@@ -282,7 +282,7 @@ bool GraphManager::deleteGraph(string graphID, bool shutdown)
 	/**
 	*	@outline:
 	*
-	*		0) check if the graph can be remode
+	*		0) check if the graph can be removed
 	*		1) remove the rules from the LSI0
 	*		2) stop the NFs
 	*		3) delete the LSI, the virtual links and the 
@@ -416,7 +416,7 @@ bool GraphManager::deleteFlow(string graphID, string flowID)
 	}
 
 #ifndef UNIFY_NFFG
-	//if the graph has only this flow, remove the entre graph
+	//if the graph has only this flow, remove the entire graph
 	if(graph->getNumberOfRules() == 1)
 	{
 		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The graph \"%s\" has only one flow. Then the entire graph will be removed",graphID.c_str());
@@ -505,7 +505,7 @@ bool GraphManager::checkGraphValidity(highlevel::Graph *graph, ComputeController
 	{
 		if(!graph->isDefinedHere(*graphEP))
 		{
-			//since this endpoint is defined into another graph, that endpoint must alredy exist
+			//since this endpoint is defined into another graph, that endpoint must already exist
 			if(availableEndPoints.count(*graphEP) == 0)
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Endpoint \"%s\" is not defined by the current graph, and it does not exist yet",graphEP->c_str());
@@ -672,7 +672,7 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 	
 	/**
 	*	A virtual link can be used in two direction, hence it can be shared between a NF port and a physical port.
-	*	In principle a virtual link could aslo be shared between a NF port and an endpoint but, for simplicity, we
+	*	In principle a virtual link could also be shared between a NF port and an endpoint but, for simplicity, we
 	*	use separated virtual links in case of endpoint.
 	*/
 	unsigned int numberOfVLrequiredBeforeEndPoints = (vlNFs.size() > vlPhyPorts.size())? vlNFs.size() : vlPhyPorts.size();
@@ -831,7 +831,7 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 	while(aux < numberOfVLrequiredBeforeEndPoints)
 	{
 		//The first vlinks are only used for NFs and physical ports
-		//TODO: this could be optimized, although it is not easy (and usefull)
+		//TODO: this could be optimized, although it is not easy (and useful)
 		aux++;
 		vl3++;
 	}
@@ -1586,7 +1586,7 @@ void GraphManager::removeUselessPorts_NFs_Endpoints_VirtualLinks(RuleRemovedInfo
 		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The NF port '%s' is associated with a vlink",rri.nf_port.c_str());
 		
 		/**
-		*	In case NF:port does not appear in other actions, and it is not use for any phsyical port, then the vlink must be removed
+		*	In case NF:port does not appear in other actions, and it is not use for any physical port, then the vlink must be removed
 		*/
 		
 		bool equal = false;

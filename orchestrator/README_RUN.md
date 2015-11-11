@@ -22,14 +22,14 @@ Folder `config` contains some configuration file examples that can be used
 to configure/test the un-orchestrator.
 
   * `config/universal-node-example.xml`: configuration file describing
-    the physical ports to be handeld by the un-orchestrator, as well as
-    the amount of CPU, memory and storage provided to the universal node.
+    the physical ports to be handled by the un-orchestrator, as well as
+    the amount of CPU, memory and storage provided to the Universal Node.
   * `config/simple_passthrough_nffg.json`: simple graph that implements
     a simple passthrough function, i.e., traffic is received from a first
     physical port and sent out from a second physical port, after having
     been handled to the vswitch.
-  * `config/passthrough_with_vnf_nffg.json`: graph that include a virtual
-    network function. Traffic is received from a first physical port, provided
+  * `config/passthrough_with_vnf_nffg.json`: graph that includes a VNF.
+    Traffic is received from a first physical port, provided
     to a network function, and then sent out from a second physical port.
 
 
@@ -42,7 +42,7 @@ Set up DPDK (after each reboot of the physical machine), in order to:
   * Insert KNI module
   * Setup hugepage mappings for non-NUMA systems (1000 should be a reasonable
     number)
-  * Bind Ethernet device to IGB UIO module (bind all the ethernet interfaces
+  * Bind Ethernet devices to IGB UIO module (bind all the ethernet interfaces
     that you want to use)
 
 	$ cd [xdpd]/libs/dpdk/tools  
@@ -61,7 +61,7 @@ on flows matched, and so on. The xcli can be run by just typing:
 
     $ xcli
 
-### How to start OvS (managed through OFCONFIG) to work with the un-orchestrator [DEPRECATED]
+## How to start OvS (managed through OFCONFIG) to work with the un-orchestrator [DEPRECATED]
 
 Start OvS:
 
@@ -76,7 +76,7 @@ OF-CONFIG server can be started by:
 
 By default, `ofc-server` starts in daemon mode. To avoid daemon mode, use the
 `-f` parameter.
-For a the full list of the supported parameters, type:
+For the full list of the supported parameters, type:
 
     $ ofc-server -h
     

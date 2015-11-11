@@ -67,13 +67,13 @@ REST tool (e.g., some nice plugins for Mozilla Firefox). Just in case,
 you can also use the cURL command line tool, such as in the following
 example:
 
-    curl -i -H "Content-Type: application/json" -d "@myGraph.json" -X PUT  http://un-orchestrator-address:port
+    curl -i -H "Content-Type: application/json" -d "@myGraph.json" -X PUT  http://un-orchestrator-address:port/graph/myGraph
 
 ===============================================================================
 
 This example is more complex, and it includes a network function called "bridge".
 Packets coming from the interface ge0 are sent to the first port of the network
-function (bridge:1), while packes coming from the second port of the network
+function (bridge:1), while packets coming from the second port of the network
 function (bridge:2) are sent on the network interface ge1
   
 PUT /graph/myGraph HTTP/1.1   
@@ -411,7 +411,7 @@ Content-Type : application/json
 ===============================================================================
 
 Within the "match" element, the following fields are allowed (all the values
-must be spicified as strings):
+must be specified as strings):
 
 	"port"         //only if "VNF_id" and "endpoint_id" are not specified
 	"VNF_id"       //only if "port" and "endpoint_id" are not specified

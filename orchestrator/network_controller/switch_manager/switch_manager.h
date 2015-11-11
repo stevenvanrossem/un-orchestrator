@@ -28,7 +28,7 @@ class SwitchManager
 public:
 
 	/**
-	*	@brief: Cretes a new LSI
+	*	@brief: Creates a new LSI
 	*
 	*	@param: cli		Description of the lsi to be created
 	*	@return: 		Information related to the lsi created

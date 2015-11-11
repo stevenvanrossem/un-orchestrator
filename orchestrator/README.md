@@ -26,8 +26,8 @@ when the proper messages are received.
 
 As evident in the picture below, which provides an overall view of the UN, the
 un-orchestrator includes several modules; the most important ones are the network
-controller and the conpute controller, which are exploited by the itself to interact
-respectively with the vSwitch and the hypervisor(s). This two modules are detailed in
+controller and the conpute controller, which are exploited by the un-orchestrator itself to interact
+respectively with the vSwitch and the hypervisor(s). These two modules are detailed in
 the following.
 
 ![universal-node](https://raw.githubusercontent.com/netgroup-polito/un-orchestrator/master/images/universal-node.png)
@@ -48,7 +48,7 @@ It consists of two parts:
     implementation for the switch manager, according to the commands
     supported by the vSwitch itself.
 
-Currently, it supports Open vSwitch (OvS) and the extensible DataPath daemon
+Currently, the un-orchestrator supports Open vSwitch (OvS) and the extensible DataPath daemon
 (xDPd) as vSwitches.
 If you are interested to add the support for a new virtual switch, please 
 check the file [network_controller/switch_manager/README.md](network_controller/switch_manager/README.md).
@@ -67,9 +67,10 @@ already processed in a graph.
 The compute controller is the sub-module that interacts with the hypervisor
 and handles the lifecycle of a virtual network function (i.e., creating,
 updating, destroying a VNF), including the operations needed to attach
-those ports to the running vSwitch.
+VNF ports to the running vSwitch. Each execution environment may require a different 
+implementation for the compute controller, according to the commands supported by the hypervisor itself.
 
-Currently it supports network functions as (KVM) VMs, Docker and DPDK 
+Currently the prototype supports virtual network functions as (KVM) VMs, Docker and DPDK 
 processes, although only a subset of them can be available depending on 
 the chosen vSwitch. If you are interested to add the support for a new 
 hypervisor, please check the file [compute_controller/README.md](compute_controller/README.md).
