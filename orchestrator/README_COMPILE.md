@@ -166,7 +166,6 @@ Now create the ovsbd database:
 	$ sudo ovsdb-tool create /usr/local/etc/openvswitch/conf.db  \
 		/usr/local/share/openvswitch/vswitch.ovsschema
 
-
 ## Virtual Execution Environment for network functions
 
 The current un-orchestrator supports different types of execution environments.
@@ -180,22 +179,46 @@ provided here:
 
 	http://docs.docker.com/installation/  
 
-### QEMU/KVM
+### QEMU/KVM/Libvirt
 
 This is needed in order to run network functions in KVM-based virtual machines.
 Two flavors of virtual machines are supported:
 
-  * virtual machines that exchange packets with the vSwitch through the `virtio` driver. This configuration allows you to run both traditional processes and DPDK-based processes vithin the virtual machines;
+  * virtual machines that exchange packets with the vSwitch through the `virtio` driver. This configuration allows you to run both traditional processes and DPDK-based processes within the virtual machines. In this case, the host backend for the virtual NICs is implemented through `vhost` in case OvS and xDPd as vSwitches, and through `vhost-user` when OvS-DPDK is used as vSwitch;
   * virtual machines that exchange packets with the vSwitch through shared memory (`ivshmem`). This configuration is oriented to performance, and only supports DPDK-based processes within the virtual machine.
 	  
-#### Standard QEMU/KVM
+#### Standard QEMU/KVM (without `ivshmem` support)
 
-To install the standard QEMU/KVM execution environment, execute the 
+To install the standard QEMU/KVM/Libvirt execution environment, execute the 
 following command:
 
 	$ sudo apt-get install libvirt-dev qemu-kvm libvirt-bin bridge-utils qemu-system  
 
-#### QEMU with IVSHMEM support
+##### Libvirt with support to `vhost-user` ports
+
+If you intend to use (DPDK) `vhost-user` ports, a recent version of Libvirt must 
+be used that supports configuration of this type of ports. You can build it from 
+sources using the following commands:
+
+	$ sudo apt-get install libxml-xpath-perl libyajl-dev libdevmapper-dev libpciaccess-dev libnl-dev
+	$ git clone git://libvirt.org/libvirt.git
+	; select the commit that is known to work and have the necessary support
+	$ git checkout f57842ecfda1ece8c59718e62464e17f75a27062
+	$ cd libvirt
+	$ ./autogen.sh
+	$ make
+	$ sudo make install
+
+In case you already had libvirt installed on the system, this will install an 
+alternative version which must then be used instead of the default one:
+
+	; Stop any running Libvirtd instance and run the alternative version just installed:
+	$ sudo service libvirt-bin stop
+	$ sudo /usr/local/sbin/libvirtd --daemon
+
+Similarly, if you use virsh, you'd have to use the version from `/usr/local/bin`.
+
+#### QEMU with `ivshmem` support
 
 To compile and install the QEMU/KVM execution environment with the support to `ivshmem`,
 further steps are required:
@@ -204,7 +227,7 @@ further steps are required:
 	$ cd dpdk-ovs/qemu
 	$ mkdir -p bin/
 	$ cd bin
-	$ sudo apt-get install git libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev
+	$ sudo apt-get install libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev
 	$ ../configure
 	$ make
 	$ sudo make install

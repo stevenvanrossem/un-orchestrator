@@ -41,7 +41,7 @@ Then, register the new VNF in the name-resolver by adding the following piece of
 		<implementation type="docker" uri="dummy"/>
 	</network-function>
 
-At this point, prepare a NF-FG and pass it to the un-orchestator, which will take care of executing all the operation required to implement the graph. The graph shown in the picture above can be described in the JSON syntax defined in WP5 as follow:
+At this point, prepare a NF-FG and pass it to the un-orchestator, which will take care of executing all the operations required to implement the graph. The graph shown in the picture above can be described in the JSON syntax defined in WP5 as follow:
 
   
     {
@@ -100,7 +100,7 @@ At this point, prepare a NF-FG and pass it to the un-orchestator, which will tak
         }  
     }  
     
-This json can be stored in a file (e.g., nffg.json) and provided to the un-orchestrar either through the command line at the boot of the un-orchestrator, or through its REST API. In the latter case, the command to be used is the following:
+This json can be stored in a file (e.g., nffg.json) and provided to the un-orchestrator either through the command line at the boot of the un-orchestrator, or through its REST API. In the latter case, the command to be used is the following:
 
       curl -i -H "Content-Type: application/json" -d "@nffg.json" -X PUT  http://un-orchestrator-address:port/graph/graphid
 
