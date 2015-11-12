@@ -74,7 +74,7 @@ protected:
 		physicalPortsName(physicalPortsName.begin(),physicalPortsName.end()),
 		nf_types(nf_types.begin(),nf_types.end()),
 		netFunctionsPortsName(netFunctionsPortsName.begin(),netFunctionsPortsName.end()),
-		vlinksRemoteLsi(vlinksRemoteLsi.begin(),vlinksRemoteLsi.end(), ofBridgeIDs(ofBridgeIDs.begin(), ofBridgeIDs.end()))
+		vlinksRemoteLsi(vlinksRemoteLsi.begin(),vlinksRemoteLsi.end()), ofBridgeIDs(ofBridgeIDs.begin(), ofBridgeIDs.end())
 	{
 		map<string,nf_t>::iterator it = nf_types.begin();
 		for(; it != nf_types.end(); it++)
@@ -124,9 +124,9 @@ public:
 	 * @param nf_name	name of the of_bridge network function
 	 * @return 			the id of the remote L3-LSI
 	 */
-	map<string, uint64_t> getOfBridgeID(string nf_name)
+	uint64_t getOfBridgeID(string nf_name)
 	{
-		return ofBridgeIDs[nf];
+		return ofBridgeIDs[nf_name];
 	}
 };
 
