@@ -62,13 +62,19 @@ private:
 	*/
 	list<uint64_t> vlinksRemoteLsi;
 
+	/**
+	 *  @brief: map of of_bridge internal network functions, LSI-ID of the L3-LSI
+	 */
+	map<string, uint64_t> ofBridgeIDs;
+
 protected:
-	CreateLsiIn(string controllerAddress, string controllerPort, list<string> physicalPortsName, map<string,nf_t>  nf_types, map<string,list<string> > netFunctionsPortsName, list<uint64_t> vlinksRemoteLsi) 
+	CreateLsiIn(string controllerAddress, string controllerPort, list<string> physicalPortsName,map<string,nf_t>  nf_types,
+			map<string,list<string> > netFunctionsPortsName, list<uint64_t> vlinksRemoteLsi, map<string, uint64_t> ofBridgeIDs)
 		: controllerAddress(controllerAddress), controllerPort(controllerPort), 
 		physicalPortsName(physicalPortsName.begin(),physicalPortsName.end()),
 		nf_types(nf_types.begin(),nf_types.end()),
 		netFunctionsPortsName(netFunctionsPortsName.begin(),netFunctionsPortsName.end()),
-		vlinksRemoteLsi(vlinksRemoteLsi.begin(),vlinksRemoteLsi.end())
+		vlinksRemoteLsi(vlinksRemoteLsi.begin(),vlinksRemoteLsi.end(), ofBridgeIDs(ofBridgeIDs.begin(), ofBridgeIDs.end()))
 	{
 		map<string,nf_t>::iterator it = nf_types.begin();
 		for(; it != nf_types.end(); it++)
@@ -110,6 +116,17 @@ public:
 	list<uint64_t> getVirtualLinksRemoteLSI()
 	{
 		return vlinksRemoteLsi;
+	}
+
+	/**
+	 * @brief: returns the ID of the remote L3-LSI related to the network function <nf_name>
+	 *
+	 * @param nf_name	name of the of_bridge network function
+	 * @return 			the id of the remote L3-LSI
+	 */
+	map<string, uint64_t> getOfBridgeID(string nf_name)
+	{
+		return ofBridgeIDs[nf];
 	}
 };
 

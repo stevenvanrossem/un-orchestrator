@@ -1,9 +1,10 @@
 #include "lsi.h"
 
-LSI::LSI(string controllerAddress, string controllerPort, map<string,string> physical_ports, map<string, list<unsigned int> > network_functions,vector<VLink> virtual_links, map<string,nf_t>  nf_types) :
-		controllerAddress(controllerAddress), controllerPort(controllerPort), 
-		nf_types(nf_types.begin(),nf_types.end()),
-		virtual_links(virtual_links.begin(),virtual_links.end())
+LSI::LSI(string controllerAddress, string controllerPort, map<string,string> physical_ports,
+		map<string, list<unsigned int> > network_functions,vector<VLink> virtual_links,
+		map<string,nf_t>  nf_types, map<string, uint64_t> ofBridgeIDs) :
+		controllerAddress(controllerAddress), controllerPort(controllerPort), nf_types(nf_types.begin(),nf_types.end()),
+		virtual_links(virtual_links.begin(),virtual_links.end()), ofBridgeIDs(ofBridgeIDs.begin(), ofBridgeIDs.end())
 {
 	for(map<string,string>::iterator p = physical_ports.begin(); p != physical_ports.end(); p++)
 	{
@@ -328,4 +329,8 @@ void LSI::removeNF(string nf)
 	map<string,nf_t>::iterator jt = nf_types.find(nf); 
 	nf_types.erase(jt);
 	return;
+}
+
+uint64_t LSI::getOfBridgeID(string of_bridgeNFname){
+	return ofBridgeIDs[of_bridgeNFname];
 }

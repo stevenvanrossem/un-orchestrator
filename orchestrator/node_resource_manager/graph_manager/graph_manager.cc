@@ -676,21 +676,22 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 
 			//The L3-LSI is not connected to physical ports, but just the tenant LSI
 			//through virtual links
-			map<string,string> dummyPhyPorts;
+			list<string> physicalPorts;
 
 			//Virtual links will be created later
+			list<uint64_t> vLinksRemoteLSI;
 			vector<VLink> virtual_links;
 
 			//Just 1 type of NF for this LSI
 			map<string,nf_t>  nf_types;
 			nf_types[i->first] = INTERNAL;
 
+			//The L3-LSI does not have other switches above it
+			map<string, uint64_t> ofBridgeIDs;
+
 			list<unsigned int> ports;
 			map<string, list<unsigned int> > network_functions;
 			network_functions[i->first] = ports;
-
-			//Prepare the structure representing the new L3-LSI
-			LSI *lsi = new LSI("", "", dummyPhyPorts, network_functions,virtual_links,nf_types);
 
 			CreateLsiOut *clo = NULL;
 			try {
@@ -698,11 +699,10 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 				//No ports will be attached to the LSI at this moment
 				map<string,list<string> > netFunctionsPortsName;
 
-				CreateLsiIn cli("","", lsi->getPhysicalPortsName(),nf_types,netFunctionsPortsName,lsi->getVirtualLinksRemoteLSI());
+				CreateLsiIn cli("","", physicalPorts,nf_types,netFunctionsPortsName,vLinksRemoteLSI, ofBridgeIDs);
 
 				clo = switchManager.createLsi(cli);
 
-				lsi->setDpid(clo->getDpid());
 
 				ofBridgeIDs[i->first] = clo->getDpid();
 
@@ -718,21 +718,22 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 
 			} catch (SwitchManagerException& e) {
 				logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "%s",e.what());
-				switchManager.destroyLsi(lsi->getDpid());
+
+				for(map<string, uint64_t>::iterator it = ofBridgeIDs.begin(); it != ofBridgeIDs.end(); it++)
+					switchManager.destroyLsi(it->second);
+
 				if(clo != NULL)
 					delete(clo);
 				delete(graph);
-				delete(lsi);
 				delete(computeController);
 				delete(controller);
 				graph = NULL;
-				lsi = NULL;
 				computeController = NULL;
 				controller = NULL;
 				throw GraphManagerException();
 			}
 
-		} //end if(of_bridge function)
+		} //end if(of_bridge function name)
 
 		//[+] Add here other implementations for the internal network functions
 
@@ -777,7 +778,7 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 		nf_types[nf->first] = computeController->getNFType(nf->first);
 	
 	//Prepare the structure representing the new tenant-LSI
-	LSI *lsi = new LSI(string(OF_CONTROLLER_ADDRESS), strControllerPort.str(), dummyPhyPorts, network_functions,virtual_links,nf_types);
+	LSI *lsi = new LSI(string(OF_CONTROLLER_ADDRESS), strControllerPort.str(), dummyPhyPorts, network_functions,virtual_links,nf_types, ofBridgeIDs);
 	
 	CreateLsiOut *clo = NULL;
 	try
@@ -789,7 +790,7 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 			netFunctionsPortsName[nf->first] = lsi->getNetworkFunctionsPortNames(nf->first);
 		}
 		
-		CreateLsiIn cli(string(OF_CONTROLLER_ADDRESS),strControllerPort.str(), lsi->getPhysicalPortsName(),nf_types,netFunctionsPortsName,lsi->getVirtualLinksRemoteLSI());
+		CreateLsiIn cli(string(OF_CONTROLLER_ADDRESS),strControllerPort.str(), lsi->getPhysicalPortsName(),nf_types,netFunctionsPortsName,lsi->getVirtualLinksRemoteLSI(), ofBridgeIDs);
 
 		clo = switchManager.createLsi(cli);
 
@@ -846,6 +847,8 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 		throw GraphManagerException();
 	}
 	
+
+
 	uint64_t dpid = lsi->getDpid();
 	
 	map<string,unsigned int> lsi_ports = lsi->getPhysicalPorts();

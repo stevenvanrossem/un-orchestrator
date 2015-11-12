@@ -95,8 +95,15 @@ private:
 	*/
 	map<string, uint64_t> endpoints_vlinks;
 
+	/**
+	 * 	@brief: the map is <of_bridgeNF name, L3-LSI IS>
+	 */
+	map<string, uint64_t> ofBridgeIDs;
+
 public:
-	LSI(string controllerAddress, string controllerPort, map<string,string> ports, map<string, list <unsigned int> > network_functions,vector<VLink> virtual_links,map<string,nf_t>  nf_types);
+	LSI(string controllerAddress, string controllerPort, map<string,string> ports,
+			map<string, list <unsigned int> > network_functions,vector<VLink> virtual_links,
+			map<string,nf_t>  nf_types, map<string, uint64_t> ofBridgeIDs);
 
 	string getControllerAddress();
 	string getControllerPort();
@@ -124,6 +131,14 @@ public:
 	map<string, uint64_t> getNFsVlinks();
 	map<string, uint64_t> getPortsVlinks();
 	map<string, uint64_t> getEndPointsVlinks();
+
+	/*
+	 * Returns the LSI ID of the remote L3-LSI corresponding to the name of the NF
+	 *
+	 * @param	of_bridgeNFname	name of the NF that implements a of_bridge
+	 * @return 					LSI-ID corresponding to that of_bridge
+	 */
+	uint64_t getOfBridgeID(string of_bridgeNFname);
 
 	//FIXME: public is not a good choice
 	void setNFsVLinks(map<string, uint64_t> nfs_vlinks);
