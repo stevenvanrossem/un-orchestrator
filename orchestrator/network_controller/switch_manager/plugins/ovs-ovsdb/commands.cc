@@ -414,7 +414,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 					uint64_t remote_id = cli.getOfBridgeID(*nf);
 					//name of the port on the tenant LSI = <portName>_<i>
 					string vrt(*nfp);
-					logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "REMOTEID %d", remote_id);
+
 					//name of the port on the L3-LSI (peer) = <local_port_name>_p
 					string trv(vrt + "_p");
 
@@ -1098,72 +1098,109 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int s){
 		for(list<string>::iterator nf = nfp.begin(); nf != nfp.end(); nf++)
 		{
 			char ifac[64] = "iface";
-			char p_n[64] = "";
-				
-			//Create the current name of a interface
-			sprintf(temp, "%d", rnumber);
-			strcat(ifac, temp);
-			
-			string str = (*nf);
-				
-			//Create port name to lower case
-			for (string::size_type i=0; i<str.length(); ++i)
-    			str[i] = tolower(str[i], loc);
-    				
-    		//Create the current port name
-			strcpy(tmp, (char *)(str).c_str());
-			sprintf(temp, "%" PRIu64, anpi.getDpid());
-			strcat(tmp, "b");
-			strcat(tmp, temp);
-			strcpy(temp, tmp);
-				
-			for(unsigned int j=0;j<strlen(temp);j++){
-				if(temp[j] == '_')
-					temp[j] = 'p';
+
+			if(anpi.getNFtype() == INTERNAL){
+				uint64_t remote_id = anpi.getRemoteL3LsiId();
+				//name of the port on the tenant LSI = <portName>_<i>
+				string vrt(*nf);
+
+				//name of the port on the L3-LSI (peer) = <local_port_name>_p
+				string trv(vrt + "_p");
+
+				peer_n[trv] = vrt;
+
+
+
+
+				sprintf(temp, "%d", rnumber);
+				strcat(ifac, temp);
+
+
+				cmd_add_virtual_link(vrt ,trv ,ifac ,dnumber, s);
+
+				//insert this port name into port_n
+				port_l[anpi.getDpid()].push_back(ifac);
+
+				sprintf(temp, "%d", rnumber);
+				strcat(ifac, temp);
+
+				cmd_add_virtual_link(trv, vrt, ifac, remote_id, s);
+
+				/*fill the map ports*/
+				ports[(*nf)] = rnumber-2;
+
 			}
+			else
+			{
+
+				char p_n[64] = "";
+
+				//Create the current name of a interface
+				sprintf(temp, "%d", rnumber);
+				strcat(ifac, temp);
 				
-//			sprintf(temp, "%d", rnumber);
-//			strcat(ifac, temp);
-		
-			first_obj["op"] = "insert";
-			first_obj["table"] = "Interface";
-		
-			sprintf(p_n, "%" PRIu64 "_%s", anpi.getDpid(), (*nf).c_str());
-			row["name"] = p_n;
-			row["type"] = "internal";
+				string str = (*nf);
+
+				//Create port name to lower case
+				for (string::size_type i=0; i<str.length(); ++i)
+	    			str[i] = tolower(str[i], loc);
+
+	    		//Create the current port name
+				strcpy(tmp, (char *)(str).c_str());
+				sprintf(temp, "%" PRIu64, anpi.getDpid());
+				strcat(tmp, "b");
+				strcat(tmp, temp);
+				strcpy(temp, tmp);
+
+				for(unsigned int j=0;j<strlen(temp);j++){
+					if(temp[j] == '_')
+						temp[j] = 'p';
+				}
+
+	//			sprintf(temp, "%d", rnumber);
+	//			strcat(ifac, temp);
+
+				first_obj["op"] = "insert";
+				first_obj["table"] = "Interface";
 			
-			row["admin_state"] = "up";
-			row["link_state"] = "up";
-			row["ofport"] = rnumber;
-			row["ofport_request"] = rnumber;
-		
-			first_obj["row"] = row;
-		
-			first_obj["uuid-name"] = ifac;
-		
-			params.push_back(first_obj);
-		
-			row.clear();
-			first_obj.clear();
+				sprintf(p_n, "%" PRIu64 "_%s", anpi.getDpid(), (*nf).c_str());
+				row["name"] = p_n;
+				row["type"] = "internal";
 				
-			first_obj["op"] = "insert";
-			first_obj["table"] = "Port";
+				row["admin_state"] = "up";
+				row["link_state"] = "up";
+				row["ofport"] = rnumber;
+				row["ofport_request"] = rnumber;
+
+				first_obj["row"] = row;
+
+				first_obj["uuid-name"] = ifac;
+
+				params.push_back(first_obj);
+
+				row.clear();
+				first_obj.clear();
+
+				first_obj["op"] = "insert";
+				first_obj["table"] = "Port";
+
+				row["name"] = p_n;
+
+				iface.push_back("set");
 		
-			row["name"] = p_n;
+				iface2.push_back("named-uuid");
+				iface2.push_back(ifac);
 		
-			iface.push_back("set");
-	
-			iface2.push_back("named-uuid");
-			iface2.push_back(ifac);
-	
-			iface1.push_back(iface2);
-			iface.push_back(iface1);
-		
-			row["interfaces"] = iface;
-		
-			first_obj["row"] = row;
-		
-			first_obj["uuid-name"] = temp;
+				iface1.push_back(iface2);
+				iface.push_back(iface1);
+
+				row["interfaces"] = iface;
+
+				first_obj["row"] = row;
+			
+				first_obj["uuid-name"] = temp;
+				
+			}
 		
 			params.push_back(first_obj);
 		

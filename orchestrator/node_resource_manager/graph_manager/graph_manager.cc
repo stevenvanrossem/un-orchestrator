@@ -700,7 +700,6 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 			list<uint64_t> vLinksRemoteLSI;
 			vector<VLink> virtual_links;
 
-			//Just 1 type of NF for this LSI
 			map<string,nf_t>  nf_types;
 
 			list<unsigned int> ports;
@@ -1250,8 +1249,9 @@ bool GraphManager::updateGraph(string graphID, highlevel::Graph *newPiece)
 	/**
 	*	2) Select an implementation for the new NFs
 	*/
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "2) Select an implementation for the new NFs");	
-	if(!computeController->selectImplementation())
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "2) Select an implementation for the new NFs");
+	map<string, NF*>* newInternalNFs = computeController->selectImplementation();
+	if(newInternalNFs == NULL)
 	{
 		//This is an internal error
 		delete(computeController);
@@ -1260,7 +1260,82 @@ bool GraphManager::updateGraph(string graphID, highlevel::Graph *newPiece)
 	}
 	
 	/**
-	*	3) Update the lsi (in case of new ports/NFs/endpoints are required)
+	*	3) Deploy new internal NFs (if any)
+	*/
+
+	map<string, uint64_t> newOfBridgeIDs;
+
+	for(map<string, NF*>::iterator i = newInternalNFs->begin(); i != newInternalNFs->end(); i++){
+
+		string prefix = "of_bridge";
+
+		if(!i->first.compare(0, prefix.length(), prefix)){
+			/*
+			 * new internal open flow bridge was found
+			 * create the level3 LSI without any port!!
+			 */
+
+			//The L3-LSI is not connected to physical ports, but just the tenant LSI
+			//through virtual links
+			list<string> physicalPorts;
+
+			//Virtual links will be created later
+			list<uint64_t> vLinksRemoteLSI;
+			vector<VLink> virtual_links;
+
+			map<string,nf_t>  nf_types;
+
+			list<unsigned int> ports;
+			map<string, list<unsigned int> > network_functions;
+			network_functions[i->first] = ports;
+
+			CreateLsiOut *clo = NULL;
+			try {
+
+				//No ports will be attached to the LSI at this moment
+				map<string,list<string> > netFunctionsPortsName;
+				map<string, uint64_t> dummyOFBridgeIDs;
+				CreateLsiIn cli("","", physicalPorts,nf_types,netFunctionsPortsName,vLinksRemoteLSI, dummyOFBridgeIDs);
+
+				clo = switchManager.createLsi(cli);
+
+
+				newOfBridgeIDs[i->first] = clo->getDpid();
+
+				map<string,unsigned int> physicalPorts = clo->getPhysicalPorts();
+				if(!physicalPorts.empty()) {
+					logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Non required physical ports have been attached to the l3-lsi");
+					delete(clo);
+					throw GraphManagerException();
+				}
+
+				delete(clo);
+
+
+			} catch (SwitchManagerException& e) {
+				logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "%s",e.what());
+
+				for(map<string, uint64_t>::iterator it = newOfBridgeIDs.begin(); it != newOfBridgeIDs.end(); it++)
+					switchManager.destroyLsi(it->second);
+
+				if(clo != NULL)
+					delete(clo);
+				delete(graph);
+				delete(tmp);
+				graph = NULL;
+				tmp = NULL;
+				throw GraphManagerException();
+			}
+
+		} //end if(of_bridge function name)
+
+		//[+] Add here other implementations for the internal network functions
+
+	}
+
+
+	/**
+	*	4) Update the tenant lsi (in case of new ports/NFs/endpoints are required)
 	*/
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "3) update the lsi (in case of new ports/NFs/endpoints are required)");
 	
@@ -1404,8 +1479,26 @@ bool GraphManager::updateGraph(string graphID, highlevel::Graph *newPiece)
 		try
 		{
 			lsi->addNF(nf->first,nf->second,computeController->getNFType(nf->first));
-			AddNFportsIn anpi(dpid,nf->first,computeController->getNFType(nf->first),lsi->getNetworkFunctionsPortNames(nf->first));
 			
+			uint64_t remoteL3LsiId = 0;
+
+			if (computeController->getNFType(nf->first) == INTERNAL){
+
+				string prefix = "of_bridge";
+
+				if(!nf->first.compare(0, prefix.length(), prefix)){
+					/*	A new internal bridge:
+					 * 	needs the remoteL3LsiId
+					 */
+					remoteL3LsiId = newOfBridgeIDs[nf->first];
+
+				}
+
+
+			}
+
+			AddNFportsIn anpi(dpid,nf->first,computeController->getNFType(nf->first),lsi->getNetworkFunctionsPortNames(nf->first), remoteL3LsiId);
+
 			anpo = switchManager.addNFPorts(anpi);
 			
 			if(!lsi->setNfPortsID(anpo->getNFname(), anpo->getPorts()))

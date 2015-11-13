@@ -42,9 +42,14 @@ private:
 	*/
 	list<string> nf_ports;
 
+	/**
+	 *  @brief: id of the remote L3-LSI the port has to be connected with (only if type == INTERNAL)
+	 */
+	uint64_t remoteL3LsiId;
+
 protected:
-	AddNFportsIn(uint64_t dpid, string nf_name, nf_t type, list<string> nf_ports) 
-		: dpid(dpid), nf_name(nf_name), type(type), nf_ports(nf_ports)
+	AddNFportsIn(uint64_t dpid, string nf_name, nf_t type, list<string> nf_ports, uint64_t remoteL3LsiId)
+		: dpid(dpid), nf_name(nf_name), type(type), nf_ports(nf_ports), remoteL3LsiId(remoteL3LsiId)
 	{
 	}
 	
@@ -70,6 +75,10 @@ public:
 		return nf_ports;
 	}
 	
+	uint64_t getRemoteL3LsiId(){
+		return remoteL3LsiId;
+	}
+
 };
 
 
