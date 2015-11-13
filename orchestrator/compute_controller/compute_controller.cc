@@ -573,17 +573,22 @@ map<string, NF*>* ComputeController::selectImplementation()
 		string prefix = "of_bridge";
 
 		if(!nf->first.compare(0, prefix.length(), prefix)){
-			/*
-			 * We do not need to call the name-resolver
-			 * The UN already knows how to implement it
-			 */
-			internalNFs->insert(*nf);
+			if(current->getSelectedDescription() == NULL){
+				/*
+				 * We do not need to call the name-resolver
+				 * The UN already knows how to implement it
+				 */
+				internalNFs->insert(*nf);
 
-			Internal *i = new Internal();
+				Internal *i = new Internal();
 
-			i->setDescription(new Description(INTERNAL,""));
+				i->setDescription(new Description(INTERNAL,""));
 
-			current->setSelectedDescription(i);
+				current->setSelectedDescription(i);
+
+				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Internal (native) bridge implementation has been selected for NF \"%s\".",nf->first.c_str());
+
+			}
 		}
 	}
 
