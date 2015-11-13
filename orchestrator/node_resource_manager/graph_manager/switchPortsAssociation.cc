@@ -6,15 +6,24 @@ map<string, pair <string, string> > SwitchPortsAssociation::associationportgraph
 
 void SwitchPortsAssociation::setAssociation(string graphID, string port, string nf_name)
 {
-
+	pthread_mutex_lock(&association_mutex);
+	
+	pair <string,string> thePair = make_pair(graphID,nf_name);
+	associationportgraphnf[port] = thePair;
+	
+	pthread_mutex_unlock(&association_mutex);
 }
 
 string SwitchPortsAssociation::getGraphID(string port)
 {
+	assert(associationportgraphnf.count(port) == 1);
 
+	return associationportgraphnf[port].first;
 }
 
 string SwitchPortsAssociation::getNfName(string port)
 {
+	assert(associationportgraphnf.count(port) == 1);
 
+	return associationportgraphnf[port].second;
 }

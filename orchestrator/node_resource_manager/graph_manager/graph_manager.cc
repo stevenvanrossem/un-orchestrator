@@ -728,12 +728,21 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 				delete(clo);
 				throw GraphManagerException();
 			}			
-		}
+		}	
 		
 		map<string,list<string> > networkFunctionsPortsNameOnSwitch = clo->getNetworkFunctionsPortsNameOnSwitch();
 		
 		for(map<string,list<string> >::iterator nfpnos = networkFunctionsPortsNameOnSwitch.begin(); nfpnos != networkFunctionsPortsNameOnSwitch.end(); nfpnos++)
+		{
 			lsi->setNetworkFunctionsPortsNameOnSwitch(nfpnos->first,nfpnos->second);
+#ifdef ENABLE_DIRECT_VM2VM
+			//For each port on the switch, save its correspondence with the graphID and with the network function
+			
+			list<string> ports = nfpnos->second;
+			for(list<string>::iterator port = ports.begin(); port != ports.end(); port++)
+				SwitchPortsAssociation::setAssociation(graph->getID(), *port, nfpnos->first);
+#endif				
+		}
 		
 		list<pair<unsigned int, unsigned int> > vl = clo->getVirtualLinks();
 		//TODO: check if the number of vlinks is the same required 
@@ -1317,6 +1326,13 @@ bool GraphManager::updateGraph(string graphID, highlevel::Graph *newPiece)
 			
 			//FIXME: usefull? Probably no!
 			lsi->setNetworkFunctionsPortsNameOnSwitch(anpo->getNFname(),anpo->getPortsNameOnSwitch());
+			
+#ifdef ENABLE_DIRECT_VM2VM
+			//For each port on the switch, save its correspondence with the graphID and with the network function
+			list<string> ports = anpo->getPortsNameOnSwitch();
+			for(list<string>::iterator port = ports.begin(); port != ports.end(); port++)
+				SwitchPortsAssociation::setAssociation(graphID, *port, anpo->getNFname());
+#endif							
 			
 			delete(anpo);
 		}catch(SwitchManagerException e)

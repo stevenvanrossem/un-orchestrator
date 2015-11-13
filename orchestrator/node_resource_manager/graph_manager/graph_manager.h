@@ -16,6 +16,10 @@
 #include "../graph/high_level_graph/high_level_output_action_endpoint.h"
 #include "../rest_server/match_parser.h"
 
+#ifdef ENABLE_DIRECT_VM2VM
+	#include "switchPortsAssociation.h"
+#endif	
+
 #ifdef VSWITCH_IMPLEMENTATION_XDPD
 	#include "../../network_controller/switch_manager/plugins/xdpd/xdpd_manager.h"
 	#define SWITCH_MANAGER_IMPLEMENTATION XDPDManager

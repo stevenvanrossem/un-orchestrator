@@ -1,19 +1,24 @@
 #ifndef SWITCH_PORT_ASSOCIATION_H_
 #define SWITCH_PORT_ASSOCIATION_H_ 1
 
+#pragma once
+
 #include <map>
 #include <string>
 #include <utility>
+#include <assert.h>
 
 using namespace std;
 
 class SwitchPortsAssociation
 {
+friend class GraphManager;
+
 private:
 	/**
 	*	@brief: this class contains a static map defined as follows
 	*
-	*		<"name of port on the switch", pair <lsi id, network function name>  >
+	*		<"name of port on the switch", pair <graph id, network function name>  >
 	*/
 	static map<string, pair <string, string> > associationportgraphnf;
 	
@@ -22,7 +27,7 @@ private:
 	*/
 	static pthread_mutex_t association_mutex;
 
-public:
+protected:
 
 	/**
 	*	@brief: introduce a new association "port, graph ID, network function"
