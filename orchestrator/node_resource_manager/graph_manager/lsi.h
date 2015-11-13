@@ -140,6 +140,8 @@ public:
 	 */
 	uint64_t getOfBridgeID(string of_bridgeNFname);
 
+	map<string, uint64_t> getOFBridgeIDs();
+
 	//FIXME: public is not a good choice
 	void setNFsVLinks(map<string, uint64_t> nfs_vlinks);
 	void addNFvlink(string NF, uint64_t vlinkID);

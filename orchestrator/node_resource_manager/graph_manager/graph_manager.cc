@@ -54,19 +54,20 @@ GraphManager::GraphManager(int core_mask,string portsFileName) :
 
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Creating the LSI-0...");
 
-	//The three following structures are empty. No NF and no virtual link is attached.
+	//The four following structures are empty. No NF and no virtual link is attached.
 	map<string, list<unsigned int> > dummy_network_functions;
 	vector<VLink> dummy_virtual_links;
 	map<string,nf_t>  nf_types;
+	map<string, uint64_t> dummyOFBridges;
 	
-	LSI *lsi = new LSI(string(OF_CONTROLLER_ADDRESS), strControllerPort.str(), phyPorts, dummy_network_functions,dummy_virtual_links,nf_types);
+	LSI *lsi = new LSI(string(OF_CONTROLLER_ADDRESS), strControllerPort.str(), phyPorts, dummy_network_functions,dummy_virtual_links,nf_types, dummyOFBridges);
 	
 	try
 	{
 		//Create a new LSI, which is the LSI-0 of the node
 		
 		map<string,list<string> > netFunctionsPortsName;		
-		CreateLsiIn cli(string(OF_CONTROLLER_ADDRESS),strControllerPort.str(),lsi->getPhysicalPortsName(),nf_types,netFunctionsPortsName,lsi->getVirtualLinksRemoteLSI());
+		CreateLsiIn cli(string(OF_CONTROLLER_ADDRESS),strControllerPort.str(),lsi->getPhysicalPortsName(),nf_types,netFunctionsPortsName,lsi->getVirtualLinksRemoteLSI(), dummyOFBridges);
 
 		CreateLsiOut *clo = switchManager.createLsi(cli);
 		
@@ -285,9 +286,10 @@ bool GraphManager::deleteGraph(string graphID, bool shutdown)
 	*		0) check if the graph can be removed
 	*		1) remove the rules from the LSI0
 	*		2) stop the NFs
-	*		3) delete the LSI, the virtual links and the 
+	*		3) delete the L3-LSIs and the virtual links
+	*		4) delete the LSI, the virtual links and the
 	*			ports related to NFs
-	*		4) delete the endpoints defined by the graph
+	*		5) delete the endpoints defined by the graph
 	*/
 	
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Deleting graph '%s'...",graphID.c_str());
@@ -335,9 +337,25 @@ bool GraphManager::deleteGraph(string graphID, bool shutdown)
 #else
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "2) Flag RUN_NFS disabled. No NF to be stopped");
 #endif
-	
+
 	/**
-	*		3) delete the LSI, the virtual links and the 
+	*		3) delete the L3-LSIs and the virtual links
+	*/
+	
+	map<string, uint64_t> OFBridgeIDs = tenantLSI->getOFBridgeIDs();
+	for(map<string, uint64_t>::iterator it = OFBridgeIDs.begin(); it != OFBridgeIDs.end(); it++){
+		try
+		{
+			switchManager.destroyLsi(it->second);
+		} catch (SwitchManagerException e)
+		{
+			logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "%s",e.what());
+			throw GraphManagerException();
+		}
+	}
+
+	/**
+	*		4) delete the LSI, the virtual links and the
 	*			ports related to NFs
 	*/
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "3) Delete the LSI, the vlinks, and the ports used by NFs");
@@ -352,7 +370,7 @@ bool GraphManager::deleteGraph(string graphID, bool shutdown)
 	}
 	
 	/**
-	*		4) delete the endpoints defined by the graph
+	*		5) delete the endpoints defined by the graph
 	*/
 	if(!shutdown)
 	{
@@ -684,10 +702,6 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 
 			//Just 1 type of NF for this LSI
 			map<string,nf_t>  nf_types;
-			nf_types[i->first] = INTERNAL;
-
-			//The L3-LSI does not have other switches above it
-			map<string, uint64_t> ofBridgeIDs;
 
 			list<unsigned int> ports;
 			map<string, list<unsigned int> > network_functions;
@@ -698,8 +712,8 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 
 				//No ports will be attached to the LSI at this moment
 				map<string,list<string> > netFunctionsPortsName;
-
-				CreateLsiIn cli("","", physicalPorts,nf_types,netFunctionsPortsName,vLinksRemoteLSI, ofBridgeIDs);
+				map<string, uint64_t> dummyOFBridgeIDs;
+				CreateLsiIn cli("","", physicalPorts,nf_types,netFunctionsPortsName,vLinksRemoteLSI, dummyOFBridgeIDs);
 
 				clo = switchManager.createLsi(cli);
 

@@ -334,3 +334,7 @@ void LSI::removeNF(string nf)
 uint64_t LSI::getOfBridgeID(string of_bridgeNFname){
 	return ofBridgeIDs[of_bridgeNFname];
 }
+
+map<string, uint64_t> LSI::getOFBridgeIDs(){
+	return ofBridgeIDs;
+}

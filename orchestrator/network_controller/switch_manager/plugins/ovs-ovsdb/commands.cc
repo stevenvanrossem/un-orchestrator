@@ -162,31 +162,36 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
     
     int l = 0;
     
-    //Create controller
-    /*Create the current target of a controller*/
-	strcat(tcp_s, cli.getControllerAddress().c_str());
-	strcat(tcp_s, ":");
-	strcat(tcp_s, cli.getControllerPort().c_str());
-	strcpy(temp, tcp_s);
-	
-	first_obj["op"] = "insert";
-    first_obj["table"] = "Controller";
     
-    /*insert a Controller*/
-    row["target"] = temp;
-    row["local_ip"] = "127.0.0.1";
-    row["connection_mode"] = "out-of-band";
-    row["is_connected"] = true;
+    if(cli.getControllerAddress() != "" && cli.getControllerPort() != ""){
+    	//Create controller
+		/*Create the current target of a controller*/
+		strcat(tcp_s, cli.getControllerAddress().c_str());
+		strcat(tcp_s, ":");
+		strcat(tcp_s, cli.getControllerPort().c_str());
+		strcpy(temp, tcp_s);
+
+		first_obj["op"] = "insert";
+		first_obj["table"] = "Controller";
+
+		/*insert a Controller*/
+		row["target"] = temp;
+		row["local_ip"] = "127.0.0.1";
+		row["connection_mode"] = "out-of-band";
+		row["is_connected"] = true;
     
+
     first_obj["row"] = row;
     
     //create the current name of a controller --> ctrl+dnumber
     sprintf(temp, "%s%" PRIu64, ctr, dnumber);
     
     first_obj["uuid-name"] = temp;
-    
+
     params.push_back(first_obj);
-    
+
+    }
+
     row.clear();
     first_obj.clear();
     
@@ -209,23 +214,24 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 	port1.clear();
 	port.clear();
     
-    Array ctrl;
-    ctrl.push_back("set");
+	Array ctrl, ctrl1, ctrl2;
 
-	Array ctrl1;
-	Array ctrl2;
+	if(cli.getControllerAddress() != "" && cli.getControllerPort() != ""){
 
-	//create the current name of a controller
-	sprintf(tmp, "%s%" PRIu64, ctr, dnumber);
-	
-	ctrl2.push_back("named-uuid");
-	ctrl2.push_back(tmp);
-	
-	ctrl1.push_back(ctrl2);
-	 
-	ctrl.push_back(ctrl1);
-    
-    row["controller"] = ctrl;
+		ctrl.push_back("set");
+
+		//create the current name of a controller
+		sprintf(tmp, "%s%" PRIu64, ctr, dnumber);
+
+		ctrl2.push_back("named-uuid");
+		ctrl2.push_back(tmp);
+
+		ctrl1.push_back(ctrl2);
+
+		ctrl.push_back(ctrl1);
+
+		row["controller"] = ctrl;
+	}
     
 	peer.push_back("map");
 	
@@ -399,36 +405,80 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 			
 			/*for each network function port in the list of nfs_ports*/
 			for(list<string>::iterator nfp = nfs_ports.begin(); nfp != nfs_ports.end(); nfp++){
-				add_ports((*nfp), dnumber, 1, s);
-				
-				locale loc;	
-				port2.push_back("named-uuid");
+
+				//counter to give a number to the port
+				uint i = 1;
+
+				//nf_type == INTERNAL => create virtual link to remote l3-lsi
+				if(nf_type[*nf] == INTERNAL){
+					uint64_t remote_id = cli.getOfBridgeID(*nf);
+					//name of the port on the tenant LSI = <portName>_<i>
+					string vrt(*nfp);
+					logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "REMOTEID %d", remote_id);
+					//name of the port on the L3-LSI (peer) = <local_port_name>_p
+					string trv(vrt + "_p");
+
+					peer_n[trv] = vrt;
+
+					strcpy(rp[l], trv.c_str());
+
+					char ifac[64] = "iface";
+
+
+					sprintf(temp, "%d", rnumber);
+					strcat(ifac, temp);
+
+
+					cmd_add_virtual_link(vrt ,trv ,ifac ,dnumber, s);
+
+					sprintf(temp, "%d", rnumber);
+					strcat(ifac, temp);
+
+					cmd_add_virtual_link(trv, vrt, ifac, remote_id, s);
+
+
+					i++;
+					/*fill the map ports*/
+					n_ports_1[(*nfp)] = rnumber-2;
+
+				} else {
+
+					add_ports((*nfp), dnumber, 1, s);
+
+					/*fill the map ports*/
+					n_ports_1[(*nfp)] = rnumber-1;
+
+				}
+
+				locale loc;
+				//port2.push_back("named-uuid");
 				string str = (*nfp);
-				
+
 				for (string::size_type i=0; i<str.length(); ++i)
-    				str[i] = tolower(str[i], loc);
-    				
+					str[i] = tolower(str[i], loc);
+
 				strcpy(tmp, (char *)(str).c_str());
 				sprintf(temp, "%" PRIu64, dnumber);
 				strcat(tmp, "b");
 				strcat(tmp, temp);
 				strcpy(temp, tmp);
-				
+
 				for(unsigned int j=0;j<strlen(temp);j++){
 					if(temp[j] == '_')
 						temp[j] = 'p';
 				}
-				
+
 				//insert this port name into port_n
 				port_l[dnumber].push_back(temp);
-				
-				/*fill the map ports*/
-				n_ports_1[(*nfp)] = rnumber-1;
-				
+
+
+
 				stringstream pnos;
 				pnos << dnumber << "_" << *nfp;
 				port_name_on_switch.push_back(pnos.str());
-				
+
+
+
 			}
 			
 			/*fill the network_functions_ports*/
