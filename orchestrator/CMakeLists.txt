@@ -179,6 +179,8 @@ SET(SOURCES
 	node_resource_manager/graph_manager/virtual_link.cc
 	node_resource_manager/graph_manager/fileParser.h
 	node_resource_manager/graph_manager/fileParser.cc
+	node_resource_manager/graph_manager/switchPortsAssociation.h
+	node_resource_manager/graph_manager/switchPortsAssociation.cc
 	
 	node_resource_manager/graph/match.h
 	node_resource_manager/graph/match.cc
