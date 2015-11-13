@@ -184,17 +184,15 @@ provided here:
 This is needed in order to run network functions in KVM-based virtual machines.
 Two flavors of virtual machines are supported:
 
-  * virtual machines that exchange packets with the vSwitch through the `virtio` driver. This configuration allows you to run both traditional processes and DPDK-based processes within the virtual machines. In this case, the host backend for the virtual NICs is implemented through `vhost` in case OvS and xDPd as vSwitches, and through `vhost-user` when OvS-DPDK as vSwitch.
+  * virtual machines that exchange packets with the vSwitch through the `virtio` driver. This configuration allows you to run both traditional processes and DPDK-based processes within the virtual machines. In this case, the host backend for the virtual NICs is implemented through `vhost` in case OvS and xDPd as vSwitches, and through `vhost-user` when OvS-DPDK is used as vSwitch;
   * virtual machines that exchange packets with the vSwitch through shared memory (`ivshmem`). This configuration is oriented to performance, and only supports DPDK-based processes within the virtual machine.
 	  
-#### Standard QEMU/KVM/Libvirt
+#### Standard QEMU/KVM (without `ivshmem` support)
 
 To install the standard QEMU/KVM/Libvirt execution environment, execute the 
 following command:
 
 	$ sudo apt-get install libvirt-dev qemu-kvm libvirt-bin bridge-utils qemu-system  
-	
-This configuration does not support `ivshmem` ports.
 
 ##### Libvirt with support to `vhost-user` ports
 
@@ -220,7 +218,7 @@ alternative version which must then be used instead of the default one:
 
 Similarly, if you use virsh, you'd have to use the version from `/usr/local/bin`.
 
-#### QEMU with IVSHMEM support
+#### QEMU with `ivshmem` support
 
 To compile and install the QEMU/KVM execution environment with the support to `ivshmem`,
 further steps are required:

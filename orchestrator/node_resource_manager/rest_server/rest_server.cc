@@ -112,7 +112,7 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 				    	foundVNFs = true;
 				    	const Array& vnfs_array = fg_value.getArray();
 				    					    	
-				    	//Itearate on the VNFs
+				    	//Iterate on the VNFs
 				    	for( unsigned int vnf = 0; vnf < vnfs_array.size(); ++vnf )
 						{
 							//This is a VNF, with an ID and a template
@@ -138,7 +138,7 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 							}
 							if(!foundID)
 							{
-								logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in an elmenet of \"%s\"",_ID,VNFS);
+								logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in an element of \"%s\"",_ID,VNFS);
 								return false;
 							}
 						}
@@ -148,7 +148,7 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 				    	const Array& ids_array = fg_value.getArray();
 						foundFlowRules = true;
 					
-						//Itearate on the IDs
+						//Iterate on the IDs
 						for( unsigned int id = 0; id < ids_array.size(); ++id )
 						{
 							Object id_object = ids_array[id].getObject();
