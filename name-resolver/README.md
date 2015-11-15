@@ -33,7 +33,7 @@ We are now ready to compile the name-resolver.
 
 The previous command allows you to select some configuration parameters for the
 name-resolver, such as the logging lever. When you're finished, exit from the 
-'ccmake' interface by *generating the configuration files* (press 'c' and 'g')
+`ccmake` interface by *generating the configuration files* (press 'c' and 'g')
 and type the following commands:
 
 	; Create makefile scripts based on the previously selected options

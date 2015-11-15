@@ -4,8 +4,8 @@ This file describes, thorugh a set of examples, some of the commands that
 can be used to interact with the un-orchestrator.
 
 The un-orchestrator can either accept a NF-FG from a file, or from its 
-REST interface (which features an embedded HTTP server).
-Some examples are available in the 'config' folder.
+REST interface thanks to its embedded HTTP server.
+Some examples are available in the `config` folder.
 
 **WARNING: these commands are not valid if you use the NF-FG library defined in
 WP3.**
@@ -31,15 +31,16 @@ Retrieve information on the available physical interfaces:
 
 
 ### NF-FG examples
-This section provides some NF-FG that can be used to configure the un-orchestrator.
+This section provides some NF-FG that can be used to configure the un-orchestrator,
+written in the original NF-FG formalism (the one defined in WP5).
 
-### vSwitch pass-through example
+### Example 1: vSwitch pass-through, without VNFs
 
 This example is very simple: it configures a graph that receives all the
-traffic from interface ge0 and sends it to interface ge1, without any
-network function in the middle.
+traffic from interface `ge0` and sends it to interface `ge1`, without any
+network function in between.
 
-First, create a new file, named *myGraph.json*, that contains the following
+First, create a new file, named `myGraph.json`, that contains the following
 graph data:
 
     {
@@ -67,17 +68,19 @@ REST tool (e.g., some nice plugins for Mozilla Firefox). Just in case,
 you can also use the cURL command line tool, such as in the following
 example:
 
-    curl -i -H "Content-Type: application/json" -d "@myGraph.json" -X PUT  http://un-orchestrator-address:port/graph/myGraph
+    curl -i -H "Content-Type: application/json" -d "@myGraph.json" \
+      -X PUT  http://un-orchestrator-address:port/graph/myGraph
 
-===============================================================================
+
+### Example 2: vSwitch with a simple `bridge`
 
 This example is more complex, and it includes a network function called "bridge".
-Packets coming from the interface ge0 are sent to the first port of the network
-function (bridge:1), while packets coming from the second port of the network
-function (bridge:2) are sent on the network interface ge1
+Packets coming from the interface `ge0` are sent to the first port of the network
+function (`bridge:1`), while packets coming from the second port of the network
+function (`bridge:2`) are sent on the network interface `ge1`.
   
-PUT /graph/myGraph HTTP/1.1   
-Content-Type : application/json   
+    PUT /graph/myGraph HTTP/1.1   
+    Content-Type : application/json   
   
     {  
         "flow-graph":  
@@ -114,15 +117,22 @@ Content-Type : application/json
     	}  
     }  
 
-===============================================================================
+
+### Example with a complex service graph 
+
+In this example, traffic coming from `eth0` is forwarded to the firewall through the port
+`firewall:1`. Then, traffic coming from the firewall (`firewall:2`) is split based on the destination
+TCP port. Packets directed to the TCP port 80 is provided to the web cache then to the NAT,
+while all the other traffic is directly provided to the NAT. Finally, packets from `NAT:2` leaves the
+graph through the port `eth2`.
 
 Example implementing the following graph:
 
     eth0 -> firewall -> if (tcp_dst == 80) -> web cache  -> nat  -> eth1  
                         else \--------------------------/ 
 
-PUT /graph/myGraph HTTP/1.1   
-Content-Type : application/json   
+    PUT /graph/myGraph HTTP/1.1   
+    Content-Type : application/json   
                
     { 
     	"flow-graph":   
