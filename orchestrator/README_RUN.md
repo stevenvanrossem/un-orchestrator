@@ -27,10 +27,12 @@ to configure/test the un-orchestrator.
   * `config/simple_passthrough_nffg.json`: simple graph that implements
     a simple passthrough function, i.e., traffic is received from a first
     physical port and sent out from a second physical port, after having
-    been handled to the vswitch.
+    been handled to the vswitch. This graph is written according to the
+    original NF-FG definition (WP5-based). 
   * `config/passthrough_with_vnf_nffg.json`: graph that includes a VNF.
     Traffic is received from a first physical port, provided
     to a network function, and then sent out from a second physical port.
+    This graph is written according to the original NF-FG definition (WP5-based).
 
 
 ## How to start xDPd to work with the un-orchestrator
@@ -56,7 +58,7 @@ Start xDPd:
 	$ sudo ./xdpd
     
 xDPd comes with a command line tool called `xcli`, that can be used to check 
-the  flows installed in the lsis, which are the lsis deployed, see statistics 
+the  flows installed in the lsis, which are the LSIs deployed, see statistics 
 on flows matched, and so on. The xcli can be run by just typing:
 
     $ xcli

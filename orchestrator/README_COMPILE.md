@@ -20,7 +20,7 @@ In the following we list the steps required on an **Ubuntu 14.04**.
 	; - libboost-all-dev: nice c++ library with tons of useful functions
 	; - libmicrohttpd-dev: embedded micro http server
 	; - libxml2-dev: nice library to parse and create xml
-	$ sudo apt-get install build-essential cmake cmake-curses-gui libboost-all-dev libmicrohttpd-dev -libxml2-dev
+	$ sudo apt-get install build-essential cmake cmake-curses-gui libboost-all-dev libmicrohttpd-dev libxml2-dev
 
 	; Install JSON Spirit (nice library to parse JSON files)
 	$ git clone https://github.com/sirikata/json-spirit
@@ -61,9 +61,9 @@ In order to install xDPd, you have to follow the steps below.
 
 **WARNING: Currently, xDPd is not compiling on Linux kernels newer than 3.16.0-30.**
 
-### Open vSwitch (of-config) [DEPRECATED]
+### OpenvSwitch (of-config) [DEPRECATED]
 
-Open vSwitch can be installed with either the OVSDB or OF-CONFIG plugin.
+OpenvSwitch can be installed with either the OVSDB or OF-CONFIG plugin.
 Although both protocols allow to control the switch (e.g., create/delete
 new bridging instances, create/delete ports, etc), we found out
 that OF-CONFIG is rather limited in terms of capabilities. For instance,
@@ -71,13 +71,13 @@ it cannot set the type of port configured on the switch (e.g., virtio
 or IVSHMEM), requiring the orchestrator to rely on a combination of
 OF-CONFIG commands and bash scripts to perform its job.
 
-For this reason we suggest to install Open vSwitch with its native OSVDB 
+For this reason we suggest to install OpenvSwitch with its native OSVDB 
 support (next section); although OVSDB is not standard, it seems that it
 does its job better than OF-CONFIG.
 
-In any case, the compilation instruction for setting up Open vSwitch with 
+In any case, the compilation instruction for setting up OpenvSwitch with 
 OF-CONFIG are the following (not guaranteed that those are 100% accurate,
-as the OF-CONFIG support in Open vSwitch is rather primitive).
+as the OF-CONFIG support in OpenvSwitch is rather primitive).
 
 OvS with the OFCONFIG support can be installed as follows:
 
@@ -95,7 +95,7 @@ OvS with the OFCONFIG support can be installed as follows:
 	; Install the libnetconf library by following the instructions in the
     ; INSTALL file contained in the root folder of this library.
 
-    ; Download Open vSwitch from
+    ; Download OpenvSwitch from
     ;      from http://openvswitch.org/releases/openvswitch-2.4.0.tar.gz
     $ tar -xf openvswitch-2.4.0.tar.gz
     $ cd openvswitch-2.4.0
@@ -108,9 +108,9 @@ OvS with the OFCONFIG support can be installed as follows:
 
 	; Follow the instructions as described in the file INSTALL.md provided in the root folder of that repository.
 
-### Open vSwitch (OVSDB)
+### OpenvSwitch (OVSDB)
 
-At first, download the Open vSwitch source code from:
+At first, download the OpenvSwitch source code from:
 
     http://openvswitch.org/releases/openvswitch-2.4.0.tar.gz
 
@@ -122,7 +122,7 @@ Then execute the following commands:
     $ make
     $ sudo make install
 
-### Open vSwitch (OVSDB) with DPDK support
+### OpenvSwitch (OVSDB) with DPDK support
 
 Before installing OvS with DPDK, you must download and compile the DPDK library. At first, download
 the source code from:
@@ -146,7 +146,7 @@ To compile OvS with the DPDK support, execute:
 Details on the DPDK ports, namely `user space vhost` and `ivshmem`, are available
 on the [DPDK website](http://dpdk.org/)
 
-Now, download the Open vSwitch source code:
+Now, download the OpenvSwitch source code:
 
     $ git clone https://github.com/openvswitch/ovs
     
@@ -158,7 +158,7 @@ Then execute the following commands:
 	$ make
 	$ sudo make install
 	
-Now create the ovsbd database:	
+Now create the ovsdb database:	
 	
 	$ mkdir -p /usr/local/etc/openvswitch
 	$ mkdir -p /usr/local/var/run/openvswitch
@@ -212,11 +212,11 @@ sources using the following commands:
 In case you already had libvirt installed on the system, this will install an 
 alternative version which must then be used instead of the default one:
 
-	; Stop any running Libvirtd instance and run the alternative version just installed:
+	; Stop any running libvirtd instance and run the alternative version just installed:
 	$ sudo service libvirt-bin stop
 	$ sudo /usr/local/sbin/libvirtd --daemon
 
-Similarly, if you use virsh, you'd have to use the version from `/usr/local/bin`.
+Similarly, if you use `virsh`, you would have to use the version from `/usr/local/bin`.
 
 #### QEMU with `ivshmem` support
 
@@ -235,7 +235,7 @@ further steps are required:
 ### DPDK processes
 
 In order to run VNFs implemented as DPDK processes, no further operation is required,
-since the DPDK library have already been installed together with the vSwitch.
+since the DPDK library has already been installed together with the vSwitch.
 
 ## NF-FG library
 
@@ -263,7 +263,7 @@ The previous command allows you to select some configuration parameters for the
 un-orchestrator, such as the virtual switch used, which kind of execution environment(s)
 you want to enable, the NF-FG format to use (the default WP5 one or the one defined
 in WP3), etc. When you're finished, exit from
-the 'ccmake' interface by *generating the configuration files* (press 'c' and 'g')
+the `ccmake` interface by *generating the configuration files* (press 'c' and 'g')
 and type the following commands:
 
 	; Create makefile scripts based on the previously selected options

@@ -42,7 +42,7 @@ using namespace std;
 using namespace json_spirit;
 
 #define DATABASE_ADDRESS	"localhost"
-#define DATABASE_PORT		"2828"
+#define DATABASE_PORT		"2626"
 #define DATABASE_BASE_URL	"/nfs/"
 #define DATABASE_DIGEST_URL	"digest/"
 

@@ -16,17 +16,17 @@ the operations required to actually implement the forwarding graph:
     function (VNF);
   * configure the virtual switch (vSwitch) to create a new logical switching 
     instance (LSI) and the ports required to connect it to the VNF to be deployed;
-  * deploy and starts the VNF;
-  * translate the rules to steer the traffic into OpelFlow flowmod messages 
+  * deploy and start the VNF;
+  * translate the rules to steer the traffic into OpenFlow flowmod messages 
     to be sent to the vSwitch (some flowmod are sent to the new LSI, others 
-    to the LSI-0, i.e. an LSI that steers the traffic into the proper graph.).
+    to the LSI-0, i.e. an LSI that steers the traffic into the proper graph.)
 
 Similarly, the un-orchestrator takes care of updating or destroying a graph,
 when the proper messages are received.
 
 As evident in the picture below, which provides an overall view of the UN, the
 un-orchestrator includes several modules; the most important ones are the network
-controller and the conpute controller, which are exploited by the un-orchestrator itself to interact
+controller and the compute controller, which are exploited by the un-orchestrator itself to interact
 respectively with the vSwitch and the hypervisor(s). These two modules are detailed in
 the following.
 
@@ -41,14 +41,14 @@ It consists of two parts:
   * the Openflow controller(s): a new Openflow controller is created for each
     new LSI, which is used to steer the traffic among the ports of the LSI
     itself;
-  * the switch manager: it is used to create/destroy LSIs, create/destroy 
-    virtual ports, and so on. In practice, it allows the un-orchestrator to
+  * the switch manager: it is used to create/destroy LSIs and virtual ports,
+    and more. In practice, it allows the un-orchestrator to
     interact with the vSwitch in order to perform management operations. Each
     virtual switch implementation (e.g., xDPd, OvS) may require a different
     implementation for the switch manager, according to the commands
     supported by the vSwitch itself.
 
-Currently, the un-orchestrator supports Open vSwitch (OvS) and the extensible DataPath daemon
+Currently, the un-orchestrator supports OpenvSwitch (OvS) and the extensible DataPath daemon
 (xDPd) as vSwitches.
 If you are interested to add the support for a new virtual switch, please 
 check the file [network_controller/switch_manager/README.md](network_controller/switch_manager/README.md).
@@ -58,7 +58,7 @@ LSI (called LSI-0) that is connected to the physical interfaces and to several o
 LSIs. Each one of these additional LSIs corresponds to a different NF-FG; hence, it is
 connected to the VNFs of such a NF-FG, and takes care of steering the traffic among
 them as required by the graph description. Instead the LSI-0, being the only one connected
-to the physical interafces of the UN and to all the other graphs, dispatches the
+to the physical interfaces of the UN and to all the other graphs, dispatches the
 traffic entering into the node to the proper graph, and properly handles the packets
 already processed in a graph.
 
@@ -80,11 +80,11 @@ hypervisor, please check the file [compute_controller/README.md](compute_control
 The following table shows which execution environments
 are supported with the different vSwitches.
 
-|                            | Docker     |  KVM  | KVM-DPDK (ivshmem) | DPDK processes |
-|----------------------------|------------|-------|--------------------|----------------|
-| **xDPd**                   |    **Y**   | **Y** |          N         |      **Y**     |
-| **OvS (OVSDB / OFconfig)** |    **Y**   | **Y** |    not possible    |  not possible  |
-| **OvS-DPDK**               |    N       | **Y** |        **Y**       |      **Y**     |
+|                            |   Docker     |    KVM  |   KVM-DPDK (ivshmem)   |     DPDK processes     |
+|----------------------------|--------------|---------|------------------------|------------------------|
+| **xDPd**                   |    **Yes**   | **Yes** |          No            |         **Yes**        |
+| **OvS (OVSDB / OFconfig)** |    **Yes**   | **Yes** | No (requires OvS-DPDK) | No (requires OvS-DPDK) |
+| **OvS-DPDK**               |      No      | **Yes** |        **Yes**         |         **Yes**        |
 
 
 ### NF-FG
