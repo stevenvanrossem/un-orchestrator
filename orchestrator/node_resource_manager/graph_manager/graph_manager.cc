@@ -349,7 +349,7 @@ bool GraphManager::deleteGraph(string graphID, bool shutdown)
 		try
 		{
 			switchManager.destroyLsi(it->second);
-		} catch (SwitchManagerException e)
+		} catch (SwitchManagerException& e)
 		{
 			logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "%s",e.what());
 			throw GraphManagerException();
