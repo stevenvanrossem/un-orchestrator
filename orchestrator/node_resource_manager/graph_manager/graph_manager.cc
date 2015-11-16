@@ -286,8 +286,8 @@ bool GraphManager::deleteGraph(string graphID, bool shutdown)
 	*		0) check if the graph can be removed
 	*		1) remove the rules from the LSI0
 	*		2) stop the NFs
-	*		3) delete the L3-LSIs and the virtual links
-	*		4) delete the LSI, the virtual links and the
+	*		3) delete the L3-LSIs (if any)
+	*		4) delete the tenant LSI, the virtual links and the
 	*			ports related to NFs
 	*		5) delete the endpoints defined by the graph
 	*/
@@ -339,8 +339,10 @@ bool GraphManager::deleteGraph(string graphID, bool shutdown)
 #endif
 
 	/**
-	*		3) delete the L3-LSIs and the virtual links
+	*		3) delete the L3-LSIs (if any)
 	*/
+
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "3) Delete the L3-LSIs (if any)");
 	
 	map<string, uint64_t> OFBridgeIDs = tenantLSI->getOFBridgeIDs();
 	for(map<string, uint64_t>::iterator it = OFBridgeIDs.begin(); it != OFBridgeIDs.end(); it++){
@@ -358,7 +360,7 @@ bool GraphManager::deleteGraph(string graphID, bool shutdown)
 	*		4) delete the LSI, the virtual links and the
 	*			ports related to NFs
 	*/
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "3) Delete the LSI, the vlinks, and the ports used by NFs");
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "4) Delete the tenant LSI, the vlinks, and the ports used by NFs");
 	
 	try
 	{
@@ -681,6 +683,8 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 	*	3) Deploy internal NFs
 	*/
 
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "3) Deploy internal NFs (if any)");
+
 	map<string, uint64_t> ofBridgeIDs;
 
 	for(map<string, NF*>::iterator i = internalNFs->begin(); i != internalNFs->end(); i++){
@@ -757,7 +761,7 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 	/**
 	*	4) Create the tenant LSI
 	*/
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "3) Create the LSI");
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "4) Create the tenant LSI");
 	
 	set<string> phyPorts = graph->getPorts();
 	map<string, list<unsigned int> > network_functions = graph->getNetworkFunctions();
@@ -955,10 +959,10 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 	lsi->setEndPointsVLinks(endpoints_vlinks);
 
 	/**
-	*	4) Start the network functions
+	*	5) Start the network functions
 	*/
 #ifdef RUN_NFS
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "4) start the network functions");
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "5) start the network functions");
 	
 	computeController->setLsiID(dpid);
 		
@@ -1014,13 +1018,13 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 	}
 			
 #else
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "3) Flag RUN_NFS disabled. NFs will not start");
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "5) Flag RUN_NFS disabled. NFs will not start");
 #endif
 	
 	/**
-	*	5) Create the rules and download them in LSI-0 and tenant-LSI
+	*	6) Create the rules and download them in LSI-0 and tenant-LSI
 	*/
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "5) Create the rules and download them in LSI-0 and tenant-LSI");
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "6) Create the rules and download them in LSI-0 and tenant-LSI");
 	try
 	{
 		//creates the rules for LSI-0 and for the tenant-LSI
