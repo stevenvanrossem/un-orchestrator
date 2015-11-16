@@ -18,12 +18,18 @@ string SwitchPortsAssociation::getGraphID(string port)
 {
 	assert(associationportgraphnf.count(port) == 1);
 
+	if(associationportgraphnf.count(port) != 1)	
+		throw SwitchPortsAssociationException();
+
 	return associationportgraphnf[port].first;
 }
 
 string SwitchPortsAssociation::getNfName(string port)
 {
 	assert(associationportgraphnf.count(port) == 1);
+	
+	if(associationportgraphnf.count(port) != 1)	
+		throw SwitchPortsAssociationException();
 
 	return associationportgraphnf[port].second;
 }

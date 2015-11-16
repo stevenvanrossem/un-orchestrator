@@ -405,9 +405,10 @@ int RestServer::print_out_key (void *cls, enum MHD_ValueKind kind, const char *k
 int RestServer::doPut(struct MHD_Connection *connection, const char *url, void **con_cls)
 {
 	struct MHD_Response *response;
-	
-	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
-	assert(con_info != NULL);
+
+#ifdef ENABLE_DIRECT_VM2VM
+	bool putGraph = false;
+#endif
 
 	//Check the URL
 	char delimiter[] = "/";
@@ -424,7 +425,11 @@ int RestServer::doPut(struct MHD_Connection *connection, const char *url, void *
 		switch(i)
 		{
 			case 0:
-				if(strcmp(pnt,BASE_URL_GRAPH) != 0)
+				if((strcmp(pnt,BASE_URL_GRAPH) != 0) 
+#ifdef ENABLE_DIRECT_VM2VM
+					&& (strcmp(pnt,BASE_URL_DIRECT_VM2VM) != 0) 
+#endif
+					)
 				{
 put_malformed_url:
 					logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Resource \"%s\" does not exist", url);
@@ -433,6 +438,13 @@ put_malformed_url:
 					MHD_destroy_response (response);
 					return ret;
 				}
+				
+				
+#ifdef ENABLE_DIRECT_VM2VM
+				if(strcmp(pnt,BASE_URL_GRAPH) == 0) 
+					putGraph = true;
+#endif
+				
 				break;
 			case 1:
 				strcpy(graphID,pnt);
@@ -441,15 +453,17 @@ put_malformed_url:
 		pnt = strtok( NULL, delimiter );
 		i++;
 	}
+	
+#ifdef ENABLE_DIRECT_VM2VM
+	if(! ((i == 2 && putGraph) || (i == 1 && !putGraph)))
+#else
 	if(i != 2)
+#endif
 	{
 		//the URL is malformed
 		goto put_malformed_url;
 	}
 	
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Resource to be created/updated: %s",graphID);
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Content:");
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "%s",con_info->message);
 	
 	if(MHD_lookup_connection_value (connection,MHD_HEADER_KIND, "Host") == NULL)
 	{
@@ -469,6 +483,28 @@ put_malformed_url:
 		MHD_destroy_response (response);
 		return ret;
 	}*/
+
+#ifdef ENABLE_DIRECT_VM2VM	
+	if(putGraph)
+		return doPutGraph(connection,url,con_cls,graphID);
+#endif
+
+#ifdef ENABLE_DIRECT_VM2VM
+	else
+		return doPutCommandReletedToPort(connection, con_cls);
+#endif
+}
+
+int RestServer::doPutGraph(struct MHD_Connection *connection, const char *url, void **con_cls, char *graphID)
+{
+	struct MHD_Response *response;	
+
+	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
+	assert(con_info != NULL);
+	
+	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Resource to be created/updated: %s",graphID);
+	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Content:");
+	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "%s",con_info->message);
 	
 	bool newGraph = !(gm->graphExists(graphID));
 	
@@ -484,7 +520,7 @@ put_malformed_url:
 		return ret;
 	}
 	
-		graph->print();
+	graph->print();
 	try
 	{
 
@@ -1270,3 +1306,80 @@ delete_malformed_url:
 	}	
 }
 
+
+#ifdef ENABLE_DIRECT_VM2VM
+int RestServer::doPutCommandReletedToPort(struct MHD_Connection *connection, void **con_cls)
+{
+	struct MHD_Response *response;
+	int ret;
+	
+	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
+	assert(con_info != NULL);
+	
+	Value value;
+	read(con_info->message, value);
+	//value contains the json in the body
+	
+	string port;
+	string command;
+	
+	try
+	{
+		Object obj = value.getObject();
+		
+	  	bool foundPort = false;
+	  	bool foundCommand = false;
+		
+		//Identify the flow rules
+		for( Object::const_iterator i = obj.begin(); i != obj.end(); ++i )
+		{
+	 	    const string& name  = i->first;
+		    const Value&  value = i->second;
+		    
+			if(name == DIRECT_VM2VM_PORT)
+			{
+				foundPort = true;
+				port = value.getString();
+			}
+			else if (name == DIRECT_VM2VM_COMMAND)
+			{
+				foundCommand = true;
+				command = value.getString();
+			}
+		    						
+			if(!foundPort || !foundCommand)
+			{
+				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\", or key \"%s\", or all of them not found",DIRECT_VM2VM_PORT,DIRECT_VM2VM_COMMAND);
+				goto malformed_content;
+			}
+		}
+	}catch(exception& e)
+	{
+		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The content does not respect the JSON syntax: ",e.what());
+		goto malformed_content;
+	}
+    
+    //The content of the received message is syntactically correct is correct
+    
+    if(!gm->executeCommandReleatedToPort(port,command))
+	{
+		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The command '%s' is not valid!",command.c_str());
+		goto malformed_content;	
+	}
+    
+    logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The command '%s' related to the port '%s' has been executed!",command.c_str(),command.c_str());
+	response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
+//	MHD_add_response_header (response, "Location", absolute_url.str().c_str());
+	ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+	MHD_destroy_response (response);
+	return ret;
+	
+malformed_content:
+	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Malformed content");
+	response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
+	ret = MHD_queue_response (connection, MHD_HTTP_BAD_REQUEST, response);
+	MHD_destroy_response (response);
+	return ret;
+
+}
+#endif

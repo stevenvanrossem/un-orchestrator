@@ -53,4 +53,14 @@ protected:
 	static string getNfName(string port);
 };
 
+class SwitchPortsAssociationException: public exception
+{
+public:
+	virtual const char* what() const throw()
+	{
+		return "SwitchPortsAssociation";
+	}
+};
+
+
 #endif //SWITCH_PORT_ASSOCIATION_H_

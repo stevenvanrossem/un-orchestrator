@@ -1982,3 +1982,28 @@ void GraphManager::printInfo(bool completed)
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "");
 }
 
+#ifdef ENABLE_DIRECT_VM2VM
+bool GraphManager::executeCommandReleatedToPort(string port, string command)
+{
+	string graphID = SwitchPortsAssociation::getGraphID(port);
+	string nfName = SwitchPortsAssociation::getNfName(port);
+	
+	if(tenantLSIs.count(graphID) == 0)
+	{
+		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The graph \"%s\" does not exist",graphID.c_str());
+		return false;
+	}
+	
+	ComputeController *nfs_manager = NULL;
+	try
+	{
+		GraphInfo graphInfo = (tenantLSIs.find(graphID))->second;
+		nfs_manager = graphInfo.getComputeController();
+	}catch(SwitchPortsAssociationException)
+	{
+		return false;
+	}
+
+	return nfs_manager->executeSpecificCommand(nfName,command);
+}
+#endif

@@ -81,8 +81,11 @@ private:
 	static int doGetInterfaces(struct MHD_Connection *connection);
 	
 	static int doPut(struct MHD_Connection *connection, const char *url, void **con_cls);
+	static int doPutGraph(struct MHD_Connection *connection, const char *url, void **con_cls, char *graphID);
 	static bool parsePutBody(struct connection_info_struct &con_info,highlevel::Graph &graph, bool newGraph);
-	
+#ifdef ENABLE_DIRECT_VM2VM
+	static int doPutCommandReletedToPort(struct MHD_Connection *connection, void **con_cls);
+#endif	
 	static int doDelete(struct MHD_Connection *connection,const char *url, void **con_cls);
 	
 	static int createGraphFromFile(string toBeCreated);

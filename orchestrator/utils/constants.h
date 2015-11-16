@@ -12,6 +12,9 @@
 #define REST_PORT 				8080
 #define BASE_URL_GRAPH			"graph"
 #define BASE_URL_IFACES			"interfaces"
+#ifdef ENABLE_DIRECT_VM2VM
+	#define BASE_URL_DIRECT_VM2VM	"direct_vm2vm"
+#endif
 #define REST_URL 				"http://localhost"
 #define REQ_SIZE 				2*1024*1024
 
@@ -100,6 +103,14 @@
 					#define VLAN_PUSH	"push"
 					#define VLAN_POP	"pop"
 				//#define VLAN_ID	"vlan_id"
+
+#ifdef ENABLE_DIRECT_VM2VM
+	/*
+	*	Costants in the JSON describing the command for the direct vm2vm
+	*/
+	#define DIRECT_VM2VM_PORT	"port"
+	#define DIRECT_VM2VM_COMMAND	"command"
+#endif
 			
 /*
 *	Misc

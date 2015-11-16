@@ -269,6 +269,17 @@ public:
 	*/
 	bool deleteFlow(string graphID, string flowID);
 	
+#ifdef ENABLE_DIRECT_VM2VM
+	/**
+	*	@brief: Execute, through the compute controller, a command related to a port
+	*			of a network function
+	*
+	*	@param:	port	Port associated with the command to be executed
+	*	@param: command	Command to be executed
+	*/
+	bool executeCommandReleatedToPort(string port, string command);
+#endif
+	
 #ifdef UNIFY_NFFG
 	/**
 	*	@brief: deletes a NF from the graph
