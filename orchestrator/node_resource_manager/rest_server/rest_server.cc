@@ -206,7 +206,7 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 		}
 	}catch(exception& e)
 	{
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The content does not respect the JSON syntax: ",e.what());
+		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The content does not respect the JSON syntax: ",e.what());
 		return false;
 	}
 	
@@ -441,7 +441,7 @@ put_malformed_url:
 				
 				
 #ifdef ENABLE_DIRECT_VM2VM
-				if(strcmp(pnt,BASE_URL_GRAPH) == 0) 
+				if(strcmp(pnt,BASE_URL_GRAPH) == 0)
 					putGraph = true;
 #endif
 				
@@ -483,11 +483,11 @@ put_malformed_url:
 		MHD_destroy_response (response);
 		return ret;
 	}*/
-
+	
 #ifdef ENABLE_DIRECT_VM2VM	
 	if(putGraph)
-		return doPutGraph(connection,url,con_cls,graphID);
 #endif
+		return doPutGraph(connection,url,con_cls,graphID);
 
 #ifdef ENABLE_DIRECT_VM2VM
 	else
@@ -1003,7 +1003,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 		}
 	}catch(exception& e)
 	{
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The content does not respect the JSON syntax: ",e.what());
+		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The content does not respect the JSON syntax: ",e.what());
 		return false;
 	}
     
@@ -1316,6 +1316,9 @@ int RestServer::doPutCommandReletedToPort(struct MHD_Connection *connection, voi
 	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
 	assert(con_info != NULL);
 	
+	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Content of the request:");
+	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "%s",con_info->message);
+	
 	Value value;
 	read(con_info->message, value);
 	//value contains the json in the body
@@ -1355,7 +1358,7 @@ int RestServer::doPutCommandReletedToPort(struct MHD_Connection *connection, voi
 		}
 	}catch(exception& e)
 	{
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The content does not respect the JSON syntax: ",e.what());
+		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The content does not respect the JSON syntax: ",e.what());
 		goto malformed_content;
 	}
     
