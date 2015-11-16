@@ -530,7 +530,10 @@ bool Libvirt::executeSpecificCommand(uint64_t lsiID, string name, string command
 	sprintf(vm_name, "%" PRIu64 "_%s", lsiID, name.c_str());
 
 	assert(monitor.count(vm_name) != 0);
+	
+	stringstream ss;
+	ss << command << "\n\r";
 
-	return sendCommand(monitor.find(vm_name)->second, (char*)command.c_str());
+	return sendCommand(monitor.find(vm_name)->second, ss.str().c_str());
 }
 #endif
