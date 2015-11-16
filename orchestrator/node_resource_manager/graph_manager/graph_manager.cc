@@ -1290,6 +1290,9 @@ bool GraphManager::updateGraph(string graphID, highlevel::Graph *newPiece)
 			network_functions[i->first] = ports;
 
 			CreateLsiOut *clo = NULL;
+
+			LSI *tenantLSI = (tenantLSIs.find(graphID))->second.getLSI();
+
 			try {
 
 				//No ports will be attached to the LSI at this moment
@@ -1301,6 +1304,7 @@ bool GraphManager::updateGraph(string graphID, highlevel::Graph *newPiece)
 
 
 				newOfBridgeIDs[i->first] = clo->getDpid();
+				tenantLSI->addOFBridge(i->first, clo->getDpid());
 
 				map<string,unsigned int> physicalPorts = clo->getPhysicalPorts();
 				if(!physicalPorts.empty()) {

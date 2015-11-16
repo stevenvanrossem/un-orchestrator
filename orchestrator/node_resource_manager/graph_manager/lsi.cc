@@ -338,3 +338,7 @@ uint64_t LSI::getOfBridgeID(string of_bridgeNFname){
 map<string, uint64_t> LSI::getOFBridgeIDs(){
 	return ofBridgeIDs;
 }
+
+void LSI::addOFBridge(string of_bridgeNFname, uint64_t dpid){
+	ofBridgeIDs[of_bridgeNFname] = dpid;
+}

@@ -140,7 +140,22 @@ public:
 	 */
 	uint64_t getOfBridgeID(string of_bridgeNFname);
 
+	/*
+	 * Returns LSI IDs of the remote L3-LSIs
+	 *
+	 * @return 					map of_bridgeNFname->L3-LSI-ID for this LSI
+	 */
 	map<string, uint64_t> getOFBridgeIDs();
+
+	/*
+	 * Returns the LSI ID of the remote L3-LSI corresponding to the name of the NF
+	 *
+	 * @param	of_bridgeNFname	name of the NF that implements a of_bridge
+	 * @param 	LSI-ID corresponding to that of_bridge
+	 */
+	void addOFBridge(string of_bridgeNFname, uint64_t dpid);
+
+
 
 	//FIXME: public is not a good choice
 	void setNFsVLinks(map<string, uint64_t> nfs_vlinks);

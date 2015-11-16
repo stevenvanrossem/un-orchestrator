@@ -94,7 +94,6 @@ int commands::cmd_disconnect(int s){
 *	@cli = struct CreateLsiIn
 */
 CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
-
     unsigned int i=0;	
     int nwritten = 0;
     
@@ -106,7 +105,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 	map<string,map<string, unsigned int> >  network_functions_ports;
 	list<pair<unsigned int, unsigned int> > virtual_links;
 	
-    int dnumber_new = 0, nfnumber_old = 0;
+    int dnumber_new = 0; //nfnumber_old = 0;
     
     //list of ports
 	list<string> ports = cli.getPhysicalPortsName();
@@ -430,12 +429,10 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 
 
 					cmd_add_virtual_link(vrt ,trv ,ifac ,dnumber, s);
-
 					sprintf(temp, "%d", rnumber);
 					strcat(ifac, temp);
 
 					cmd_add_virtual_link(trv, vrt, ifac, remote_id, s);
-
 
 					i++;
 					/*fill the map ports*/
@@ -490,7 +487,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 	/*Create interfaces related by the vlink ports*/
 	if(vport.size() != 0)
 	{	
-		nfnumber_old = pnumber;
+		//nfnumber_old = pnumber;
 	
 		for(list<uint64_t>::iterator nf = vport.begin(); nf != vport.end(); nf++)
 		{
@@ -547,7 +544,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
     peer1.clear();
     peer2.clear();
     
-    pnumber = nfnumber_old;
+    //pnumber = nfnumber_old;
     
     uint64_t pi = 0;
     
@@ -1087,6 +1084,7 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int s){
 
 	//connect socket
     s = cmd_connect();
+    bool traditionalPort = false;
 
 	if(nfp.size() != 0){
 		
@@ -1097,9 +1095,12 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int s){
 		/*for each port in the list of nfp*/
 		for(list<string>::iterator nf = nfp.begin(); nf != nfp.end(); nf++)
 		{
-			char ifac[64] = "iface";
+
 
 			if(anpi.getNFtype() == INTERNAL){
+
+				char ifac[64] = "iface";
+
 				uint64_t remote_id = anpi.getRemoteL3LsiId();
 				//name of the port on the tenant LSI = <portName>_<i>
 				string vrt(*nf);
@@ -1116,11 +1117,11 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int s){
 				strcat(ifac, temp);
 
 
-				cmd_add_virtual_link(vrt ,trv ,ifac ,dnumber, s);
+				cmd_add_virtual_link(vrt ,trv ,ifac ,anpi.getDpid(), s);
 
 				//insert this port name into port_n
 				port_l[anpi.getDpid()].push_back(ifac);
-
+				strcpy(ifac, "iface");
 				sprintf(temp, "%d", rnumber);
 				strcat(ifac, temp);
 
@@ -1132,6 +1133,9 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int s){
 			}
 			else
 			{
+				traditionalPort = true;
+
+				char ifac[64] = "iface";
 
 				char p_n[64] = "";
 
@@ -1200,195 +1204,198 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int s){
 			
 				first_obj["uuid-name"] = temp;
 				
+				params.push_back(first_obj);
+
+				row.clear();
+				first_obj.clear();
+				iface.clear();
+				iface1.clear();
+				iface2.clear();
+
 			}
-		
-			params.push_back(first_obj);
-		
-			row.clear();
-			first_obj.clear();
-			iface.clear();
-			iface1.clear();
-			iface2.clear();
-				
 			//insert this port name into port_n
 			port_l[anpi.getDpid()].push_back(temp);
-				
-			ports[(*nf)] = rnumber;	
-			
+
+			ports[(*nf)] = rnumber;
+
 			stringstream pnos;
 			pnos << anpi.getDpid() << "_" << *nf;
 			ports_name_on_switch.push_back(pnos.str());
-			
 			rnumber++;
-		}
-		
-		first_obj["op"] = "update";
-		first_obj["table"] = "Bridge";
-			   
-		third_object.push_back("_uuid");
-		third_object.push_back("==");
-		
-		fourth_object.push_back("uuid");
-		fourth_object.push_back(switch_uuid[anpi.getDpid()].c_str());
-		
-		third_object.push_back(fourth_object);
-		where.push_back(third_object);
-		
-		first_obj["where"] = where;
-	
-		where.clear();
-	
-		for(list<string>::iterator u = port_uuid[anpi.getDpid()].begin(); u != port_uuid[anpi.getDpid()].end(); u++)
-		{
-			port2.push_back("uuid");
-			port2.push_back((*u));
-			port1.push_back(port2);
-			port2.clear();
-		}
-		
-		for(list<string>::iterator u = vport_uuid[anpi.getDpid()].begin(); u != vport_uuid[anpi.getDpid()].end(); u++)
-		{
-			port2.push_back("uuid");		
-			port2.push_back((*u));
-			port1.push_back(port2);
-			port2.clear();
-		}
-
-		list<string> ports_name_on_switch;
-		for(list<string>::iterator nff = nfp.begin(); nff != nfp.end(); nff++)
-		{
-			string str = (*nff);
-				
-			//Create port name to lower case
-			for (string::size_type i=0; i<str.length(); ++i)
-    			str[i] = tolower(str[i], loc);
-    				
-			strcpy(tmp, (char *)(str).c_str());
-			sprintf(temp, "%" PRIu64, anpi.getDpid());
-			strcat(tmp, "b");
-			strcat(tmp, temp);
-			strcpy(temp, tmp);
-				
-			for(unsigned int j=0;j<strlen(temp);j++){
-				if(temp[j] == '_')
-					temp[j] = 'p';
-			}
-		
-			port2.push_back("named-uuid");
-			port2.push_back(temp);
-			port1.push_back(port2);
-			port2.clear();
-		}
-		
-		/*Array with two elements*/
-		i_array.push_back("set");		   
-		i_array.push_back(port1);
-		row["ports"] = i_array;
-		first_obj["row"] = row;
-		params.push_back(first_obj);
-		
-		second_obj.clear();
-		
-		/*Object with four items [op, table, where, mutations]*/
-		second_obj["op"] = "mutate";
-		second_obj["table"] = "Open_vSwitch";
-		
-		/*Empty array [where]*/
-		second_obj["where"] = where;
 			
-		/*Array with two element*/
-		maa.push_back("next_cfg");
-		maa.push_back("+=");
-		maa.push_back(1);
-			
-		ma.push_back(maa);
-		
-		second_obj["mutations"] = ma;
-			
-		params.push_back(second_obj);
-		
-		ma.clear();
-		maa.clear();
-		row.clear();
-		where.clear();
-		first_obj.clear();
-		second_obj.clear();
-		third_object.clear();
-		fourth_object.clear();
-		i_array.clear();
-		iface.clear();
-		iface1.clear();
-		iface2.clear();
-		port1.clear();
-		port2.clear();
-		root["params"] = params;
-
-		root["id"] = id;
-
-		stringstream ss;
- 		write_formatted(root, ss );
-		
-		nwritten = sock_send(s, ss.str().c_str(), strlen(ss.str().c_str()), ErrBuf, sizeof(ErrBuf));
-		if (nwritten == sockFAILURE)
-		{
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error sending data: %s", ErrBuf);
-			throw commandsException();
-		}
-    
-    	r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
-		if (r == sockFAILURE)
-		{
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error reading data: %s", ErrBuf);
-			throw commandsException();
 		}
 		
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Result of query: ");
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, ss.str().c_str());
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Response json: ");
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, read_buf);
-		
-		Value value;
-    	read( read_buf, value );
-    	Object rootNode = value.getObject();
+		if(traditionalPort){
+			first_obj["op"] = "update";
+			first_obj["table"] = "Bridge";
 
-		for (Object::const_iterator it = rootNode.begin(); it != rootNode.end(); ++it)
-		{
-			std::string name = (*it).first;
-			const Value &node = it->second;
-			if (name == "result")
+			third_object.push_back("_uuid");
+			third_object.push_back("==");
+
+			fourth_object.push_back("uuid");
+			fourth_object.push_back(switch_uuid[anpi.getDpid()].c_str());
+
+			third_object.push_back(fourth_object);
+			where.push_back(third_object);
+
+			first_obj["where"] = where;
+		
+			where.clear();
+		
+			for(list<string>::iterator u = port_uuid[anpi.getDpid()].begin(); u != port_uuid[anpi.getDpid()].end(); u++)
 			{
-				const Array &result = node.getArray();
+				port2.push_back("uuid");
+				port2.push_back((*u));
+				port1.push_back(port2);
+				port2.clear();
+			}
+
+			for(list<string>::iterator u = vport_uuid[anpi.getDpid()].begin(); u != vport_uuid[anpi.getDpid()].end(); u++)
+			{
+				port2.push_back("uuid");
+				port2.push_back((*u));
+				port1.push_back(port2);
+				port2.clear();
+			}
+
+			list<string> ports_name_on_switch;
+			for(list<string>::iterator nff = nfp.begin(); nff != nfp.end(); nff++)
+			{
+				string str = (*nff);
+
+				//Create port name to lower case
+				for (string::size_type i=0; i<str.length(); ++i)
+	    			str[i] = tolower(str[i], loc);
+
+				strcpy(tmp, (char *)(str).c_str());
+				sprintf(temp, "%" PRIu64, anpi.getDpid());
+				strcat(tmp, "b");
+				strcat(tmp, temp);
+				strcpy(temp, tmp);
+
+				for(unsigned int j=0;j<strlen(temp);j++){
+					if(temp[j] == '_')
+						temp[j] = 'p';
+				}
+
+				port2.push_back("named-uuid");
+				port2.push_back(temp);
+				port1.push_back(port2);
+				port2.clear();
+			}
+
+			/*Array with two elements*/
+			i_array.push_back("set");
+			i_array.push_back(port1);
+			row["ports"] = i_array;
+			first_obj["row"] = row;
+			params.push_back(first_obj);
+
+			second_obj.clear();
+
+			/*Object with four items [op, table, where, mutations]*/
+			second_obj["op"] = "mutate";
+			second_obj["table"] = "Open_vSwitch";
+
+			/*Empty array [where]*/
+			second_obj["where"] = where;
+
+			/*Array with two element*/
+			maa.push_back("next_cfg");
+			maa.push_back("+=");
+			maa.push_back(1);
 				
-				for(unsigned i=0;i<result.size();i++)
+			ma.push_back(maa);
+
+			second_obj["mutations"] = ma;
+				
+			params.push_back(second_obj);
+
+			ma.clear();
+			maa.clear();
+			row.clear();
+			where.clear();
+			first_obj.clear();
+			second_obj.clear();
+			third_object.clear();
+			fourth_object.clear();
+			i_array.clear();
+			iface.clear();
+			iface1.clear();
+			iface2.clear();
+			port1.clear();
+			port2.clear();
+			root["params"] = params;
+
+			root["id"] = id;
+
+			stringstream ss;
+	 		write_formatted(root, ss );
+			
+			nwritten = sock_send(s, ss.str().c_str(), strlen(ss.str().c_str()), ErrBuf, sizeof(ErrBuf));
+			if (nwritten == sockFAILURE)
+			{
+				logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error sending data: %s", ErrBuf);
+				throw commandsException();
+			}
+
+	    	r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
+			if (r == sockFAILURE)
+			{
+				logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error reading data: %s", ErrBuf);
+				throw commandsException();
+			}
+			
+			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Result of query: ");
+			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, ss.str().c_str());
+			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Response json: ");
+			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, read_buf);
+			
+			Value value;
+	    	read( read_buf, value );
+	    	Object rootNode = value.getObject();
+
+			for (Object::const_iterator it = rootNode.begin(); it != rootNode.end(); ++it)
+			{
+				std::string name = (*it).first;
+				const Value &node = it->second;
+				if (name == "result")
 				{
-					Object uuidNode = result[i].getObject();
-								 		
-					for (Object::const_iterator it1 = uuidNode.begin(); it1 != uuidNode.end(); ++it1)
+					const Array &result = node.getArray();
+
+					for(unsigned i=0;i<result.size();i++)
 					{
-						std::string name1 = (*it1).first;
-						const Value &node1 = it1->second;
-							
-						if(name1 == "uuid")
+						Object uuidNode = result[i].getObject();
+
+						for (Object::const_iterator it1 = uuidNode.begin(); it1 != uuidNode.end(); ++it1)
 						{
-							const Array &stuff1 = node1.getArray();
-									
-							if(i==1){
-								port_uuid[dnumber].push_back(stuff1[i].getString());
+							std::string name1 = (*it1).first;
+							const Value &node1 = it1->second;
+
+							if(name1 == "uuid")
+							{
+								const Array &stuff1 = node1.getArray();
+
+								if(i==1){
+									port_uuid[dnumber].push_back(stuff1[i].getString());
+								}
+							} else if(name1 == "details"){
+								logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "%s", node1.getString().c_str());
+								throw commandsException();
 							}
-						} else if(name1 == "details"){
-							logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "%s", node1.getString().c_str());
-							throw commandsException();
 						}
-					}		
+					}
 				}
 			}
+
+			root.clear();
+			params.clear();
+
+			//Increment transaction id
+			id++;
+
 		}
-			
-		root.clear();
-		params.clear();
-			
-		//Increment transaction id
-		id++;
+
 	}
 
 	//disconnect socket
@@ -1573,7 +1580,7 @@ void commands::cmd_editconfig_NFPorts_delete(DestroyNFportsIn dnpi, int s){
 AddVirtualLinkOut *commands::cmd_addVirtualLink(AddVirtualLinkIn avli, int s){
 	/*struct to return*/
 	AddVirtualLinkOut *avlo = NULL;
-	
+
 	char temp[64] = "", vrt[64] = "", trv[64] = "";
 	
 	list<pair<unsigned int, unsigned int> > virtual_links;
