@@ -1349,12 +1349,11 @@ int RestServer::doPutCommandReletedToPort(struct MHD_Connection *connection, voi
 				foundCommand = true;
 				command = value.getString();
 			}
-		    						
-			if(!foundPort || !foundCommand)
-			{
-				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\", or key \"%s\", or all of them not found",DIRECT_VM2VM_PORT,DIRECT_VM2VM_COMMAND);
-				goto malformed_content;
-			}
+		}
+		if(!foundPort || !foundCommand)
+		{
+			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\", or key \"%s\", or all of them not found",DIRECT_VM2VM_PORT,DIRECT_VM2VM_COMMAND);
+			goto malformed_content;
 		}
 	}catch(exception& e)
 	{
