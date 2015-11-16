@@ -492,6 +492,8 @@ bool Libvirt::sendCommand(string tcpport, char *command)
 	
 	Hints.ai_family= AF_INET;
 	Hints.ai_socktype= SOCK_STREAM;
+
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The command to the VM is going to be sent on the TCP port \"%s\"", tcpport.c_str());
 	
 	if (sock_initaddress ("127.0.0.1", tcpport.c_str(), &Hints, &AddrInfo, ErrBuf, sizeof(ErrBuf)) == sockFAILURE)
 	{

@@ -526,7 +526,7 @@ bool ComputeController::startNF(string nf_name, list<string> namesOfPortsOnTheSw
 #ifdef ENABLE_DIRECT_VM2VM
 bool ComputeController::executeSpecificCommand(string nf_name, string command)
 {
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Executing the command '\'%s\'' on the NF \"%s\"",command.c_str(),nf_name.c_str());
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Executing the command \"%s\" on the NF \"%s\"",command.c_str(),nf_name.c_str());
 	
 	if(nfs.count(nf_name) == 0)
 	{
