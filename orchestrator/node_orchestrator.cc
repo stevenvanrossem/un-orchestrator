@@ -109,6 +109,9 @@ int main(int argc, char *argv[])
 	if (NULL == http_daemon)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot start the HTTP deamon. The %s cannot be run.",MODULE_NAME);
+		
+		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Please, check that the TCP port %d is not used (use the command \"netstat -a | grep %d\")",rest_port,rest_port);
+		
 		return EXIT_FAILURE;
 	}
 	
