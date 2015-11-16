@@ -9,7 +9,7 @@
 *	Connections
 */
 
-#define REST_PORT 				2828
+#define REST_PORT 				2626
 #define BASE_URL 				"nfs"
 #define REST_URL 				"http://localhost"
 #define DIGEST_URL 				"digest"

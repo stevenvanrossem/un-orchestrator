@@ -1,6 +1,6 @@
 # How to use the un-orchestrator
 
-This file describes, thorugh a set of examples, some of the commands that
+This file describes, through a set of examples, some of the commands that
 can be used to interact with the un-orchestrator.
 
 The un-orchestrator can either accept a NF-FG from a file, or from its 
@@ -373,7 +373,7 @@ Content-Type : application/json
        }  
     }  
 
-PUT /graph/othweGraph HTTP/1.1   
+PUT /graph/otherGraph HTTP/1.1   
 Content-Type : application/json   
                
     {   
