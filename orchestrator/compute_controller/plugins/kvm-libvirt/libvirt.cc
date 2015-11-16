@@ -534,6 +534,6 @@ bool Libvirt::executeSpecificCommand(uint64_t lsiID, string name, string command
 	stringstream ss;
 	ss << command << "\n\r";
 
-	return sendCommand(monitor.find(vm_name)->second, ss.str().c_str());
+	return sendCommand(monitor.find(vm_name)->second, (char *)ss.str().c_str());
 }
 #endif
