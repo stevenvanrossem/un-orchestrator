@@ -44,7 +44,7 @@ bool Libvirt::isSupported()
 {
 #ifndef ENABLE_KVM_IVSHMEM
 	connect();
-	
+
 	if(connection == NULL)
 		return false;
 #endif
@@ -62,7 +62,7 @@ void Libvirt::connect()
 
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Connecting to Libvirt ...");
 	connection = virConnectOpen("qemu:///system");
-	if (connection == NULL) 
+	if (connection == NULL)
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Failed to open connection to qemu:///system");
 	else
 		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Open connection to qemu:///system successfull");
@@ -81,15 +81,15 @@ bool Libvirt::startNF(StartNFIn sni)
 	virDomainPtr dom = NULL;
 	char domain_name[64];
 	const char *xmlconfig = NULL;
-	
+
 	string nf_name = sni.getNfName();
 	string uri_image = description->getURI();
-	
+
 	list<string> namesOfPortsOnTheSwitch = sni.getNamesOfPortsOnTheSwitch();
 
 	/* Domain name */
 	sprintf(domain_name, "%" PRIu64 "_%s", sni.getLsiID(), nf_name.c_str());
-		
+
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Using Libvirt XML template %s", uri_image.c_str());
 	xmlInitParser();
 
@@ -221,19 +221,19 @@ bool Libvirt::startNF(StartNFIn sni)
     if ((0 == (update_flags & EMULATOR_UPDATED)) && (QEMU_BIN_PATH != NULL)) {
     	xmlNewTextChild(devices, NULL, BAD_CAST "emulator", BAD_CAST QEMU_BIN_PATH);
     }
-	
+
 	/* Create XML for VM */
 #ifdef VSWITCH_IMPLEMENTATION_OVSDPDK
 
 	//XXX: userspace vhost is only used in case of ovs-dpdk
-	
+
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "This function is KVM-USVHOST");
 
 	/* Create NICs */
-	
-	for(list<string>::iterator pn = namesOfPortsOnTheSwitch.begin(); pn != namesOfPortsOnTheSwitch.end(); pn++) 
+
+	for(list<string>::iterator pn = namesOfPortsOnTheSwitch.begin(); pn != namesOfPortsOnTheSwitch.end(); pn++)
 	{
-	
+
 		char sock_path[255];
 //		sprintf(sock_path, "%s/%s_%u", OVS_BASE_SOCK_PATH, domain_name, i);
 		sprintf(sock_path, "%s/%s", OVS_BASE_SOCK_PATH, pn->c_str());
@@ -262,10 +262,10 @@ bool Libvirt::startNF(StartNFIn sni)
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "This function is a 'standard process' in KVM");
 
 	/* Create NICs */
-	for(list<string>::iterator pn = namesOfPortsOnTheSwitch.begin(); pn != namesOfPortsOnTheSwitch.end(); pn++) 
+	for(list<string>::iterator pn = namesOfPortsOnTheSwitch.begin(); pn != namesOfPortsOnTheSwitch.end(); pn++)
 	{
 		string port_name = *pn;
-		
+
 		xmlNodePtr ifn = xmlNewChild(devices, NULL, BAD_CAST "interface", NULL);
 	    xmlNewProp(ifn, BAD_CAST "type", BAD_CAST "direct");
 
@@ -275,7 +275,7 @@ bool Libvirt::startNF(StartNFIn sni)
 
 	    xmlNodePtr modeln = xmlNewChild(ifn, NULL, BAD_CAST "model", NULL);
 	    xmlNewProp(modeln, BAD_CAST "type", BAD_CAST "virtio");
-	    
+
 	    xmlNodePtr virt = xmlNewChild(ifn, NULL, BAD_CAST "virtualport", NULL);
 	    xmlNewProp(virt, BAD_CAST "type", BAD_CAST "openvswitch");
 	}
@@ -292,8 +292,8 @@ bool Libvirt::startNF(StartNFIn sni)
 	/* Final XML Cleanup */
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
-	
-#ifdef DEBUG_KVM 
+
+#ifdef DEBUG_KVM
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Dumping XML to %s", domain_name);
 	FILE* fp = fopen(domain_name, "w");
 	if (fp) {
@@ -308,11 +308,11 @@ bool Libvirt::startNF(StartNFIn sni)
     		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Domain definition failed");
     		return false;
 	}
-	
+
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Boot guest");
-	
+
 	virDomainFree(dom);
-	
+
 	return true;
 }
 #else
@@ -324,21 +324,21 @@ bool Libvirt::startNF(StartNFIn sni)
 	//As a consequence, we decide to directly use the QEMU command line for ivshmem virtual machine. I know, this
 	//way the code is dirty, but it seems to be the better (fastest) solution to implement ivhsmem support in the
 	//universal node.
-	
-	//XXX: we ignore all the information written in the xml file, except the path with the VM image
-	
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "This function is KVM-IVSHMEM");	
-	
 
-	char domain_name[64];	
+	//XXX: we ignore all the information written in the xml file, except the path with the VM image
+
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "This function is KVM-IVSHMEM");
+
+
+	char domain_name[64];
 	string nf_name = sni.getNfName();
 	string uri_image = description->getURI();
 
 	/* Domain name */
 	sprintf(domain_name, "%" PRIu64 "_%s", sni.getLsiID(), nf_name.c_str());
-		
-	//Parse the VM template	
-		
+
+	//Parse the VM template
+
 	xmlInitParser();
 	xmlDocPtr doc;
 
@@ -352,101 +352,101 @@ bool Libvirt::startNF(StartNFIn sni)
 	char *disk_path = NULL;
 
 	xmlNodePtr root = xmlDocGetRootElement(doc);
-	for(xmlNodePtr cur_root_child=root->xmlChildrenNode; cur_root_child!=NULL; cur_root_child=cur_root_child->next) 
+	for(xmlNodePtr cur_root_child=root->xmlChildrenNode; cur_root_child!=NULL; cur_root_child=cur_root_child->next)
 	{
 		if ((cur_root_child->type == XML_ELEMENT_NODE)&&(!xmlStrcmp(cur_root_child->name, (const xmlChar*)"devices")))
 		{
-			//We are in the <devices> element			
+			//We are in the <devices> element
 			xmlNodePtr devices = cur_root_child;
-			for(xmlNodePtr device = devices->xmlChildrenNode; device != NULL; device = device->next) 
+			for(xmlNodePtr device = devices->xmlChildrenNode; device != NULL; device = device->next)
 			{
 				if ((device->type == XML_ELEMENT_NODE)&&(!xmlStrcmp(device->name, (const xmlChar*)"disk")))
-				{					
+				{
 					//We are in the <disk> element
 					xmlChar* attr_type = xmlGetProp(device, (const xmlChar*)"type");
 					xmlChar* attr_device = xmlGetProp(device, (const xmlChar*)"device");
-										
+
 					if(strcmp((const char*)attr_type,"file")==0 && strcmp((const char*)attr_device,"disk")==0)
-					{						
+					{
 						xmlNodePtr disk = device;
-					
-						//we are in the proper disk						
-						for(xmlNodePtr indisk = disk->xmlChildrenNode; indisk != NULL; indisk = indisk->next) 
+
+						//we are in the proper disk
+						for(xmlNodePtr indisk = disk->xmlChildrenNode; indisk != NULL; indisk = indisk->next)
 						{
-						
+
 							if ((indisk->type == XML_ELEMENT_NODE)&&(!xmlStrcmp(indisk->name, (const xmlChar*)"source")))
-							{	
+							{
 								//We are in the <source> element
 								//Retrieve the path of the disk
 								xmlChar* attr_file = xmlGetProp(indisk, (const xmlChar*)"file");
-								
+
 								disk_path  = (char*)malloc(sizeof(char) * (strlen((const char*)attr_file) + 1));
 								memcpy(disk_path, attr_file, strlen((const char*)attr_file));
-								disk_path[strlen((const char*)attr_file)] = '\0';					
+								disk_path[strlen((const char*)attr_file)] = '\0';
 								goto after_parsing;
 							}
 						}
-						
+
 					}
 				}
 			}
-		}	
-		
+		}
+
 	}//end iteration over the document
-	
+
 after_parsing:
-	
+
 	if(disk_path == NULL)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Wrong XML file describing the VM to run: no path for VM disk found.");
 		return false;
 	}
-	
+
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Virtual machine disk available at path: '%s'",disk_path);
-	
-	
+
+
 	//Get the command line generator and prepare the command line
 	IvshmemCmdLineGenerator cmdgenerator;
-	
-	
+
+
 	stringstream ivshmemcmdline;
 	//for(unsigned int i=1; i <= n_ports; i++)
-	
-	
+
+
 	list<string> namesOfPortsOnTheSwitch = sni.getNamesOfPortsOnTheSwitch();
-	
+
 	for(list<string>::iterator name = namesOfPortsOnTheSwitch.begin(); name != namesOfPortsOnTheSwitch.end(); name++)
-	{	
+	{
 		//Retrieve the command line
-		
+
 		char cmdline[512];
 		if(!cmdgenerator.get_cmdline((*name).c_str(), cmdline, 512))
 			return false;
-			
+
 		ivshmemcmdline << " " << cmdline;
 	}
-	
+
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Command line part for ivshmem '%s'",ivshmemcmdline.str().c_str());
-	
+
 	pthread_mutex_lock(&Libvirt_mutex);
-	
+
 	stringstream command;
 	command << QEMU << " " << domain_name << " " << next_tcp_port << " " << disk_path << "'" << ivshmemcmdline.str().c_str() << "'";
-	
+
 	stringstream portstream;
 	portstream << next_tcp_port;
-	monitor[domain_name] = portstream.str();	
-	next_tcp_port++; 							
+	monitor[domain_name] = portstream.str();
+	next_tcp_port++;
 	pthread_mutex_unlock(&Libvirt_mutex);
-	
+
 	int retVal = system(command.str().c_str());
 	retVal = retVal >> 8;
-	
+
 	if(retVal == 0)
 		return false;
-		
+
 	return true;
-}	
+}
 #endif
 
 bool Libvirt::stopNF(StopNFIn sni)
@@ -456,7 +456,7 @@ bool Libvirt::stopNF(StopNFIn sni)
 	sprintf(vm_name, "%" PRIu64 "_%s", sni.getLsiID(), sni.getNfName().c_str());
 
 #ifndef ENABLE_KVM_IVSHMEM
-	
+
 	assert(connection != NULL);
 
 	/*destroy the VM*/
@@ -465,17 +465,17 @@ bool Libvirt::stopNF(StopNFIn sni)
 		return false;
 	}
 #else
-	//To stop the VNF, use its own network monitor	
+	//To stop the VNF, use its own network monitor
 	assert(monitor.count(vm_name) == 1);
-	
+
 	string tcpport = monitor.find(vm_name)->second;
 	char *command= QUIT_COMMAND;
-		
+
 	//remove the tcp port from the monitor
 	monitor.erase(vm_name);
-		
+
 	return sendCommand(tcpport, command);
-#endif	
+#endif
 	return true;
 }
 
@@ -487,22 +487,21 @@ bool Libvirt::sendCommand(string tcpport, char *command)
 	char ErrBuf[BUFFER_SIZE];
 	int socket;							// keeps the socket ID for this connection
 	int WrittenBytes;					// Number of bytes written on the socket
-	int ReadBytes;						// Number of bytes received from the socket
 	char DataBuffer[DATA_BUFFER_SIZE];	// Buffer containing data received from the socket
 
 	memset(&Hints, 0, sizeof(struct addrinfo));
-	
+
 	Hints.ai_family= AF_INET;
 	Hints.ai_socktype= SOCK_STREAM;
 
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The command to the VM is going to be sent on the TCP port \"%s\"", tcpport.c_str());
-	
+
 	if (sock_initaddress ("127.0.0.1", tcpport.c_str(), &Hints, &AddrInfo, ErrBuf, sizeof(ErrBuf)) == sockFAILURE)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error resolving given address/port (%s/%s): %s",  "127.0.0.1",  tcpport.c_str(), ErrBuf);
 		return false;
 	}
-	
+
 	if ( (socket= sock_open(AddrInfo, 0, 0,  ErrBuf, sizeof(ErrBuf))) == sockFAILURE)
 	{
 		// AddrInfo is no longer required
@@ -517,14 +516,14 @@ bool Libvirt::sendCommand(string tcpport, char *command)
 		return false;
 
 	}
-	
+
 	//Read received data (that will be ignored, since it is useless)
-	ReadBytes= sock_recv(socket, DataBuffer, sizeof(DataBuffer), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
-		
+	(void) sock_recv(socket, DataBuffer, sizeof(DataBuffer), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
+
 	//Close the TCP connection
 	shutdown(socket,SHUT_WR);
 	sock_close(socket,ErrBuf,sizeof(ErrBuf));
-	
+
 	return true;
 }
 #endif
@@ -539,7 +538,7 @@ bool Libvirt::executeSpecificCommand(uint64_t lsiID, string name, string command
 	sprintf(vm_name, "%" PRIu64 "_%s", lsiID, name.c_str());
 
 	assert(monitor.count(vm_name) != 0);
-	
+
 	stringstream ss;
 	ss << command << "\n\r";
 
