@@ -64,9 +64,4 @@
 		<native uri="../NFs/native/openflow-bridge/openflow_bridge.tar.gz" dependencies="openvswitch" location="local"/>
 	</network-function>
 	
-	<network-function name="odl_controller" num-ports="2" summary="OpenDaylight (Lithium) controller">
-		<!-- Point to a Libvirt XML domain template -->
-		<kvm uri="../NFs/kvm/odl_controller/odl_controller_kvm_vnf.xml"/>
-	</network-function>
-	
 </network-functions>
