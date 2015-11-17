@@ -635,9 +635,9 @@ nf_manager_ret_t ComputeController::retrieveAllAvailableNFs()
 		char ErrBuf[BUFFER_SIZE];
 		struct addrinfo Hints;
 		struct addrinfo *AddrInfo;
-		int socket;				// keeps the socket ID for this connection
-		int WrittenBytes;			// Number of bytes written on the socket
-		int ReadBytes;				// Number of bytes received from the socket
+		int socket;							// keeps the socket ID for this connection
+		int WrittenBytes;					// Number of bytes written on the socket
+		int ReadBytes;						// Number of bytes received from the socket
 		char DataBuffer[DATA_BUFFER_SIZE];	// Buffer containing data received from the socket
 
 		memset(&Hints, 0, sizeof(struct addrinfo));

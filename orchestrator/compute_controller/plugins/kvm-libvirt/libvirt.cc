@@ -485,8 +485,10 @@ bool Libvirt::sendCommand(string tcpport, char *command)
 	struct addrinfo *AddrInfo;
 	struct addrinfo Hints;
 	char ErrBuf[BUFFER_SIZE];
-	int socket;						// keeps the socket ID for this connection
-	int WrittenBytes;				// Number of bytes written on the socket
+	int socket;							// keeps the socket ID for this connection
+	int WrittenBytes;					// Number of bytes written on the socket
+	int ReadBytes;						// Number of bytes received from the socket
+	char DataBuffer[DATA_BUFFER_SIZE];	// Buffer containing data received from the socket
 
 	memset(&Hints, 0, sizeof(struct addrinfo));
 	
@@ -515,6 +517,13 @@ bool Libvirt::sendCommand(string tcpport, char *command)
 		return false;
 
 	}
+	
+	//Read received data (that will be ignored, since it is useless)
+	ReadBytes= sock_recv(socket, DataBuffer, sizeof(DataBuffer), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
+		
+	//Close the TCP connection
+	shutdown(socket,SHUT_WR);
+	sock_close(socket,ErrBuf,sizeof(ErrBuf));
 	
 	return true;
 }
