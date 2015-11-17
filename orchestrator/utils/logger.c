@@ -8,7 +8,7 @@
 
 extern void logger(int LoggingLevel, const char *ModuleName, const char *File, int Line, const char *Format, ...)
 {
-		char Buffer[BUFFER_SIZE];
+	char Buffer[BUFFER_SIZE];
 	int BufSize= BUFFER_SIZE - 1;
 	va_list Args;
 #ifndef LOG_1024X768
@@ -17,8 +17,13 @@ extern void logger(int LoggingLevel, const char *ModuleName, const char *File, i
 	char CurrentTimeBuffer[64];
 	struct timeval tv;
 	time_t CurrentTime;
-	FILE *DestFile= stdout;//stderr;
 
+#ifdef LOG_ON_FILE
+	// The file is open in append
+	FILE *DestFile = fopen(LOG_FILE,"a");
+#else
+	FILE *DestFile= stdout;//stderr;
+#endif
 
 	if (LoggingLevel < LOGGING_LEVEL)
 		return;
@@ -57,6 +62,8 @@ extern void logger(int LoggingLevel, const char *ModuleName, const char *File, i
 #else
 	fprintf(DestFile, "%s\n", Buffer);
 #endif
+
+	fflush(DestFile);
 }
 
 extern void coloredLogger(char *color, int LoggingLevel, const char *ModuleName, const char *File, int Line, const char *Format, ...)
