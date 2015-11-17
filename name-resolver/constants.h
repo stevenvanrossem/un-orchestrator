@@ -48,9 +48,15 @@
 #define NATIVE_DESCRIPTION			"native"
 
 /*
+*	Name of the file used to print log information
+*/
+#ifdef LOG_ON_FILE
+	#define LOG_FILE			"name-resolver.log"
+#endif
+
+/*
 *	Misc
 */
 #define BUFFER_SIZE				1024
-
 
 #endif //CONSTANTS_H_

@@ -67,6 +67,14 @@ IF(${LOGGING_LEVEL_INDEX} EQUAL 4)
 ENDIF()
 # End of the rather complicated CMake code for setting the logging level
 
+OPTION(
+	LOG_ON_FILE
+	"Turn on to print log messages on the file 'name-resolver.log'. If disabled, stdout is used for the log."
+	OFF
+)
+IF(LOG_ON_FILE)
+	ADD_DEFINITIONS(-DLOG_ON_FILE)
+ENDIF(LOG_ON_FILE)
 
 # Set source files
 SET(SOURCES

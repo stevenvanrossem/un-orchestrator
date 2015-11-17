@@ -3,6 +3,8 @@
 #include <stdio.h>	// vsnprintf
 #include <stdarg.h>	// va_list
 
+#include "constants.h"
+
 /*
  * The following are the logging levels we have.
  *

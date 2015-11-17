@@ -161,6 +161,8 @@ bool RestServer::init(string fileName)
 			nfs.insert(nf);
 		}
 	}
+	
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Configuration file read!");
 
 	return true;
 }

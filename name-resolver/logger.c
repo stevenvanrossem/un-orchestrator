@@ -14,7 +14,13 @@ char *LoggingLevelString;
 char CurrentTimeBuffer[64];
 struct timeval tv;
 time_t CurrentTime;
-FILE *DestFile= stdout;//stderr;
+
+#ifdef LOG_ON_FILE
+	// The file is open in append
+	FILE *DestFile = fopen(LOG_FILE,"a");
+#else
+	FILE *DestFile= stdout;//stderr;
+#endif
 
 
 	if (LoggingLevel < LOGGING_LEVEL)
@@ -49,5 +55,7 @@ FILE *DestFile= stdout;//stderr;
 #else
 	fprintf(DestFile, "%s\n", Buffer);
 #endif
+
+	fflush(DestFile);
 };
 
