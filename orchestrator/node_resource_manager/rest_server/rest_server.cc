@@ -30,7 +30,12 @@ bool RestServer::init(char *nffg_filename,int core_mask, char *ports_file_name)
 	if(nffg_filename != NULL)
 	{	
 		sleep(2); //XXX This give time to the controller to be initialized
-		return readGraphFromFile(nffg_filename);
+		
+		if(!readGraphFromFile(nffg_filename))
+		{
+			delete gm;
+			return false;
+		}
 	}
 			
 	return true;

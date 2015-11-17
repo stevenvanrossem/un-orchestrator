@@ -205,4 +205,11 @@ extern ofp_version_t OFP_VERSION;
 	#define REMOVE_GRAPH_FILE			"./node_resource_manager/virtualizer/.remove_graph.json"
 #endif	
 
+/*
+*	Name of the file used to print log information
+*/
+#ifdef LOG_ON_FILE
+	#define LOG_FILE			"node-orchestrator.log"
+#endif
+
 #endif //CONSTANTS_H_

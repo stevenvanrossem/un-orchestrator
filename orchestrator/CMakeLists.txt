@@ -158,6 +158,16 @@ IF(UNIFY_NFFG)
 	ADD_DEFINITIONS(-DUNIFY_NFFG)
 ENDIF(UNIFY_NFFG)
 
+OPTION(
+	LOG_ON_FILE
+	"Turn on to print log messages on the file 'node-orchestrator.log'. If disabled, stdout is used for the log."
+	OFF
+)
+IF(LOG_ON_FILE)
+	ADD_DEFINITIONS(-DLOG_ON_FILE)
+ENDIF(LOG_ON_FILE)
+
+
 MARK_AS_ADVANCED(
 	DEBUG_KVM DEBUG_OPENFLOW POLITO_MESSAGE LOG_1024X768 RUN_NFS
 )

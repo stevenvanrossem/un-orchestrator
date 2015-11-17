@@ -41,10 +41,10 @@
 using namespace std;
 using namespace json_spirit;
 
-#define DATABASE_ADDRESS	"localhost"
-#define DATABASE_PORT		"2626"
-#define DATABASE_BASE_URL	"/nfs/"
-#define DATABASE_DIGEST_URL	"digest/"
+#define NAME_RESOLVER_ADDRESS		"localhost"
+#define NAME_RESOLVER_PORT			"2626"
+#define NAME_RESOLVER_BASE_URL		"/nfs/"
+#define NAME_RESOLVER_DIGEST_URL	"digest/"
 
 #define CODE_POSITION				9
 #define CODE_METHOD_NOT_ALLLOWED	"405"
