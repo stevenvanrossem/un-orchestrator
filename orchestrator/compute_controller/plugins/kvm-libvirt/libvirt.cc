@@ -29,6 +29,7 @@ Libvirt::Libvirt()
 {
 #ifndef ENABLE_KVM_IVSHMEM
 	virSetErrorFunc(NULL, customErrorFunc);
+	connect();
 #endif
 }
 
