@@ -27,6 +27,10 @@ struct MHD_Daemon *http_daemon = NULL;
 bool parse_command_line(int argc, char *argv[],int *rest_port, char **nffg_file_name,int *core_mask, char **ports_file_name);
 bool usage(void);
 bool doChecks(void);
+void terminateRestServer(void);
+#ifdef UNIFY_NFFG
+	void terminateVirtualizer(void);
+#endif
 
 /**
 *	Implementations
@@ -37,19 +41,10 @@ void singint_handler(int sig)
     logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The '%s' is terminating...",MODULE_NAME);
 
 	MHD_stop_daemon(http_daemon);
-	
-	try
-	{
-		RestServer::terminate();
-	}catch(...)
-	{
-		//Do nothing, since the program is terminating
-	}
+	terminateRestServer();
 	
 #ifdef UNIFY_NFFG
-	//Terminate the Python code
-	Virtualizer::terminate();
-	Py_Finalize();
+	terminateVirtualizer();
 #endif
 	
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Bye :D");
@@ -100,6 +95,9 @@ int main(int argc, char *argv[])
 	if(!RestServer::init(nffg_file_name,core_mask,ports_file_name))
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot start the %s",MODULE_NAME);
+#ifdef UNIFY_NFFG
+		terminateVirtualizer();
+#endif
 		exit(EXIT_FAILURE);	
 	}
 
@@ -109,14 +107,21 @@ int main(int argc, char *argv[])
 	if (NULL == http_daemon)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot start the HTTP deamon. The %s cannot be run.",MODULE_NAME);
-		
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Please, check that the TCP port %d is not used (use the command \"netstat -a | grep %d\")",rest_port,rest_port);
+		
+		terminateRestServer();
+#ifdef UNIFY_NFFG
+		terminateVirtualizer();
+#endif
 		
 		return EXIT_FAILURE;
 	}
 	
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The '%s' is started!",MODULE_NAME);
 	signal(SIGINT,singint_handler);
+	
+	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The '%s' is started!",MODULE_NAME);
+	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Waiting for commands on TCP port \"%d\"",rest_port);
+	
 	rofl::cioloop::get_loop().run();
 	
 	return 0;
@@ -271,3 +276,22 @@ bool doChecks(void)
 	return true;
 }
 
+#ifdef UNIFY_NFFG
+void terminateVirtualizer()
+{
+	//Terminate the Python code
+	Virtualizer::terminate();
+	Py_Finalize();
+}
+#endif
+
+void terminateRestServer()
+{
+	try
+	{
+		RestServer::terminate();
+	}catch(...)
+	{
+		//Do nothing, since the program is terminating
+	}
+}

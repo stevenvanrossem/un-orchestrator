@@ -53,15 +53,15 @@ nf_manager_ret_t ComputeController::retrieveDescription(string nf)
 		Hints.ai_family= AF_INET;
 		Hints.ai_socktype= SOCK_STREAM;
 
-		if (sock_initaddress (DATABASE_ADDRESS, DATABASE_PORT, &Hints, &AddrInfo, ErrBuf, sizeof(ErrBuf)) == sockFAILURE)
+		if (sock_initaddress (NAME_RESOLVER_ADDRESS, NAME_RESOLVER_PORT, &Hints, &AddrInfo, ErrBuf, sizeof(ErrBuf)) == sockFAILURE)
 		{
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error resolving given address/port (%s/%s): %s",  DATABASE_ADDRESS, DATABASE_PORT, ErrBuf);
+			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error resolving given address/port (%s/%s): %s",  NAME_RESOLVER_ADDRESS, NAME_RESOLVER_PORT, ErrBuf);
 			return NFManager_SERVER_ERROR;
 		}
 
 		stringstream tmp;
-		tmp << "GET " << DATABASE_BASE_URL << nf << " HTTP/1.1\r\n";
-		tmp << "Host: :" << DATABASE_ADDRESS << ":" << DATABASE_PORT << "\r\n";
+		tmp << "GET " << NAME_RESOLVER_BASE_URL << nf << " HTTP/1.1\r\n";
+		tmp << "Host: :" << NAME_RESOLVER_ADDRESS << ":" << NAME_RESOLVER_PORT << "\r\n";
 		tmp << "Connection: close\r\n";
 		tmp << "Accept: */*\r\n\r\n";
 		string message = tmp.str();
@@ -73,7 +73,8 @@ nf_manager_ret_t ComputeController::retrieveDescription(string nf)
 		if ( (socket= sock_open(AddrInfo, 0, 0,  ErrBuf, sizeof(ErrBuf))) == sockFAILURE)
 		{
 			// AddrInfo is no longer required
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot contact the name resolver: %s", ErrBuf);
+			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot contact the name resolver at \"%s:%s\"", NAME_RESOLVER_ADDRESS, NAME_RESOLVER_PORT);
+			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "%s", ErrBuf);
 			return NFManager_SERVER_ERROR;
 		}
 
@@ -813,15 +814,15 @@ nf_manager_ret_t ComputeController::retrieveAllAvailableNFs()
 		Hints.ai_family= AF_INET;
 		Hints.ai_socktype= SOCK_STREAM;
 
-		if (sock_initaddress (DATABASE_ADDRESS, DATABASE_PORT, &Hints, &AddrInfo, ErrBuf, sizeof(ErrBuf)) == sockFAILURE)
+		if (sock_initaddress (NAME_RESOLVER_ADDRESS, NAME_RESOLVER_PORT, &Hints, &AddrInfo, ErrBuf, sizeof(ErrBuf)) == sockFAILURE)
 		{
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error resolving given address/port (%s/%s): %s",  DATABASE_ADDRESS, DATABASE_PORT, ErrBuf);
+			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error resolving given address/port (%s/%s): %s",  NAME_RESOLVER_ADDRESS, NAME_RESOLVER_PORT, ErrBuf);
 			return NFManager_SERVER_ERROR;
 		}
 
 		stringstream tmp;
-		tmp << "GET " << DATABASE_BASE_URL << DATABASE_DIGEST_URL << " HTTP/1.1\r\n";
-		tmp << "Host: :" << DATABASE_ADDRESS << ":" << DATABASE_PORT << "\r\n";
+		tmp << "GET " << NAME_RESOLVER_BASE_URL << NAME_RESOLVER_DIGEST_URL << " HTTP/1.1\r\n";
+		tmp << "Host: :" << NAME_RESOLVER_ADDRESS << ":" << NAME_RESOLVER_PORT << "\r\n";
 		tmp << "Connection: close\r\n";
 		tmp << "Accept: */*\r\n\r\n";
 		string message = tmp.str();
@@ -833,7 +834,8 @@ nf_manager_ret_t ComputeController::retrieveAllAvailableNFs()
 		if ( (socket= sock_open(AddrInfo, 0, 0,  ErrBuf, sizeof(ErrBuf))) == sockFAILURE)
 		{
 			// AddrInfo is no longer required
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot contact the name resolver: %s", ErrBuf);
+			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot contact the name resolver at \"%s:%s\"", NAME_RESOLVER_ADDRESS, NAME_RESOLVER_PORT);
+			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "%s", ErrBuf);
 			return NFManager_SERVER_ERROR;
 		}
 
