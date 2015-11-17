@@ -1,5 +1,9 @@
 #include "ivshmem_cmdline_generator.h"
 
+#include <sched.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <rte_config.h>
 #include <rte_eal.h>
 #include <rte_ivshmem.h>
@@ -29,14 +33,14 @@ bool IvshmemCmdLineGenerator::dpdk_init(void)
 
 	/* does not exist a nicer way to do it? */
 	/* XXX: why -n is not required? */
-	char * arg[] = 
+	char * arg[] =
 	{
 		"./something",
 		"--proc-type=secondary",
 		"-c",
-		"0x1",
-		"-n",
-		"2",
+		"0x01",
+		/*"-n",
+		"2",*/
 		"--",
 		NULL
 	};
@@ -49,6 +53,20 @@ bool IvshmemCmdLineGenerator::dpdk_init(void)
 	}
 
 	init = true;
+
+	/*
+	 * rte_eal_init changes the core mask of the thread.
+	 * Change it back to all cores
+	 */
+	int nCores = sysconf(_SC_NPROCESSORS_ONLN);
+
+	cpu_set_t *c;
+	c = CPU_ALLOC(nCores);
+	int i = 0;
+	for(i = 0;  i < nCores; i++)
+		CPU_SET(i, c);
+
+	sched_setaffinity(0, nCores, c);
 
 	pthread_mutex_unlock(&IvshmemCmdLineGenerator_mutex);
 	return true;
