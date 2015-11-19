@@ -4,7 +4,7 @@
 static const char* OVS_BASE_SOCK_PATH = "/usr/local/var/run/openvswitch/";
 
 #if defined(ENABLE_KVM_IVSHMEM) || defined(ENABLE_DPDK_PROCESSES)
-	int OVSDPDKManager::nextportname = 1;	
+	int OVSDPDKManager::nextportname = 50;	
 #endif
 
 OVSDPDKManager::OVSDPDKManager() : m_NextLsiId(0), m_NextPortId(1) /* 0 is not valid for OVS */
