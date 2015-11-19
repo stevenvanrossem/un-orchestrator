@@ -302,6 +302,8 @@ bool Libvirt::startNF(StartNFIn sni)
 	}
 #endif
 
+	assert(connection != NULL);
+
 	dom = virDomainCreateXML(connection, xmlconfig, 0);
 	if (!dom) {
 		virDomainFree(dom);
