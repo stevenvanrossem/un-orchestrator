@@ -5,7 +5,7 @@ GenericAction::GenericAction()
 
 }
 
-GenericAction::~GenericAction() 
+GenericAction::~GenericAction()
 {
 
 }

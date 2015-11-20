@@ -80,8 +80,8 @@ int do_nf(void *useless)
 				fprintf(logFile,"[%s] Sending %d packets on port %x (%s).\n", NAME,pkts_to_send[p].n_mbufs,p,nf_params.ports[p].name);
 #endif
 				int ret = rte_ring_sp_enqueue_burst(nf_params.ports[p].to_xdpd_queue,(void *const*)pkts_to_send[p].array,(unsigned)pkts_to_send[p].n_mbufs);
-			        
-	        	if (unlikely(ret < pkts_to_send[p].n_mbufs)) 
+			
+	        	if (unlikely(ret < pkts_to_send[p].n_mbufs))
 		        {
 		        	fprintf(logFile,"[%s] Not enough room in port %d towards xDPD to enqueue; the packet will be dropped.\n", NAME,p);
 					do {

@@ -6,11 +6,11 @@ This file details how to deploy and run a virtual network function (VNF) on the 
 *	send to the un-orchestrator a Network Functions-Forwarding Graph (NF-FG) including the VNF that has to be instantiated.
 
 ### Create the VNF image
-The universal node currently supports three types of VNFs: VNFs executed as Docker containers, VNFs executed inside KVM-based virtual machines, and VNFs based on the DPDK library (i.e., DPDK processes).  
+The universal node currently supports three types of VNFs: VNFs executed as Docker containers, VNFs executed inside KVM-based virtual machines, and VNFs based on the DPDK library (i.e., DPDK processes).
 In order to create your own VNF image, please check individual README's in each sub-package.
 
 ### Register the VNF in the name-resolver
-Once the VNF image is created, such a VNF must be registered in the name-resolver database (to install the name-resolver, please check [name-resolver/README.md](../name-resolver/README.md)).  
+Once the VNF image is created, such a VNF must be registered in the name-resolver database (to install the name-resolver, please check [name-resolver/README.md](../name-resolver/README.md)).
 This operation requires to edit the configuration file of the name-resolver and reboot the name-resolver itself; an example of such a file is available at [name-resolver/config/example.xml](../name-resolver/config/example.xml).
 
 ### Provide the graph description to the un-orchestrator
@@ -35,7 +35,7 @@ This VNF is deployed as part of the service shown in the picture:
 To create the VNF image and store it in the local file system of the Universal Node, execute the following command in the folder containing the Docker file describing the VNF:
 
     sudo docker build --tag="dummy" .
-    
+
 Then, register the new VNF in the name-resolver by adding the following piece of XML to the configuration file of the name-resolver itself:
 
 	<network-function name="dummy"  num-ports="2" description="dummy VNF used to show the usage of the Universal Node">
@@ -44,63 +44,63 @@ Then, register the new VNF in the name-resolver by adding the following piece of
 
 At this point, prepare a NF-FG and pass it to the un-orchestator, which will take care of executing all the operations required to implement the graph. The graph shown in the picture above can be described in the JSON syntax defined in WP5 as follow:
 
-  
+
     {
-        "flow-graph": {  
-            "VNFs": [  
-            {  
-                "id": "dummy"  
-            }  
-            ],  
-            "flow-rules": [  
-            {  
-                "id": "00000001",  
-                "match": 
-                {  
-                    "port": "eth0"  
-                },  
-                "action": 
-                {  
-                    "VNF_id": "dummy:1"  
-                }  
-            },  
-            {  
-                "id": "00000002",  
-                "match": 
-                {  
-                    "VNF_id": "dummy:2"  
-                },  
-                "action": 
-                {  
-                    "port": "eth1"  
-                }  
-            },  
-            {  
-                "id": "00000003",  
-                "match": 
-                {  
-                    "port": "eth1"  
-                },  
-                "action": 
-                {  
-                    "VNF_id": "dummy:2"  
-                }  
-            },  
-            {  
-                "id": "00000004",  
-                "match": 
-                {  
-                    "VNF_id": "dummy:1"  
-                },  
-                "action": 
-                {      
-                    "port": "eth0"  
-                }  
-            } 
-            ]  
-        }  
-    }  
-    
+        "flow-graph": {
+            "VNFs": [
+            {
+                "id": "dummy"
+            }
+            ],
+            "flow-rules": [
+            {
+                "id": "00000001",
+                "match":
+                {
+                    "port": "eth0"
+                },
+                "action":
+                {
+                    "VNF_id": "dummy:1"
+                }
+            },
+            {
+                "id": "00000002",
+                "match":
+                {
+                    "VNF_id": "dummy:2"
+                },
+                "action":
+                {
+                    "port": "eth1"
+                }
+            },
+            {
+                "id": "00000003",
+                "match":
+                {
+                    "port": "eth1"
+                },
+                "action":
+                {
+                    "VNF_id": "dummy:2"
+                }
+            },
+            {
+                "id": "00000004",
+                "match":
+                {
+                    "VNF_id": "dummy:1"
+                },
+                "action":
+                {
+                    "port": "eth0"
+                }
+            }
+            ]
+        }
+    }
+
 This json can be stored in a file (e.g., `nffg.json`) and provided to the un-orchestrator either through the command line at the boot of the un-orchestrator, or through its REST API. In the latter case, the command to be used is the following:
 
       curl -i -H "Content-Type: application/json" -d "@nffg.json" \

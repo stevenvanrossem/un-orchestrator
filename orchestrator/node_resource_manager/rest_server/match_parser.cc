@@ -11,7 +11,7 @@ string MatchParser::nfName(string name_port)
 	char tmp[BUFFER_SIZE];
 	strcpy(tmp,name_port.c_str());
 	char *pnt=strtok(tmp, delimiter);
-	while( pnt!= NULL ) 
+	while( pnt!= NULL )
 	{
 		return string(pnt);
 	}
@@ -33,7 +33,7 @@ unsigned int MatchParser::nfPort(string name_port)
 	unsigned int port = 0;
 
 	int i = 0;
-	while( pnt!= NULL ) 
+	while( pnt!= NULL )
 	{
 		switch(i)
 		{
@@ -59,11 +59,11 @@ bool MatchParser::validateMac(const char* mac)
 	int i = 0;
 	int s = 0;
 
-	while (*mac) 
+	while (*mac)
 	{
 		if (isxdigit(*mac))
 			i++;
-		else if (*mac == ':' || *mac == '-') 
+		else if (*mac == ':' || *mac == '-')
 		{
 			if (i == 0 || i / 2 - 1 != s)
 			break;

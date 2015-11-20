@@ -588,7 +588,7 @@ void *startNF(void *arguments)
 {
     to_thread_t *args = (to_thread_t *)arguments;
     assert(args->computeController != NULL);
-    
+
     if(!args->computeController->startNF(args->nf_name, args->namesOfPortsOnTheSwitch))
     	return (void*) 0;
     else
@@ -821,7 +821,7 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 		}
 			
 		map<string,map<string, unsigned int> > nfsports = clo->getNetworkFunctionsPorts();
-		//TODO: check if the number of vnfs and ports is the same required 
+		//TODO: check if the number of vnfs and ports is the same required
 		for(map<string,map<string, unsigned int> >::iterator nfp = nfsports.begin(); nfp != nfsports.end(); nfp++)
 		{
 			if(!lsi->setNfPortsID(nfp->first,nfp->second))
@@ -838,7 +838,7 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 			lsi->setNetworkFunctionsPortsNameOnSwitch(nfpnos->first,nfpnos->second);
 		
 		list<pair<unsigned int, unsigned int> > vl = clo->getVirtualLinks();
-		//TODO: check if the number of vlinks is the same required 
+		//TODO: check if the number of vlinks is the same required
 		unsigned int currentTranslation = 0;
 		for(list<pair<unsigned int, unsigned int> >::iterator it = vl.begin(); it != vl.end(); it++)
 		{
@@ -910,7 +910,7 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 			endPointsDefinedInMatches[ep] = vl1->getRemoteID();
 			
 			//This endpoint is currently not used in any other graph, since it is defined in the current graph
-			availableEndPoints[ep] = 0; 
+			availableEndPoints[ep] = 0;
 		}
 	}
 	lsi->setNFsVLinks(nfs_vlinks);
@@ -953,7 +953,7 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 			endPointsDefinedInActions[*ep] = vl3->getRemoteID();
 			
 			//This endpoint is currently not used in any other graph, since it is defined in the current graph
-			availableEndPoints[*ep] = 0; 
+			availableEndPoints[*ep] = 0;
 		}
 	}
 	lsi->setEndPointsVLinks(endpoints_vlinks);
@@ -1445,7 +1445,7 @@ bool GraphManager::updateGraph(string graphID, highlevel::Graph *newPiece)
 				endPointsDefinedInActions[*ep] = vlink.getRemoteID();
 		
 				//This endpoint is currently not used in any other graph, since it is defined in the current graph
-				availableEndPoints[*ep] = 0; 
+				availableEndPoints[*ep] = 0;
 			}
 		}catch(SwitchManagerException e)
 		{
@@ -1477,7 +1477,7 @@ bool GraphManager::updateGraph(string graphID, highlevel::Graph *newPiece)
 		endPointsDefinedInMatches[ep] = vlink.getRemoteID();
 
 		//This endpoint is currently not used in any other graph, since it is defined in the current graph
-		availableEndPoints[ep] = 0; 
+		availableEndPoints[ep] = 0;
 	}
 
 

@@ -1,6 +1,6 @@
 # Universal Node Orchestrator
 
-The Universal Node orchestrator (un-orchestrator) is the main component of the 
+The Universal Node orchestrator (un-orchestrator) is the main component of the
 Universal Node (UN). It handles the orchestration of compute and network
 resources within a UN, hence managing the complete lifecycle of computing
 containers (e.g., VMs, Docker, DPDK processes, native environment) and
@@ -10,15 +10,15 @@ Forwarding Graph (NF-FG) formalism, and takes care of implementing them on
 the physical node. 
 
 More in detail, when it receives a command to deploy a new NF-FG, it does all
-the operations required to actually implement the forwarding graph: 
+the operations required to actually implement the forwarding graph:
 
   * retrieve the most appropriate image for the selected virtual network
     function (VNF);
-  * configure the virtual switch (vSwitch) to create a new logical switching 
+  * configure the virtual switch (vSwitch) to create a new logical switching
     instance (LSI) and the ports required to connect it to the VNF to be deployed;
   * deploy and start the VNF;
-  * translate the rules to steer the traffic into OpenFlow flowmod messages 
-    to be sent to the vSwitch (some flowmod are sent to the new LSI, others 
+  * translate the rules to steer the traffic into OpenFlow flowmod messages
+    to be sent to the vSwitch (some flowmod are sent to the new LSI, others
     to the LSI-0, i.e. an LSI that steers the traffic into the proper graph.)
 
 Similarly, the un-orchestrator takes care of updating or destroying a graph,
@@ -50,7 +50,7 @@ It consists of two parts:
 
 Currently, the un-orchestrator supports OpenvSwitch (OvS) and the extensible DataPath daemon
 (xDPd) as vSwitches.
-If you are interested to add the support for a new virtual switch, please 
+If you are interested to add the support for a new virtual switch, please
 check the file [network_controller/switch_manager/README.md](network_controller/switch_manager/README.md).
 
 Note that, according to the picture above, the network controller creates a first
@@ -67,7 +67,7 @@ already processed in a graph.
 The compute controller is the sub-module that interacts with the hypervisor
 and handles the lifecycle of a virtual network function (i.e., creating,
 updating, destroying a VNF), including the operations needed to attach
-VNF ports to the running vSwitch. Each execution environment may require a different 
+VNF ports to the running vSwitch. Each execution environment may require a different
 implementation for the compute controller, according to the commands supported by the hypervisor itself.
 
 Currently the prototype supports virtual network functions as (KVM) VMs, Docker,

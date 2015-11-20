@@ -1,14 +1,14 @@
 # UN compute manager
 
-The compute manager (or controller) allows the un-orchestrator to interact with the 
+The compute manager (or controller) allows the un-orchestrator to interact with the
 execution environment for management purposes, such as the startup and the
 shutdown of network functions.
 
-Thanks to the proper plugin, the un-orchestrator can interact with a specific 
+Thanks to the proper plugin, the un-orchestrator can interact with a specific
 execution environment. New plugins (and then the support for a new execution
 environment) can be added in the folder `compute_controller/plugins`.
 
-Each plugin is required to define a class implementing the interface 
+Each plugin is required to define a class implementing the interface
 `compute_controller/nfs_manager.h`. Moreover, following  files:
 * `orchestrator/CMakeLists.txt`
 * `orchestrator/compute_controller/compute_controller.h`

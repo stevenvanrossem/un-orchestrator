@@ -46,7 +46,7 @@ private:
 	set<string> ports;
 	
 	/**
-	*	@brief: for each end point of the graph, the following structure specifies if that end 
+	*	@brief: for each end point of the graph, the following structure specifies if that end
 	*		point is defined in this graph or not
 	*/
 	map<string,bool> endpoints;
@@ -121,7 +121,7 @@ public:
 	set<string> getEndPoints();
 	
 	/**
-	*	@brief: given a graph endpoint (in the form graphID:epID), return true if it is defined 
+	*	@brief: given a graph endpoint (in the form graphID:epID), return true if it is defined
 	*		in this graph
 	*/
 	bool isDefinedHere(string endpoint);
@@ -177,7 +177,7 @@ public:
 	
 	/**
 	*	@brief: Checks if a physical port still exist in the graph. If it is no
-	*		longer used in any rule, but it is part of the "ports" set, it 
+	*		longer used in any rule, but it is part of the "ports" set, it
 	*		is removed from this set as well.
 	*
 	*	@param:	port	Name of a physical port
@@ -186,7 +186,7 @@ public:
 	
 	/**
 	*	@brief: Checks if an endpoint port still exist in the graph. If it is no
-	*		longer used in any rule, but it is part of the "endpoints" set, it 
+	*		longer used in any rule, but it is part of the "endpoints" set, it
 	*		is removed from this set as well.
 	*
 	*	@param: endpoint	Name of an endpoint

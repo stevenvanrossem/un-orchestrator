@@ -70,7 +70,7 @@ public:
 	*
 	*	@param: dvli	Information related to the connection to be destroyed
 	*/
-	virtual void destroyVirtualLink(DestroyVirtualLinkIn dvli) = 0; 
+	virtual void destroyVirtualLink(DestroyVirtualLinkIn dvli) = 0;
 
 	/**
 	*	@brief: Check if the physical interfaces required are supported by the virtual switch

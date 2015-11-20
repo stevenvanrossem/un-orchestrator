@@ -31,7 +31,7 @@ public:
 
 	void destroyNFPorts(DestroyNFportsIn dnpi);
 
-	void destroyVirtualLink(DestroyVirtualLinkIn dvli); 
+	void destroyVirtualLink(DestroyVirtualLinkIn dvli);
 
 	void checkPhysicalInterfaces(set<CheckPhysicalPortsIn> cppi);
 

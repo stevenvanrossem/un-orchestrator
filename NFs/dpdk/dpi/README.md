@@ -17,21 +17,21 @@ To change the configuration of the DPI (e.g., changing the network interfaces it
 
 ### Creating the binary
 
-In addition to the DPDK library, the DPI requires the pcre library to implements the packet inspections. 
+In addition to the DPDK library, the DPI requires the pcre library to implements the packet inspections.
 The pcre library can be installed with the command:
 
 	$ sudo apt-get install libpcre3 libpcre3-dev
 
 To compile the DPI to be used with xDPd, run the following commands:
 
-	$ export RTE_SDK=absolute_path_dpdk  
+	$ export RTE_SDK=absolute_path_dpdk
 	; e.g., export RTE_SDK=~/Desktop/dpdk-dev
 	$ RTE_TARGET=x86_64-native-linuxapp-gcc
 	$ make
 	
 To compile the DPI to be used with OvS-DPDK, run the following commands:
 
-	$ export RTE_SDK=absolute_path_dpdk  
+	$ export RTE_SDK=absolute_path_dpdk
 	; e.g., export RTE_SDK=~/Desktop/dpdk-dev
 	$ RTE_TARGET=x86_64-ivshmem-linuxapp-gcc
 	$ make

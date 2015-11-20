@@ -160,7 +160,7 @@ public:
 	nf_t getNFType(string name);
 	
 	/**
-	*	@brief: Set the identifier of the identifier of the LSI attached to the NFs 
+	*	@brief: Set the identifier of the identifier of the LSI attached to the NFs
 	*
 	*	@param:	lsiID	Identifier of an LSI
 	*/

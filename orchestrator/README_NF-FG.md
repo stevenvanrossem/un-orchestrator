@@ -6,8 +6,8 @@ Some examples are also available in the `config` folder.
 
 ## Example 1
 
-This example is very simple: configures a graph that receives all the traffic 
-from interface `eth0` and sends it to interface `eth1`, without traversing any 
+This example is very simple: configures a graph that receives all the traffic
+from interface `eth0` and sends it to interface `eth1`, without traversing any
 VNF.
 
     {
@@ -15,17 +15,17 @@ VNF.
         {
 			"flow-rules": [
 			{
-				"id": "00000001",  
-				"match":  
+				"id": "00000001",
+				"match":
 				{
-					"port" : "eth0"  
+					"port" : "eth0"
 				},
-                "action":  
+                "action":
 				{
-					"port": "eth1"  
-				}  
-			}  
-			]  
+					"port": "eth1"
+				}
+			}
+			]
 		}
 	}
 
@@ -36,41 +36,41 @@ This example is more complex, and it includes a network function called "firewal
 Packets coming from the interface `eth0` are sent to the first port of the network
 function (`firewall:1`), while packets coming from the second port of the network
 function (`firewall:2`) are sent on the network interface `eth1`.
-  
-    {  
-        "flow-graph":  
-        {  
-            "VNFs": [  
-		    {  
-				"id": "firewall"  
-			}  
-		    ],  
-		    "flow-rules": [  
-		    {  
-			    "id": "00000001",  
-    			"match":  
-				{  
-					"port" : "eth0"  
-				},  
-				"action":  
-				{  
-					"VNF_id": "firewall:1"  
-				}  
-			},  
-			{  
-				"id": "00000002",  
-				"match":  
-				{  
-					"VNF_id" : "firewall:2"  
-				},  
-				"action":  
-				{  
-					"port": "eth1"  
-				}  
-			}  
-		    ]  
-    	}  
-    }  
+
+    {
+        "flow-graph":
+        {
+            "VNFs": [
+		    {
+				"id": "firewall"
+			}
+		    ],
+		    "flow-rules": [
+		    {
+			    "id": "00000001",
+    			"match":
+				{
+					"port" : "eth0"
+				},
+				"action":
+				{
+					"VNF_id": "firewall:1"
+				}
+			},
+			{
+				"id": "00000002",
+				"match":
+				{
+					"VNF_id" : "firewall:2"
+				},
+				"action":
+				{
+					"port": "eth1"
+				}
+			}
+		    ]
+    	}
+    }
 
 
 ## Example 3
@@ -83,87 +83,87 @@ graph through the port `eth2`.
 
 This graph can be graphically represented as follows:
 
-    eth0 -> firewall -> if (tcp_dst == 80) -> web cache  -> nat  -> eth1  
-                        else \--------------------------/   
+    eth0 -> firewall -> if (tcp_dst == 80) -> web cache  -> nat  -> eth1
+                        else \--------------------------/
 
 Json description of the graph:
-               
-    { 
-    	"flow-graph":   
-	    {  
-		    "VNFs": [  
-			{  
-				"id": "firewall"  
-			},  
-			{  
-				"id": "NAT"  
-			},  
-			{  
-				"id": "web-cache"  
-			}  
-	    	],  
-	    	"flow-rules": [  
-			{  
-				"id": "00000001",  
-				"match":  
-				{  
-					"port" : "eth0"   	   
-				},  
-				"action":  
-				{  
-					"VNF_id": "firewall:1"  
-				}  
-			},  
-			{  
-				"id": "00000002",  
-				"priority" : "10",  
-				"match":  
-				{  
-					"VNF_id" : "firewall:2",  
-					"tcp_dst" : "80"  
-				},  
-				"action":  
-				{  
-					"VNF_id": "web-cache:1"  
-				}  
-			},  
-			{  
-				"id": "00000003",  
-				"priority" : "1",  
-				"match":  
-				{  
-					"VNF_id" : "firewall:2"  
-				},  
-				"action":  
-				{  
-					"VNF_id": "NAT:1"  
-				}  
-			},  
-			{  
-				"id": "00000004",  
-				"match":  
-				{  
-					"VNF_id" : "web-cache:2"  
-				},  
-				"action":  
-				{  
-					"VNF_id": "NAT:1"  
-				}  
-			},  
-			{  
-				"id": "00000005",  
-				"match":  
-				{  
-					"VNF_id" : "NAT:2"  
-				},  
-				"action":  
-				{  
-					"port": "eth1"  
-				}  
-			}  
-    		]  
-	    }  
-    }  
+
+    {
+    	"flow-graph":
+	    {
+		    "VNFs": [
+			{
+				"id": "firewall"
+			},
+			{
+				"id": "NAT"
+			},
+			{
+				"id": "web-cache"
+			}
+	    	],
+	    	"flow-rules": [
+			{
+				"id": "00000001",
+				"match":
+				{
+					"port" : "eth0"   	
+				},
+				"action":
+				{
+					"VNF_id": "firewall:1"
+				}
+			},
+			{
+				"id": "00000002",
+				"priority" : "10",
+				"match":
+				{
+					"VNF_id" : "firewall:2",
+					"tcp_dst" : "80"
+				},
+				"action":
+				{
+					"VNF_id": "web-cache:1"
+				}
+			},
+			{
+				"id": "00000003",
+				"priority" : "1",
+				"match":
+				{
+					"VNF_id" : "firewall:2"
+				},
+				"action":
+				{
+					"VNF_id": "NAT:1"
+				}
+			},
+			{
+				"id": "00000004",
+				"match":
+				{
+					"VNF_id" : "web-cache:2"
+				},
+				"action":
+				{
+					"VNF_id": "NAT:1"
+				}
+			},
+			{
+				"id": "00000005",
+				"match":
+				{
+					"VNF_id" : "NAT:2"
+				},
+				"action":
+				{
+					"port": "eth1"
+				}
+			}
+    		]
+	    }
+    }
 
 
 ## Example 4
@@ -172,82 +172,82 @@ It is possible to connect multiple graphs together by using the so called "endpo
 An endpoint is always in the form "graph_id:endpoint_id_in_the_graph", where "graph_id"
 is the graph that defines the endpoint.
 A graph that want to use and endpoint defined by another graph, can do it only if that
-endpoint has been specified by that graph. 
+endpoint has been specified by that graph.
 
 As an example, the following command defines an endpoint "myGraph:1", while the second
 command uses that endpoint.
-               
-    {   
+
+    {
         "flow-graph":
-        {   
-            "VNFs":[   
-            {  
-                "id":"bridge"  
-            }  
-            ],  
-            "flow-rules":[   
-            {    
-                "id":"00000001",  
+        {
+            "VNFs":[
+            {
+                "id":"bridge"
+            }
+            ],
+            "flow-rules":[
+            {
+                "id":"00000001",
                 "match":
-                {    
-                    "endpoint_id":"myGraph:1"  
-                },  
+                {
+                    "endpoint_id":"myGraph:1"
+                },
                 "action":
-                {    
-                    "VNF_id":"bridge:1"  
-                }  
-            },  
-            {    
-                "id":"00000002",  
+                {
+                    "VNF_id":"bridge:1"
+                }
+            },
+            {
+                "id":"00000002",
                 "match":
-                {    
-                    "VNF_id":"bridge:2"  
-                },  
+                {
+                    "VNF_id":"bridge:2"
+                },
                 "action":
-                {    
-                    "port":"eth1"  
-                }  
-            }  
-            ]  
-       }  
-    }  
-               
-    {   
+                {
+                    "port":"eth1"
+                }
+            }
+            ]
+       }
+    }
+
+    {
        "flow-graph":
-        {   
-            "VNFs":[   
-            {    
-                "id":"bridge"  
-            }  
-            ],  
-            "flow-rules":[   
-            {    
-                "id":"00000001",  
-                "priority":"25",  
+        {
+            "VNFs":[
+            {
+                "id":"bridge"
+            }
+            ],
+            "flow-rules":[
+            {
+                "id":"00000001",
+                "priority":"25",
                 "match":
-                {    
-                    "port":"eth0",  
-                    "eth_src":"aa:aa:aa:aa:aa:aa"   
-                },  
+                {
+                    "port":"eth0",
+                    "eth_src":"aa:aa:aa:aa:aa:aa"
+                },
                 "action":
-                {    
-                    "endpoint_id":"myGraph:1"  
-                }  
-            },  
-            {    
-                "id":"00000002",  
+                {
+                    "endpoint_id":"myGraph:1"
+                }
+            },
+            {
+                "id":"00000002",
                 "match":
-                {    
-                    "port":"eth0"  
-                },  
+                {
+                    "port":"eth0"
+                },
                 "action":
-                {    
-                    "port":"eth1"  
-                }  
-            }  
-            ]  
-        }  
-    }  
+                {
+                    "port":"eth1"
+                }
+            }
+            ]
+        }
+    }
 
   Since the endpoint "myGraph:1" is defined in a match of the graph "myGraph",
   other graphs can use it only in an action.
@@ -256,7 +256,7 @@ command uses that endpoint.
 
 ## Supported matches
 
-Within the "match" element of the NF-FG description, the following fields are allowed 
+Within the "match" element of the NF-FG description, the following fields are allowed
 (all the values must be specified as strings):
 
 	"port"         //only if "VNF_id" and "endpoint_id" are not specified
@@ -306,7 +306,7 @@ Within the "match" element of the NF-FG description, the following fields are al
 
 ## Supported actions
 
-Within the "action" element of the NF-FG description, one and only one of the 
+Within the "action" element of the NF-FG description, one and only one of the
 following fields **MUST** be specified:
 
 	"port"         //only if "VNF_id" and "endpoint_id" are not specified
@@ -314,23 +314,23 @@ following fields **MUST** be specified:
 	"endpoint_id"  //only if "port" and "VNF_id" are not specified
 
 The previous fields indicates an output port through which packets can be sent.	
-Other actions can be specified together with the previous ones:  
+Other actions can be specified together with the previous ones:
 
-* vlan push  
+* vlan push
 
 	"action":
-    {    
+    {
         "vlan":
         {
             "operation":"push",
             "vlan_id":"25"
         }
-    }  
+    }
 
-* vlan pop:  
+* vlan pop:
 
     "action":
-    {    
+    {
         "vlan":
         {
             "operation":"pop"

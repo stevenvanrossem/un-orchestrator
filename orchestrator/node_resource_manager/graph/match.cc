@@ -6,7 +6,7 @@ namespace graph
 Match::Match() :
 	eth_src(NULL), eth_src_mask(NULL), eth_dst(NULL), eth_dst_mask(NULL), isEthType(false),
 	isVlanID(false),isNoVlan(false),isAnyVlan(false),isVlanPCP(false),
-	isIpDSCP(false),isIpECN(false),isIpProto(false), ipv4_src(NULL), ipv4_src_mask(NULL), 
+	isIpDSCP(false),isIpECN(false),isIpProto(false), ipv4_src(NULL), ipv4_src_mask(NULL),
 		ipv4_dst(NULL), ipv4_dst_mask(NULL),
 	isTcpSrc(false), isTcpDst(false),
 	isUdpSrc(false), isUdpDst(false),
@@ -383,7 +383,7 @@ void Match::setAllCommonFields(Match match)
 	/*
 	*	Ethernet
 	*/
-	if(match.eth_src != NULL) 
+	if(match.eth_src != NULL)
 		setEthSrc(match.eth_src);
 	if(match.eth_src_mask)
 		setEthSrcMask(match.eth_src_mask);
@@ -810,7 +810,7 @@ void Match::print()
 		*	IPv4
 		*/
 		if(isIpDSCP)
-			cout << "\t\t\tIPv4 dscp: " << int(ipDSCP) << endl; 
+			cout << "\t\t\tIPv4 dscp: " << int(ipDSCP) << endl;
 		if(isIpECN)
 			cout << "\t\t\tIPv4 ecn: " << int(ipECN) << endl;
 		if(isIpProto)
@@ -1163,7 +1163,7 @@ string Match::prettyPrint()
 	*	IPv4
 	*/
 	if(isIpDSCP)
-		ss << " # IPv4 dscp: " << int(ipDSCP); 
+		ss << " # IPv4 dscp: " << int(ipDSCP);
 	if(isIpECN)
 		ss << " # IPv4 ecn: " << int(ipECN);
 	if(isIpProto)

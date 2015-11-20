@@ -1,6 +1,6 @@
 # Docker-based VNF examples
 
-This folder contains some examples of network functions implemented as Docker 
+This folder contains some examples of network functions implemented as Docker
 containers.
 
 ## How to install Docker
@@ -8,7 +8,7 @@ containers.
 In order to create your own VNF, you need to install the Docker environment by following the instructions
 provided here:
 
-	http://docs.docker.com/installation/  
+	http://docs.docker.com/installation/
 
 ## How to create your VNFs
 

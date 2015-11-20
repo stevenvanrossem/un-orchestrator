@@ -52,7 +52,7 @@ private:
 	physicalPortSide_t side;
 
 protected:
-	CheckPhysicalPortsIn(string name, physicalPortType_t type, physicalPortSide_t side) 
+	CheckPhysicalPortsIn(string name, physicalPortType_t type, physicalPortSide_t side)
 		: name(name), type(type), side(side)
 	{
 	}

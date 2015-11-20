@@ -2,9 +2,9 @@
 
 #Author: Ivano Cerrato
 #Date: June 26th 2014
-#Brief: pull a NF from a remote repository or a folder on this system, and run it. 
+#Brief: pull a NF from a remote repository or a folder on this system, and run it.
 
-#command line: 
+#command line:
 #	sudo ./nfs_manager/scripts/dpdk/pullAndRunNF.sh 2 example https://dl.dropboxusercontent.com/u/26069382/nf 2 2 2 2_example_1 2_example_2
 
 
@@ -18,7 +18,7 @@
 
 tmp_file="$1_$2_tmp"
 
-if (( $EUID != 0 )) 
+if (( $EUID != 0 ))
 then
     echo "[pullAndRunNF] This script must be executed with ROOT privileges"
     exit 0
@@ -73,8 +73,8 @@ for (( c=0; c<$6; c++ ))
 do
  	echo -ne --p ${!current} " ">> $tmp_file
 	
-	current=`expr $current + 1` 
-done 
+	current=`expr $current + 1`
+done
 
 echo `echo --s $1_$2 --l $1_$2.log` >> $tmp_file
 

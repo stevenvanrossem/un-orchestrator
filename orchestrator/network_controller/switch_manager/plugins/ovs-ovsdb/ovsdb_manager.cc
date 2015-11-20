@@ -50,4 +50,4 @@ AddVirtualLinkOut *OVSDBManager::addVirtualLink(AddVirtualLinkIn avli){
 void OVSDBManager::checkPhysicalInterfaces(set<CheckPhysicalPortsIn> cppi){
 	/*TODO*/
 }
- 
+

@@ -15,7 +15,7 @@ bool RestServer::init(string fileName)
 
 	//Validate the configuration file with the schema
 	schema_doc = xmlReadFile(NETWORK_FUNCTIONS_XSD, NULL, XML_PARSE_NONET);
-	if (schema_doc == NULL) 
+	if (schema_doc == NULL)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "The schema cannot be loaded or is not well-formed.");
 		/*Free the allocated resources*/
@@ -24,7 +24,7 @@ bool RestServer::init(string fileName)
 	}
 	
 	parser_ctxt = xmlSchemaNewDocParserCtxt(schema_doc);
-	if (parser_ctxt == NULL) 
+	if (parser_ctxt == NULL)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Unable to create a parser context for the schema.");
 		/*Free the allocated resources*/
@@ -33,7 +33,7 @@ bool RestServer::init(string fileName)
 	}
 
 	schema = xmlSchemaParse(parser_ctxt);
-	if (schema == NULL) 
+	if (schema == NULL)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "The XML schema is not valid.");
 		/*Free the allocated resources*/
@@ -42,7 +42,7 @@ bool RestServer::init(string fileName)
 	}
 
 	valid_ctxt = xmlSchemaNewValidCtxt(schema);
-	if (valid_ctxt == NULL) 
+	if (valid_ctxt == NULL)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Unable to create a validation context for the XML schema.");
 		/*Free the allocated resources*/
@@ -71,7 +71,7 @@ bool RestServer::init(string fileName)
 	xmlNodePtr root = xmlDocGetRootElement(doc);
 
 	//Load the file describing NFs
-	for(xmlNodePtr cur_root_child=root->xmlChildrenNode; cur_root_child!=NULL; cur_root_child=cur_root_child->next) 
+	for(xmlNodePtr cur_root_child=root->xmlChildrenNode; cur_root_child!=NULL; cur_root_child=cur_root_child->next)
 	{
 		if ((cur_root_child->type == XML_ELEMENT_NODE)&&(!xmlStrcmp(cur_root_child->name, (const xmlChar*)NETWORK_FUNCTION_ELEMENT)))
 		{
@@ -172,7 +172,7 @@ void RestServer::request_completed (void *cls, struct MHD_Connection *connection
 {
 	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
 
-	if (NULL == con_info) 
+	if (NULL == con_info)
 		return;
 	
 	free (con_info);
@@ -194,7 +194,7 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 		struct connection_info_struct *con_info;
 		con_info = (struct connection_info_struct*)malloc (sizeof (struct connection_info_struct));
 		
-		if (NULL == con_info) 
+		if (NULL == con_info)
 			return MHD_NO;
 		
 		if (0 != strcmp (method, GET))
@@ -239,7 +239,7 @@ int RestServer::doGet(struct MHD_Connection *connection, const char *url)
 	strcpy(tmp,url);
 	pnt=strtok(tmp, delimiter);
 	int i = 0;
-	while( pnt!= NULL ) 
+	while( pnt!= NULL )
 	{
 		switch(i)
 		{
@@ -283,7 +283,7 @@ int RestServer::doGet(struct MHD_Connection *connection, const char *url)
 	
 	try
 	{
-		Object json ; 
+		Object json ;
 		
 		//Create the json according to the request
 		if(i == 1)
@@ -366,11 +366,11 @@ void RestServer::freeXMLResources(xmlSchemaParserCtxtPtr parser_ctxt, xmlSchemaV
 	if(parser_ctxt!=NULL)
 	    xmlSchemaFreeParserCtxt(parser_ctxt);
 
-	if(schema_doc!=NULL)    
+	if(schema_doc!=NULL)
 		xmlFreeDoc(schema_doc);
 
 	if(doc!=NULL)
-		xmlFreeDoc(doc); 
+		xmlFreeDoc(doc);
 
 	xmlCleanupParser();
 }

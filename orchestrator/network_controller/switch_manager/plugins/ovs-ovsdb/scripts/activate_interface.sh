@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 #Author: Ivano Cerrato
 #Date: Oct 28th 2015

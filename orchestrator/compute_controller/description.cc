@@ -19,7 +19,7 @@ Description::Description(string type, string uri) : uri(uri) {
 	{
 		this->type = DOCKER;
 		return;
-	} 
+	}
 #endif	
 #ifdef ENABLE_KVM
 	else if(type == "kvm")

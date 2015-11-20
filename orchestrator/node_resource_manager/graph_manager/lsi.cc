@@ -326,7 +326,7 @@ void LSI::removeNF(string nf)
 	map<string,map<string, unsigned int> >::iterator it =  network_functions.find(nf);
 	network_functions.erase(it);
 
-	map<string,nf_t>::iterator jt = nf_types.find(nf); 
+	map<string,nf_t>::iterator jt = nf_types.find(nf);
 	nf_types.erase(jt);
 	return;
 }

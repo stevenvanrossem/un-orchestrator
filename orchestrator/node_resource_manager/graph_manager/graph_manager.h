@@ -70,7 +70,7 @@ private:
 	*	ports, but that must be used to connect many graphs together
 	*
 	*	map<graph ID, counter>
-	*	where graph ID is the identifier of the graph defining the end 
+	*	where graph ID is the identifier of the graph defining the end
 	*	points, while counter indicates how many times the endpoint is
 	*	used by other graphs
 	*/
@@ -83,7 +83,7 @@ private:
 	*	
 	*	Example: the graph defining the endpoint "ep" has the rule
 	*		match: nf:1 - action: ep
-	*	ep originates a vlink with an ID into the LSI0 (e.g., 1) and an ID into 
+	*	ep originates a vlink with an ID into the LSI0 (e.g., 1) and an ID into
 	*	the current LSI (e.g., 2). This structure contains the entry: <ep, 1>
 	*/
 	map<string, unsigned int> endPointsDefinedInActions;
@@ -97,7 +97,7 @@ private:
 	*
 	*   Example: the graph defining the endpoint "ep" has the rule
 	*		match: ep - action: nf:1
-	*	nf:1 originates a vlink with an ID into the LSI0 (e.g., 1) and an ID into 
+	*	nf:1 originates a vlink with an ID into the LSI0 (e.g., 1) and an ID into
 	*	the current LSI (e.g.. 2). This structure contains the entry: <ep, 1>
 	*/
 	map<string, unsigned int> endPointsDefinedInMatches;
@@ -122,11 +122,11 @@ private:
 	
 	/**
 	*	@brief: identify the virtual links required to implement the graph: each action
-	*		expressed on a NF port, associated with a match on a physical port, requires a 
+	*		expressed on a NF port, associated with a match on a physical port, requires a
 	*		a virtual link; each action on a port associated with a match on a NF requires
 	*		a virtual link; each action expressed on an end point associated with a match
-	*		on a NF requires a virtual link. 
-	*		Two actions on the same NF port requires a single virtual link, as well as two 
+	*		on a NF requires a virtual link.
+	*		Two actions on the same NF port requires a single virtual link, as well as two
 	*		ouput actions realted to the same physical port or end point requrie just one
 	*		virtual link.
 	*
@@ -143,7 +143,7 @@ private:
 	/**
 	*	@brief: apply the same rules of the previous functions, but the virtual link is required
 	*		only if the NF or the port that would need it are not alredy present in the graph.
-	*		In fact, this function must be used during the updating of an existing graph, and not 
+	*		In fact, this function must be used during the updating of an existing graph, and not
 	*		during the creation of a new one
 	*
 	*	@param: newPiece	The new part of the graph to be created
@@ -191,7 +191,7 @@ private:
 	*	@param: flowID	Identifier of the flow to be removed
 	*
 	*	FIXME: this function could be improved as follows: if the flow defines an endpoint in a match, it could
-	*	be removed if it is not used in actions of other graphs. 
+	*	be removed if it is not used in actions of other graphs.
 	*/
 	bool canDeleteFlow(highlevel::Graph *graph, string flowID);
 #endif
@@ -220,7 +220,7 @@ public:
 
 	/**
 	*	@brief: remove the graph with a specified graph descriptor. The graph cannot be
-	*		removed if it defines endpoints currently used by other graphs and 
+	*		removed if it defines endpoints currently used by other graphs and
 	*		shutdown is false.
 	*
 	*	When the graph is removed, the endpoints it defines are removed as well, and the

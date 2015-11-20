@@ -2,14 +2,14 @@
 
 #Author: Ivano Cerrato
 #Date: June 26th 2014
-#Brief: stop a NF 
+#Brief: stop a NF
 
 #command line: sudo ./stopNF.sh $1 $2
 
 #$1 LSI ID				(e.g., 2)
 #$2 NF name				(e.g., firewall)
 
-if (( $EUID != 0 )) 
+if (( $EUID != 0 ))
 then
     echo "[stopNF] This script must be executed with ROOT privileges"
     exit 0

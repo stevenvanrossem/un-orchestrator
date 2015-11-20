@@ -54,10 +54,10 @@ bool RestServer::readGraphFromFile(char *nffg_filename)
 	}
 
 	stringstream stream;
-	string str; 
+	string str;
 	while (std::getline(file, str))
 	    stream << str << endl;
-	        
+	
 	if(createGraphFromFile(stream.str()) == 0)
 		return false;
 		
@@ -78,13 +78,13 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 	}
 
 	stringstream stream;
-	string str; 
+	string str;
 	while (std::getline(file, str))
 	    stream << str << endl;
-	        
-	list<string> vnfsToBeRemoved; 
+	
+	list<string> vnfsToBeRemoved;
 	list<string> rulesToBeRemoved;
-	        
+	
 	//Parse the content of the file
 	Value value;
 	read(stream.str(), value);
@@ -99,7 +99,7 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 		{
 	 	    const string& name  = i->first;
 		    const Value&  value = i->second;
-		    
+		
 		    if(name == FLOW_GRAPH)
 		    {
 		    	foundFlowGraph = true;
@@ -241,7 +241,7 @@ void RestServer::request_completed (void *cls, struct MHD_Connection *connection
 {
 	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
 
-	if (NULL == con_info) 
+	if (NULL == con_info)
 		return;
 
 	if(con_info->length != 0)
@@ -270,7 +270,7 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 		con_info = (struct connection_info_struct*)malloc (sizeof (struct connection_info_struct));
 		
 		assert(con_info != NULL);		
-		if (NULL == con_info) 
+		if (NULL == con_info)
 			return MHD_NO;
 		
 		if ((0 == strcmp (method, PUT)) || (0 == strcmp (method, DELETE)) )
@@ -296,7 +296,7 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 	assert(con_info != NULL);
 	if (0 != strcmp (method, GET))
 	{
-        //Extract the body of the HTTP request		        
+        //Extract the body of the HTTP request		
 		if (*upload_data_size != 0)
 		{
 			strcpy(&con_info->message[con_info->length],upload_data);
@@ -329,7 +329,7 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 		if(retVal == HR_EDIT_CONFIG)
 		{
 			//Handle the graph received from the network
-			//Handle the rules to be removed as required 
+			//Handle the rules to be removed as required
 			if(!readGraphFromFile(NEW_GRAPH_FILE) || !toBeRemovedFromFile(REMOVE_GRAPH_FILE))
 			{
 				//Something wrong happened during the manipulation of the graph
@@ -351,7 +351,7 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 		int ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
 		return ret;
 	}
-   
+
 #else
 	if (0 == strcmp (method, GET))
 		return doGet(connection,url);
@@ -424,7 +424,7 @@ int RestServer::doPut(struct MHD_Connection *connection, const char *url, void *
 	strcpy(tmp,url);
 	pnt=strtok(tmp, delimiter);
 	int i = 0;
-	while( pnt!= NULL ) 
+	while( pnt!= NULL )
 	{
 		switch(i)
 		{
@@ -618,7 +618,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 		{
 	 	    const string& name  = i->first;
 		    const Value&  value = i->second;
-		    
+		
 		    if(name == FLOW_GRAPH)
 		    {
 		    	foundFlowGraph = true;
@@ -687,7 +687,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 							}
 							if(
 #ifdef POLITO_MESSAGE							
-							!foundTemplate || 
+							!foundTemplate ||
 #endif							
 							!foundID)
 							{
@@ -977,7 +977,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The content does not respect the JSON syntax: ",e.what());
 		return false;
 	}
-    
+
 #ifndef UNIFY_NFFG
 	//XXX The number of ports is provided by the name resolver, and should not depend on the flows inserted. In fact,
 	//it should be possible to start VNFs without setting flows related to such a function!
@@ -986,7 +986,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 		set<unsigned int> ports = it->second;
 		assert(ports.size() != 0);
 		
-		for(set<unsigned int>::iterator p = ports.begin(); p != ports.end(); p++) 
+		for(set<unsigned int>::iterator p = ports.begin(); p != ports.end(); p++)
 		{
 			if(!graph.updateNetworkFunction(it->first,*p))
 			{
@@ -994,7 +994,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 					return false;
 				else
 				{
-					//The message does not describe the current NF into the section "VNFs". However, this NF could be 
+					//The message does not describe the current NF into the section "VNFs". However, this NF could be
 					//already part of the graph, and in this case the match/action using it is valid. On the contrary,
 					//if the NF is no longer part of the graph, there is an error, and the graph cannot be updated.
 					if(gm->graphContainsNF(graph.getID(),it->first))
@@ -1033,7 +1033,7 @@ int RestServer::doGet(struct MHD_Connection *connection, const char *url)
 	strcpy(tmp,url);
 	pnt=strtok(tmp, delimiter);
 	int i = 0;
-	while( pnt!= NULL ) 
+	while( pnt!= NULL )
 	{
 		switch(i)
 		{
@@ -1062,7 +1062,7 @@ get_malformed_url:
 	if( (!request && i != 2) || (request && i != 1) )
 	{
 		//the URL is malformed
-		goto get_malformed_url; 
+		goto get_malformed_url;
 	}
 	
 	if(MHD_lookup_connection_value (connection,MHD_HEADER_KIND, "Host") == NULL)
@@ -1169,7 +1169,7 @@ int RestServer::doDelete(struct MHD_Connection *connection, const char *url, voi
 	strcpy(tmp,url);
 	pnt=strtok(tmp, delimiter);
 	int i = 0;
-	while( pnt!= NULL ) 
+	while( pnt!= NULL )
 	{
 		switch(i)
 		{
@@ -1245,7 +1245,7 @@ delete_malformed_url:
 				MHD_destroy_response (response);
 				return ret;
 			}
-			else 
+			else
 				logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The graph has been properly deleted!");
 				logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "");
 		}

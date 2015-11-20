@@ -29,7 +29,7 @@ bool IvshmemCmdLineGenerator::dpdk_init(void)
 
 	/* does not exist a nicer way to do it? */
 	/* XXX: why -n is not required? */
-	char * arg[] = 
+	char * arg[] =
 	{
 		"./something",
 		"--proc-type=secondary",

@@ -47,7 +47,7 @@ protected:
 	*			Each phyPort is translated into its port ID on LSI-0.
 	*			The other parameters expressed in the match are not
 	*			changed.
-	*		phyPort -> NF: 
+	*		phyPort -> NF:
 	*			PhyPort is translated into its port ID on LSI-0, while
 	*			NF is translated into the LSI-0 side virtual link that
 	*			"represents the NF" in LSI-0.
@@ -56,31 +56,31 @@ protected:
 	*		NF -> phyPort:
 	*			The entire match is replaced with a match on the LSI-0
 	*			side of the virtual link that "represents the port" in the
-	*			tenant LSI. 
+	*			tenant LSI.
 	*			phyPort is translated into it port ID on LSI-0.
 	*		NF -> NF:
 	*			This rule does not appear in LSI-0.
 	*		NF -> endpoint (the endpoint is in the action part of the rule):
 	*			* endpoint defined in the current graph: no rule inserted in LSI-0
-	*			* endpoint defined into another graph: the endpoint must be defined 
+	*			* endpoint defined into another graph: the endpoint must be defined
 	*				into a match of the other graph.
-	*				The entire match is replated with a match on the LSI-0 side of the 
-	*				virtual link that "represents the endpoint" in the LSI-0. The action 
-	*				is replaced with the identifier of the port stored in endPointsDefinedInMatches 
+	*				The entire match is replated with a match on the LSI-0 side of the
+	*				virtual link that "represents the endpoint" in the LSI-0. The action
+	*				is replaced with the identifier of the port stored in endPointsDefinedInMatches
 	*				and associated with the endpoint itself.
 	*				Example: the current graph defines the rule:
 	*					match: NFa:2 - action: ep
 	*				while another graph defined the rule
 	*					match: ep - action NFa:1
-	*				The rule in the current graph will has, as a match, the LSI-0 part of 
-	*				the virtual link corresponding to ep, while, as an action, the content 
+	*				The rule in the current graph will has, as a match, the LSI-0 part of
+	*				the virtual link corresponding to ep, while, as an action, the content
 	*				of endPointsDefinedInMatches[ep]
 	*		endpoint -> NF (the endpoint is the match part of the rule):
 	*			* endpoint defined in the current graph: no rule inserted in LSI-0
-	*			* endpoint defined into another graph: the endpoint must be defined into 
+	*			* endpoint defined into another graph: the endpoint must be defined into
 	*				an action of the other graph.
-	*				The endpoint is translated into the id saved in endPointsDefinedInActions 
-	*				and associated with the endpoint itself, while he NF is translated into 
+	*				The endpoint is translated into the id saved in endPointsDefinedInActions
+	*				and associated with the endpoint itself, while he NF is translated into
 	*				the LSI-0 side virtual link that "represents the NF" in LSI-0.
 	*				The other parameters expressed into the match are not changed
 	*/
@@ -97,7 +97,7 @@ protected:
 	*	@Translation rules:
 	*		phyPort -> phyPort :
 	*			This rule does not appear in the tenant LSI.
-	*		phyPort -> NF : 
+	*		phyPort -> NF :
 	*		endpoint -> NF:
 	*			The entire match is replaced with a match on the tenant-LSI
 	*			side of the virtual link that represents the NF on LSI-0.
@@ -112,7 +112,7 @@ protected:
 	*			The other parameters expressed in the match are not
 	*			changed.
 	*		NF -> endpoint:
-	*			NF is translated into the port ID on tenant-LSI, while endpoint 
+	*			NF is translated into the port ID on tenant-LSI, while endpoint
 	*			is rtanslated into the tenant side virtual link that "represents
 	*			the endpoint" in the tenant LSI.
 	*/

@@ -45,7 +45,7 @@ private:
 	uint64_t coreMask;
 
 protected:
-	StartNFIn(uint64_t lsiID, string nf_name, list<string> namesOfPortsOnTheSwitch, uint64_t coreMask = 0x0) 
+	StartNFIn(uint64_t lsiID, string nf_name, list<string> namesOfPortsOnTheSwitch, uint64_t coreMask = 0x0)
 		: lsiID(lsiID), nf_name(nf_name), namesOfPortsOnTheSwitch(namesOfPortsOnTheSwitch), coreMask(coreMask)
 	{
 	}
@@ -66,7 +66,7 @@ public:
 	{
 		return namesOfPortsOnTheSwitch;
 	}
-	 
+	
 	uint64_t getCoreMask()
 	{
 		return coreMask;

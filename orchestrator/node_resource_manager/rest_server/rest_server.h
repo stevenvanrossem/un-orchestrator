@@ -2,7 +2,7 @@
 #define REST_SERVER_H_ 1
 
 /**
-*	@brief: the REST server is based on the microhttpd library: 
+*	@brief: the REST server is based on the microhttpd library:
 *				www.gnu.org/software/libmicrohttpd/
 *
 *	Documentation on HTTP return values can be found at:

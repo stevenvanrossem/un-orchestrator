@@ -63,7 +63,7 @@ void Libvirt::connect()
 
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Connecting to Libvirt ...");
 	connection = virConnectOpen("qemu:///system");
-	if (connection == NULL) 
+	if (connection == NULL)
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Failed to open connection to qemu:///system");
 	else
 		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Open connection to qemu:///system successfull");
@@ -232,7 +232,7 @@ bool Libvirt::startNF(StartNFIn sni)
 
 	/* Create NICs */
 	
-	for(list<string>::iterator pn = namesOfPortsOnTheSwitch.begin(); pn != namesOfPortsOnTheSwitch.end(); pn++) 
+	for(list<string>::iterator pn = namesOfPortsOnTheSwitch.begin(); pn != namesOfPortsOnTheSwitch.end(); pn++)
 	{
 	
 		char sock_path[255];
@@ -263,7 +263,7 @@ bool Libvirt::startNF(StartNFIn sni)
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "This function is a 'standard process' in KVM");
 
 	/* Create NICs */
-	for(list<string>::iterator pn = namesOfPortsOnTheSwitch.begin(); pn != namesOfPortsOnTheSwitch.end(); pn++) 
+	for(list<string>::iterator pn = namesOfPortsOnTheSwitch.begin(); pn != namesOfPortsOnTheSwitch.end(); pn++)
 	{
 		string port_name = *pn;
 		
@@ -276,7 +276,7 @@ bool Libvirt::startNF(StartNFIn sni)
 
 	    xmlNodePtr modeln = xmlNewChild(ifn, NULL, BAD_CAST "model", NULL);
 	    xmlNewProp(modeln, BAD_CAST "type", BAD_CAST "virtio");
-	    
+	
 	    xmlNodePtr virt = xmlNewChild(ifn, NULL, BAD_CAST "virtualport", NULL);
 	    xmlNewProp(virt, BAD_CAST "type", BAD_CAST "openvswitch");
 	}
@@ -294,7 +294,7 @@ bool Libvirt::startNF(StartNFIn sni)
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
 	
-#ifdef DEBUG_KVM 
+#ifdef DEBUG_KVM
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Dumping XML to %s", domain_name);
 	FILE* fp = fopen(domain_name, "w");
 	if (fp) {
@@ -355,13 +355,13 @@ bool Libvirt::startNF(StartNFIn sni)
 	char *disk_path = NULL;
 
 	xmlNodePtr root = xmlDocGetRootElement(doc);
-	for(xmlNodePtr cur_root_child=root->xmlChildrenNode; cur_root_child!=NULL; cur_root_child=cur_root_child->next) 
+	for(xmlNodePtr cur_root_child=root->xmlChildrenNode; cur_root_child!=NULL; cur_root_child=cur_root_child->next)
 	{
 		if ((cur_root_child->type == XML_ELEMENT_NODE)&&(!xmlStrcmp(cur_root_child->name, (const xmlChar*)"devices")))
 		{
 			//We are in the <devices> element			
 			xmlNodePtr devices = cur_root_child;
-			for(xmlNodePtr device = devices->xmlChildrenNode; device != NULL; device = device->next) 
+			for(xmlNodePtr device = devices->xmlChildrenNode; device != NULL; device = device->next)
 			{
 				if ((device->type == XML_ELEMENT_NODE)&&(!xmlStrcmp(device->name, (const xmlChar*)"disk")))
 				{					
@@ -374,7 +374,7 @@ bool Libvirt::startNF(StartNFIn sni)
 						xmlNodePtr disk = device;
 					
 						//we are in the proper disk						
-						for(xmlNodePtr indisk = disk->xmlChildrenNode; indisk != NULL; indisk = indisk->next) 
+						for(xmlNodePtr indisk = disk->xmlChildrenNode; indisk != NULL; indisk = indisk->next)
 						{
 						
 							if ((indisk->type == XML_ELEMENT_NODE)&&(!xmlStrcmp(indisk->name, (const xmlChar*)"source")))
