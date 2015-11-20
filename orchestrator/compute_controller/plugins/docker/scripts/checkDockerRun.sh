@@ -9,7 +9,7 @@
 
 if (( $EUID != 0 ))
 then
-    echo "[checkDockerRun] This script must be executed with ROOT privileges"
+    echo "[$0] This script must be executed with ROOT privileges"
     exit 0
 fi
 
@@ -20,7 +20,7 @@ then
 	exit 1
 fi
 
-echo "[checkDockerRun] Docker is not running"
+echo "[$0] Docker is not running"
 
 exit 0
 

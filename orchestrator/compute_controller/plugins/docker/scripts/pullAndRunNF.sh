@@ -16,7 +16,7 @@ tmp_file="$1_$2_tmp"
 
 if (( $EUID != 0 ))
 then
-    echo "[pullAndRunNF] This script must be executed with ROOT privileges"
+    echo "[$0] This script must be executed with ROOT privileges"
     exit 0
 fi
 
@@ -24,7 +24,7 @@ echo -ne "sudo docker run -d --name $1_$2 "   > $tmp_file
 
 echo --net=\"none\"  --privileged=true  $3 >> $tmp_file
 
-echo [`date`]"[pullAndRunNF] Executing command: '"`cat $tmp_file`"'"
+echo [`date`]"[$0] Executing command: '"`cat $tmp_file`"'"
 
 ID=`bash $tmp_file`
 
@@ -33,9 +33,9 @@ ret=`echo $?`
 
 if [ $ret -eq 0 ]
 then
-	echo [`date`]"[pullAndRunNF] Container $2 started with ID: '"$ID"'"
+	echo [`date`]"[$0] Container $2 started with ID: '"$ID"'"
 else
-	echo "[pullAndRunNF] An error occurred while starting the container"
+	echo "[$0] An error occurred while starting the container"
 	rm $tmp_file
 	exit 0
 fi
@@ -60,6 +60,9 @@ current=5
 for (( c=0; c<$4; c++ ))
 do	
 	ip link set ${!current} netns $PID
+	
+	echo "[$0] Inserting port ${!current} inside a container. It will have name eth$c"
+	
 	ip netns exec $PID ip link set dev ${!current} name eth$c
 				
  	ip netns exec $PID ip link set eth$c up

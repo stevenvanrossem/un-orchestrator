@@ -20,7 +20,7 @@ tmp_file="$1_$2_tmp"
 
 if (( $EUID != 0 ))
 then
-    echo "[pullAndRunNF] This script must be executed with ROOT privileges"
+    echo "[$0] This script must be executed with ROOT privileges"
     exit 0
 fi
 
@@ -49,9 +49,9 @@ ret=`echo $?`
 
 if [ $ret -eq 0 ]
 then
-	echo "[pullAndRunNF] Image '"$3"' retrieved"
+	echo "[$0] Image '"$3"' retrieved"
 else
-	echo "[pullAndRunNF] Impossible to retrieve image '"$3"'"
+	echo "[$0] Impossible to retrieve image '"$3"'"
 	exit 0
 fi
 
@@ -70,7 +70,7 @@ done
 
 echo `echo --s $1_$2 --l $1_$2.log` >> $tmp_file
 
-echo "[pullAndRunNF] Executing command: '"`cat $tmp_file`"'"
+echo "[$0] Executing command: '"`cat $tmp_file`"'"
 
 sudo bash $tmp_file &
 

@@ -12,21 +12,21 @@
 
 if (( $EUID != 0 ))
 then
-    echo "[attachWirelessInterface] This script must be executed with ROOT privileges"
+    echo "[$0] This script must be executed with ROOT privileges"
     exit 0
 fi
 
 bridgeName=`echo br_$1`
 bridgeName+=$2
 
-echo "[attachWirelessInterface] Creating the bridge $bridgeName"
+echo "[$0] Creating the bridge $bridgeName"
 sudo brctl addbr $bridgeName
 
 kni=`echo $1_$2`
-echo "[attachWirelessInterface] Attaching the interface $kni to the bridge $bridgeName"
+echo "[$0] Attaching the interface $kni to the bridge $bridgeName"
 sudo brctl addif $bridgeName $kni
 
-echo "[attachWirelessInterface] Attaching the interface $2 to the bridge $bridgeName"
+echo "[$0] Attaching the interface $2 to the bridge $bridgeName"
 sudo brctl addif $bridgeName $2
 
 ifconfig $bridgeName up

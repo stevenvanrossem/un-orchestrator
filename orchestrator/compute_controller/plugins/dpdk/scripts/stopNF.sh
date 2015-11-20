@@ -11,19 +11,19 @@
 
 if (( $EUID != 0 ))
 then
-    echo "[stopNF] This script must be executed with ROOT privileges"
+    echo "[$0] This script must be executed with ROOT privileges"
     exit 0
 fi
 
 file="$1_$2"
 
-echo "[stopNF] Executing command: '"sudo kill -2 `cat $file | awk {'print $1'}`"'"
+echo "[$0] Executing command: '"sudo kill -2 `cat $file | awk {'print $1'}`"'"
 
 sudo kill -2 `cat $file | awk {'print $1'}`
 
 sudo rm `cat $file | awk {'print $2'}`
 
-echo "[stopNF] DPDK NF stopped"
+echo "[$0] DPDK NF stopped"
 
 rm $file
 
