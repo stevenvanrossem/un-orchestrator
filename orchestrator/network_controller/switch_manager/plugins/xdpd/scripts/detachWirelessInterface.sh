@@ -12,14 +12,14 @@
 
 if (( $EUID != 0 ))
 then
-    echo "[detachWirelessInterface] This script must be executed with ROOT privileges"
+    echo "[$0] This script must be executed with ROOT privileges"
     exit 0
 fi
 
 bridgeName=`echo br_$1`
 bridgeName+=$2
 
-echo "[detachWirelessInterface] Deleting the bridge $bridgeName"
+echo "[$0] Deleting the bridge $bridgeName"
 
 sudo ifconfig $bridgeName down
 sudo brctl delbr $bridgeName
