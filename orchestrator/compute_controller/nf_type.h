@@ -37,27 +37,6 @@ public:
 		return "";
 	}
 	
-	static unsigned int toID(nf_t type)
-	{
-#ifdef ENABLE_DPDK_PROCESSES
-		if(type == DPDK)
-			return 2;
-#endif
-#ifdef ENABLE_DOCKER
-		if(type == DOCKER)
-			return 1;
-#endif
-#ifdef ENABLE_KVM
-		if(type == KVM)
-			return 0;
-#endif		
-
-		//[+] Add here other implementations for the execution environment
-
-		assert(0);
-		return 0;
-	}
-
 	static bool isValid(string type)
 	{
 #ifdef ENABLE_DPDK_PROCESSES
