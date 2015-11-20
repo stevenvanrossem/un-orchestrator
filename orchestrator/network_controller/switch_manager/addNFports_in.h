@@ -43,7 +43,7 @@ private:
 	list<string> nf_ports;
 
 protected:
-	AddNFportsIn(uint64_t dpid, string nf_name, nf_t type, list<string> nf_ports) 
+	AddNFportsIn(uint64_t dpid, string nf_name, nf_t type, list<string> nf_ports)
 		: dpid(dpid), nf_name(nf_name), type(type), nf_ports(nf_ports)
 	{
 	}

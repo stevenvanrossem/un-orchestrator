@@ -4,7 +4,7 @@
 static const char* OVS_BASE_SOCK_PATH = "/usr/local/var/run/openvswitch/";
 
 #if defined(ENABLE_KVM_IVSHMEM) || defined(ENABLE_DPDK_PROCESSES)
-	int OVSDPDKManager::nextportname = 1;	
+	int OVSDPDKManager::nextportname = 50;	
 #endif
 
 OVSDPDKManager::OVSDPDKManager() : m_NextLsiId(0), m_NextPortId(1) /* 0 is not valid for OVS */
@@ -181,9 +181,9 @@ CreateLsiOut *OVSDPDKManager::createLsi(CreateLsiIn cli)
 
 AddNFportsOut *OVSDPDKManager::addNFPorts(AddNFportsIn anpi)
 { // SwitchManager implementation
-  
+
   	//TODO: not implemented yet
-  
+
 	AddNFportsOut *anpo = NULL;
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "addNFPorts(dpid: %" PRIu64 " NF:%s NFType:%d)", anpi.getDpid(), anpi.getNFname().c_str(), anpi.getNFtype());
 	list<string> nfs_ports = anpi.getNetworkFunctionsPorts();

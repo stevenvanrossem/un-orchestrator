@@ -2,7 +2,7 @@
 
 The full list of command line parameters for the un-orchestrator can be
 retrieved by the following command:
-  
+
     $ sudo ./node-orchestrator --h
 
 Please refer to the help provided by the node-orchestrator itself in order to
@@ -18,7 +18,7 @@ below.
 
 ### Configuration file examples
 
-Folder `config` contains some configuration file examples that can be used 
+Folder `config` contains some configuration file examples that can be used
 to configure/test the un-orchestrator.
 
   * `config/universal-node-example.xml`: configuration file describing
@@ -28,7 +28,7 @@ to configure/test the un-orchestrator.
     a simple passthrough function, i.e., traffic is received from a first
     physical port and sent out from a second physical port, after having
     been handled to the vswitch. This graph is written according to the
-    original NF-FG definition (WP5-based). 
+    original NF-FG definition (WP5-based).
   * `config/passthrough_with_vnf_nffg.json`: graph that includes a VNF.
     Traffic is received from a first physical port, provided
     to a network function, and then sent out from a second physical port.
@@ -47,8 +47,8 @@ Set up DPDK (after each reboot of the physical machine), in order to:
   * Bind Ethernet devices to IGB UIO module (bind all the ethernet interfaces
     that you want to use)
 
-	$ cd [xdpd]/libs/dpdk/tools  
-	$ sudo ./setup.sh  
+	$ cd [xdpd]/libs/dpdk/tools
+	$ sudo ./setup.sh
 	; Follow the instructions provided in the script
 
 
@@ -56,9 +56,9 @@ Start xDPd:
 
 	$ cd [xdpd]/build/src/xdpd
 	$ sudo ./xdpd
-    
-xDPd comes with a command line tool called `xcli`, that can be used to check 
-the  flows installed in the lsis, which are the LSIs deployed, see statistics 
+
+xDPd comes with a command line tool called `xcli`, that can be used to check
+the  flows installed in the lsis, which are the LSIs deployed, see statistics
 on flows matched, and so on. The xcli can be run by just typing:
 
     $ xcli
@@ -81,10 +81,10 @@ By default, `ofc-server` starts in daemon mode. To avoid daemon mode, use the
 For the full list of the supported parameters, type:
 
     $ ofc-server -h
-    
+
 
 ## How to start OvS (managed through OVSDB) to work with the un-orchestrator
-    
+
 Start OVS:
 
     $ sudo /usr/share/openvswitch/scripts/ovs-ctl start
@@ -129,7 +129,7 @@ The first time after the ovsdb database creation, initialize it:
 
 Start the switching daemon:	
 
-    $ export DB_SOCK=/usr/local/var/run/openvswitch/db.sock 
+    $ export DB_SOCK=/usr/local/var/run/openvswitch/db.sock
     $ sudo ovs-vswitchd --dpdk -c 0x1 -n 4 --socket-mem 1024,0 \
         -- unix:$DB_SOCK --pidfile --detach
 		

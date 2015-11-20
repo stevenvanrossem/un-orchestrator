@@ -8,7 +8,7 @@ Rule::Rule(Match match, Action *action,string flowID, uint64_t priority) :
 {
 }
 
-bool Rule::operator==(const Rule &other) const 
+bool Rule::operator==(const Rule &other) const
 {	
 	if(flowID == other.flowID)
 		//The two rules have the same ID

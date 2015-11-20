@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #Author: UNIFY Consortium
-#Date: 2015-07-02 
+#Date: 2015-07-02
 #Brief: Create a bridge
 
 #$1 LSI id

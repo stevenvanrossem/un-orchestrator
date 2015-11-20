@@ -14,7 +14,7 @@ using namespace lowlevel;
 
 /**
 *	@brief: Openflow controller associated with one tenant. It inserts into the
-*		LSI rules derived from the commands received by the node-orchestrator 
+*		LSI rules derived from the commands received by the node-orchestrator
 *		through the REST interface, but it does not react to events coming from
 *		the LSI itself.
 */

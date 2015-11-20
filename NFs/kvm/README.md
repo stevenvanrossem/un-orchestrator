@@ -6,7 +6,7 @@ This folder contains some examples of network functions implemented as KVM virtu
 
 In order to create your own VNF, you need to install KVM, QEMU and libvirt by executing the following command:
 
-	$ sudo apt-get install qemu-kvm libvirt-bin bridge-utils qemu-system  
+	$ sudo apt-get install qemu-kvm libvirt-bin bridge-utils qemu-system
 
 ## How to create your VNFs
 

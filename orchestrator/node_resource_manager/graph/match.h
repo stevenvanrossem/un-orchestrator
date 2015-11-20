@@ -48,7 +48,7 @@ protected:
 	/*
 	*	VLAN
 	*/
-	//Only one of 
+	//Only one of
 	//	isVlanID
 	// isNoVlan
 	// isAnyVlan

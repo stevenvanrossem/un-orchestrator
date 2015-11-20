@@ -93,11 +93,11 @@ void XDPDManager::checkPhysicalInterfaces(set<CheckPhysicalPortsIn> cppi)
 	Value value;
     read( answer, value );
     Object obj = value.getObject();
-    
+
     if(!findCommand(obj,string(DISCOVER_PHY_PORTS)))
-		throw XDPDManagerException();    
+		throw XDPDManagerException();
 	if(!findStatus(obj))
-		throw XDPDManagerException();    
+		throw XDPDManagerException();
 
 	for( Object::const_iterator i = obj.begin(); i != obj.end(); ++i )
     {
@@ -279,7 +279,7 @@ string XDPDManager::prepareCreateLSIrequest(CreateLsiIn cli)
 	}
 	if(nfs.size() > 0)
 		json["network-functions"] = nfs_array;
-	 
+	
 	list<uint64_t> vlinks = cli.getVirtualLinksRemoteLSI();
 	//XXX: it supports only the case in which all the vlinks are shered with the same LSI
 	if(vlinks.size() > 0)
@@ -297,7 +297,7 @@ string XDPDManager::prepareCreateLSIrequest(CreateLsiIn cli)
 		vlink["remote-lsi"] = remoteDpid;
 		json["virtual-links"] = vlink;
 	 }
-	 
+	
  	stringstream ss;
  	write_formatted(json, ss );
  	
@@ -398,7 +398,7 @@ CreateLsiOut *XDPDManager::parseCreateLSIresponse(CreateLsiIn cli, Object messag
 			} //end iteration on the array
         } //end name=="ports"
         else if(name == "wireless")
-        {        
+        {
         	foundWireless = true;
         	unsigned int wirelessID = value.getInt();
         	
@@ -446,7 +446,7 @@ CreateLsiOut *XDPDManager::parseCreateLSIresponse(CreateLsiIn cli, Object messag
 		    		}
 		    		else if(n_name == "ports")
 		    		{
-						const Array &ports_array = n_value.getArray(); 
+						const Array &ports_array = n_value.getArray();
 						for( unsigned int p = 0; p < ports_array.size(); ++p )
 						{
 							Object port = ports_array[p].getObject();
@@ -647,7 +647,7 @@ AddNFportsOut *XDPDManager::addNFPorts(AddNFportsIn anpi)
 	read( answer, value );
 	Object obj = value.getObject();
 	if(!findCommand(obj,string(CREATE_NF_PORTS)))
-		throw XDPDManagerException();    
+		throw XDPDManagerException();
 	if(!findStatus(obj))
 		throw XDPDManagerException();
 		
@@ -693,7 +693,7 @@ string XDPDManager::prepareCreateNFPortsRequest(AddNFportsIn anpi)
 	nfs_array.push_back(network_function);
 	
 	json["network-functions"] = nfs_array;
-	 
+	
  	stringstream ss;
  	write_formatted(json, ss );
  	
@@ -757,7 +757,7 @@ AddNFportsOut *XDPDManager::parseCreateNFPortsResponse(AddNFportsIn anpi, Object
 		    		}
 		    		else if(n_name == "ports")
 		    		{
-						const Array &ports_array = n_value.getArray(); 
+						const Array &ports_array = n_value.getArray();
 						for( unsigned int p = 0; p < ports_array.size(); ++p )
 						{
 							Object port = ports_array[p].getObject();
@@ -841,7 +841,7 @@ AddVirtualLinkOut *XDPDManager::addVirtualLink(AddVirtualLinkIn avli)
     read( answer, value );
     Object obj = value.getObject();
     if(!findCommand(obj,string(CREATE_VLINKS)))
-		throw XDPDManagerException();    
+		throw XDPDManagerException();
 	if(!findStatus(obj))
 		throw XDPDManagerException();
 	
@@ -871,7 +871,7 @@ string XDPDManager::prepareCreateVirtualLinkRequest(AddVirtualLinkIn avli)
 	
 	json["lsi-a"] = avli.getDpidA();
 	json["lsi-b"] = avli.getDpidB();
-	 
+	
  	stringstream ss;
  	write_formatted(json, ss );
  	
@@ -960,9 +960,9 @@ void XDPDManager::destroyLsi(uint64_t dpid)
     read( answer, value );
     Object obj = value.getObject();
     if(!findCommand(obj,string(DESTROY_LSI)))
-		throw XDPDManagerException();    
+		throw XDPDManagerException();
 	if(!findStatus(obj))
-		throw XDPDManagerException();		 
+		throw XDPDManagerException();		
 		
 	try
 	{
@@ -983,7 +983,7 @@ void XDPDManager::destroyVirtualLink(DestroyVirtualLinkIn dvli)
     read(answer, value);
     Object obj = value.getObject();
     if(!findCommand(obj,string(DESTROY_VLINKS)))
-		throw XDPDManagerException();    
+		throw XDPDManagerException();
 	if(!findStatus(obj))
 		throw XDPDManagerException();
 		
@@ -1003,7 +1003,7 @@ void XDPDManager::destroyNFPorts(DestroyNFportsIn dnpi)
     read( answer, value );
     Object obj = value.getObject();
     if(!findCommand(obj,string(DESTROY_NF_PORTS)))
-		throw XDPDManagerException();    
+		throw XDPDManagerException();
 	if(!findStatus(obj))
 		throw XDPDManagerException();
 		
@@ -1022,7 +1022,7 @@ string XDPDManager::prepareDestroyLSIrequest(uint64_t dpid)
  	
  	Object controller;
    	json["lsi-id"] = dpid;
-	 
+	
  	stringstream ss;
  	write_formatted(json, ss );
  	
@@ -1063,7 +1063,7 @@ string XDPDManager::prepareDestroyVirtualLinkRequest(DestroyVirtualLinkIn dvli)
 	vlinks_array.push_back(vlink);
 	
 	json["virtual-links"] = vlinks_array;
-	 
+	
  	stringstream ss;
  	write_formatted(json, ss );
  	
@@ -1117,7 +1117,7 @@ string XDPDManager::prepareDestroyNFPortsRequest(DestroyNFportsIn dnpi)
 		throw XDPDManagerException();
 	}
 	json["ports"] = ports_array;
-	 
+	
  	stringstream ss;
  	write_formatted(json, ss );
  	

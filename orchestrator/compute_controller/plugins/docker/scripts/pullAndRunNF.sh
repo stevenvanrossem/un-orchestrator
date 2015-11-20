@@ -2,7 +2,7 @@
 
 #Author: Ivano Cerrato
 #Date: June 16th 2014
-#Brief: pull a NF from a docker repository, and run it. 
+#Brief: pull a NF from a docker repository, and run it.
 
 #command line: sudo ./pullAndRunNF.sh $1 $2 $3 $4 [$5 ...]
 
@@ -14,7 +14,7 @@
 
 tmp_file="$1_$2_tmp"
 
-if (( $EUID != 0 )) 
+if (( $EUID != 0 ))
 then
     echo "[pullAndRunNF] This script must be executed with ROOT privileges"
     exit 0

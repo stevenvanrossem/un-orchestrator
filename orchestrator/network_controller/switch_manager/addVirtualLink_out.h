@@ -43,7 +43,7 @@ protected:
 	}
 
 public:
-	AddVirtualLinkOut(uint64_t idA, uint64_t idB) 
+	AddVirtualLinkOut(uint64_t idA, uint64_t idB)
 		: idA(idA), idB(idB)
 	{
 	}

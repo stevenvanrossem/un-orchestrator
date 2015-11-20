@@ -59,7 +59,7 @@ struct nf_port_t
 	char *name;
 };// __rte_cache_aligned;
 
-struct nf_params_t 
+struct nf_params_t
 {	
 	/**
 	*	@brief: number of ports managed by the NF
@@ -85,10 +85,10 @@ struct nf_params_t
 #endif
 	
 	/* mbuf pools */
-	//FIXME: currently it is not used - to be linked to the pool 
+	//FIXME: currently it is not used - to be linked to the pool
 	//used by xDPD in order to create new packets
 	struct rte_mempool *pool;
- 
+
 } __rte_cache_aligned;
 
 /**

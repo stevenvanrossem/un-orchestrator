@@ -3,7 +3,7 @@
 uint64_t VLink::nextID = 0;
 
 VLink::VLink(uint64_t remote_dpid) :
-	remote_dpid(remote_dpid), local_id(0), remote_id(0) 
+	remote_dpid(remote_dpid), local_id(0), remote_id(0)
 {
 	ID = nextID;
 	nextID++;

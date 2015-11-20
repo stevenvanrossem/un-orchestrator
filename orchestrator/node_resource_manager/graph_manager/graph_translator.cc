@@ -194,10 +194,10 @@ lowlevel::Graph GraphTranslator::lowerGraphToLSI0(highlevel::Graph *graph, LSI *
 		 else if(match.matchOnEndPoint())
 		 {
 		 	assert(action->getType() == highlevel::ACTION_ON_NETWORK_FUNCTION);
-		 
+		
 		 	stringstream ss;
 		 	ss << match.getGraphID() << ":" << match.getEndPoint();
-		 
+		
 		 	if(graph->isDefinedHere(ss.str()))
 			{
 				logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\tRule with match expressed on end point \"%s\" defined in this graph. The rule is not inserted in the LSI-0",ss.str().c_str());
@@ -268,7 +268,7 @@ lowlevel::Graph GraphTranslator::lowerGraphToLSI0(highlevel::Graph *graph, LSI *
 		 {
 		 	assert(match.matchOnNF());
 		 	assert(action->getType() == highlevel::ACTION_ON_PORT);
-		 	 
+		 	
 			//The entire match must be replaced with the virtual link associated with the port
 			//expressed in the OUTPUT action.
 			//The port in the OUTPUT action must be replaced with its port identifier
@@ -353,7 +353,7 @@ lowlevel::Graph GraphTranslator::lowerGraphToTenantLSI(highlevel::Graph *graph, 
 		{
 		 	assert(action->getType() == highlevel::ACTION_ON_NETWORK_FUNCTION);
 		 	
-		 	/** 
+		 	/**
 			*	The entire match must be replaced with the virtual link associated with the action.
 			*	The action is translated into an action to the port identifier of the NF
 			*	representing the action itself
@@ -492,8 +492,8 @@ lowlevel::Graph GraphTranslator::lowerGraphToTenantLSI(highlevel::Graph *graph, 
 			else if(action->getType() == highlevel::ACTION_ON_PORT)
 			{
 				/**
-				*	The phyPort is translated into the tenant side virtual link that 
-				*	"represents the phyPort" in the tenant LSI. The other parameters 
+				*	The phyPort is translated into the tenant side virtual link that
+				*	"represents the phyPort" in the tenant LSI. The other parameters
 				*	expressed in the match are not changed.
 				*/
 			
@@ -531,8 +531,8 @@ lowlevel::Graph GraphTranslator::lowerGraphToTenantLSI(highlevel::Graph *graph, 
 				assert(action->getType() == highlevel::ACTION_ON_ENDPOINT);
 			
 				/**
-				*	the endpoint is translated into the tenant side virtual link that 
-				*	"represents the endpoint" in the tenant LSI. The other parameters 
+				*	the endpoint is translated into the tenant side virtual link that
+				*	"represents the endpoint" in the tenant LSI. The other parameters
 				*	expressed in the match are not changed.
 				*/
 			

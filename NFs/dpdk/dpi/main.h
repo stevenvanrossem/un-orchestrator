@@ -8,7 +8,7 @@
 *
 * @brief This NF implements a DPI on packets coming from its first interface.
 * It works with two interfaces, and implements a bridge between them.
-* By default, it drops the HTTP packets containing the words "porn" and "sex". 
+* By default, it drops the HTTP packets containing the words "porn" and "sex".
 * You can add other words by exiting the file "runtime.c"
 */
 
@@ -81,7 +81,7 @@ struct nf_port_t
 	char *name;
 };// __rte_cache_aligned;
 
-struct nf_params_t 
+struct nf_params_t
 {	
 	/**
 	*	@brief: ports to be used to transmit/receive packets
@@ -102,10 +102,10 @@ struct nf_params_t
 #endif
 	
 	/* mbuf pools */
-	//FIXME: currently it is not used - to be linked to the pool 
+	//FIXME: currently it is not used - to be linked to the pool
 	//used by xDPD in order to create new packets
 	struct rte_mempool *pool;
- 
+
 } __rte_cache_aligned;
 
 /**

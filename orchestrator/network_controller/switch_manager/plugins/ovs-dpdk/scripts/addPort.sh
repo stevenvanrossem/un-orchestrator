@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #Author: UNIFY Consortium
-#Date: 2015-07-02 
+#Date: 2015-07-02
 #Brief: Add a port to a bridge
 
 #$1 LSI id
@@ -37,9 +37,9 @@ then
 
     # The veth pair peer given to the container is the one with the port_name as derived from the NF-FG.
     # This avoids having to alter the Docker command line based on what this script does. As a result, the
-    # veth pair peer we add to OVS is the one with  a decorated name:  
+    # veth pair peer we add to OVS is the one with  a decorated name:
     port=$port.lxc
-    
+
     type_cmd=""
 fi
 

@@ -7,7 +7,7 @@
 
 #command line: sudo ./checkDockerRun.sh
 
-if (( $EUID != 0 )) 
+if (( $EUID != 0 ))
 then
     echo "[checkDockerRun] This script must be executed with ROOT privileges"
     exit 0

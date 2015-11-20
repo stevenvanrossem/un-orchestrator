@@ -6,7 +6,7 @@ VlanAction::VlanAction(vlan_action_t type, uint16_t label):
 
 }
 
-VlanAction::~VlanAction() 
+VlanAction::~VlanAction()
 {
 
 }

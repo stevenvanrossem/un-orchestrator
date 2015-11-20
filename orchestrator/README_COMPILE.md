@@ -31,7 +31,7 @@ In the following we list the steps required on an **Ubuntu 14.04**.
 	; in the cloned folder
 
 	; Install ROFL-common  (library to parse OpenFlow messages)
-	$ git clone https://github.com/bisdn/rofl-common  
+	$ git clone https://github.com/bisdn/rofl-common
 	; alternatively, a copy of ROFL-common is provided in `[un-orchestrator]/contrib/rofl-common.zip`
 	$ cd rofl-common/
 
@@ -49,13 +49,13 @@ possibilities listed in this section.
 
 In order to install xDPd, you have to follow the steps below.
 
-	$ git clone https://github.com/bisdn/xdpd  
-	$ cd xdpd/  
+	$ git clone https://github.com/bisdn/xdpd
+	$ cd xdpd/
 
-	;Install all the libraries required by the README provided in this folder  
-	$ bash autogen  
-	$ cd build  
-	$ ../configure --with-hw-support=gnu-linux-dpdk --with-plugins="node_orchestrator rest"   
+	;Install all the libraries required by the README provided in this folder
+	$ bash autogen
+	$ cd build
+	$ ../configure --with-hw-support=gnu-linux-dpdk --with-plugins="node_orchestrator rest"
 	$ make
 	$ sudo make install
 
@@ -71,11 +71,11 @@ it cannot set the type of port configured on the switch (e.g., virtio
 or IVSHMEM), requiring the orchestrator to rely on a combination of
 OF-CONFIG commands and bash scripts to perform its job.
 
-For this reason we suggest to install OpenvSwitch with its native OSVDB 
+For this reason we suggest to install OpenvSwitch with its native OSVDB
 support (next section); although OVSDB is not standard, it seems that it
 does its job better than OF-CONFIG.
 
-In any case, the compilation instruction for setting up OpenvSwitch with 
+In any case, the compilation instruction for setting up OpenvSwitch with
 OF-CONFIG are the following (not guaranteed that those are 100% accurate,
 as the OF-CONFIG support in OpenvSwitch is rather primitive).
 
@@ -83,7 +83,7 @@ OvS with the OFCONFIG support can be installed as follows:
 
 	$ sudo apt-get install autoconf automake gcc libtool libxml2 libxml2-dev m4 make openssl dbus
 	
-	; Download LIBSSH from 
+	; Download LIBSSH from
 	;       https://red.libssh.org/projects/libssh/files
 	; Now install the above library following the INSTALL file provided in the root directory
 
@@ -104,7 +104,7 @@ OvS with the OFCONFIG support can be installed as follows:
     $ sudo make install
 	
 	; Clone the of-config repository
-	$ git clone https://github.com/openvswitch/of-config    
+	$ git clone https://github.com/openvswitch/of-config
 
 	; Follow the instructions as described in the file INSTALL.md provided in the root folder of that repository.
 
@@ -134,7 +134,7 @@ Then execute the following commands:
     $ tar -xf dpdk-2.1.0.tar.gz
     $ cd dpdk-2.1.0
     $ export DPDK_DIR=\`pwd\`
-    ; modify the file `$DPDK_DIR/config/common_linuxapp` so that 
+    ; modify the file `$DPDK_DIR/config/common_linuxapp` so that
     ; `CONFIG_RTE_BUILD_COMBINE_LIBS=y`
     ; `CONFIG_RTE_LIBRTE_VHOST=y`
 
@@ -149,7 +149,7 @@ on the [DPDK website](http://dpdk.org/)
 Now, download the OpenvSwitch source code:
 
     $ git clone https://github.com/openvswitch/ovs
-    
+
 Then execute the following commands:
 
     $ cd ovs
@@ -177,7 +177,7 @@ possibilities from the ones listed in this section.
 In order to support the Docker execution environment, follow the instructions
 provided here:
 
-	http://docs.docker.com/installation/  
+	http://docs.docker.com/installation/
 
 ### QEMU/KVM/Libvirt
 
@@ -186,18 +186,18 @@ Two flavors of virtual machines are supported:
 
   * virtual machines that exchange packets with the vSwitch through the `virtio` driver. This configuration allows you to run both traditional processes and DPDK-based processes within the virtual machines. In this case, the host backend for the virtual NICs is implemented through `vhost` in case OvS and xDPd as vSwitches, and through `vhost-user` when OvS-DPDK is used as vSwitch;
   * virtual machines that exchange packets with the vSwitch through shared memory (`ivshmem`). This configuration is oriented to performance, and only supports DPDK-based processes within the virtual machine.
-	  
+	
 #### Standard QEMU/KVM (without `ivshmem` support)
 
-To install the standard QEMU/KVM/Libvirt execution environment, execute the 
+To install the standard QEMU/KVM/Libvirt execution environment, execute the
 following command:
 
-	$ sudo apt-get install libvirt-dev qemu-kvm libvirt-bin bridge-utils qemu-system  
+	$ sudo apt-get install libvirt-dev qemu-kvm libvirt-bin bridge-utils qemu-system
 
 ##### Libvirt with support to `vhost-user` ports
 
-If you intend to use (DPDK) `vhost-user` ports, a recent version of Libvirt must 
-be used that supports configuration of this type of ports. You can build it from 
+If you intend to use (DPDK) `vhost-user` ports, a recent version of Libvirt must
+be used that supports configuration of this type of ports. You can build it from
 sources using the following commands:
 
 	$ sudo apt-get install libxml-xpath-perl libyajl-dev libdevmapper-dev libpciaccess-dev libnl-dev
@@ -209,7 +209,7 @@ sources using the following commands:
 	$ make
 	$ sudo make install
 
-In case you already had libvirt installed on the system, this will install an 
+In case you already had libvirt installed on the system, this will install an
 alternative version which must then be used instead of the default one:
 
 	; Stop any running libvirtd instance and run the alternative version just installed:
@@ -239,13 +239,13 @@ since the DPDK library has already been installed together with the vSwitch.
 
 ## NF-FG library
 
-These steps are mandatory only if you plan to use the Network Functions - 
+These steps are mandatory only if you plan to use the Network Functions -
 Forwarding Graph (NF-FG) defined in WP3.
 
 	; Retrieve the NF-FG library.
 	
 	; Copy the library in the un-orchestrator folder
-	$ cp [nffg]/virtualizer3.pyc [un-orchestrator]/orchestrator/node_resource_manager/virtualizer      
+	$ cp [nffg]/virtualizer3.pyc [un-orchestrator]/orchestrator/node_resource_manager/virtualizer
 
 Finally, remember to select the proper `cmake` option when compiling the `un-orchestrator`.
 
@@ -257,7 +257,7 @@ We are now ready to compile the un-orchestrator.
 	$ cd orchestrator
 
 	; Choose among possible compilation options
-	$ ccmake .  
+	$ ccmake .
 
 The previous command allows you to select some configuration parameters for the
 un-orchestrator, such as the virtual switch used, which kind of execution environment(s)

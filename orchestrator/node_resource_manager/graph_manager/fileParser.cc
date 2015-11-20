@@ -15,7 +15,7 @@ set<CheckPhysicalPortsIn> FileParser::parseConfigurationFile(string fileName)
 
 	//Validate the configuration file with the schema
 	schema_doc = xmlReadFile(PHY_PORTS_XSD, NULL, XML_PARSE_NONET);
-	if (schema_doc == NULL) 
+	if (schema_doc == NULL)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "The schema \"%s\" cannot be loaded or is not well-formed.",PHY_PORTS_XSD);
 		/*Free the allocated resources*/
@@ -24,7 +24,7 @@ set<CheckPhysicalPortsIn> FileParser::parseConfigurationFile(string fileName)
 	}
 	
 	parser_ctxt = xmlSchemaNewDocParserCtxt(schema_doc);
-	if (parser_ctxt == NULL) 
+	if (parser_ctxt == NULL)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Unable to create a parser context for the schema \"%s\".",PHY_PORTS_XSD);
 		/*Free the allocated resources*/
@@ -33,7 +33,7 @@ set<CheckPhysicalPortsIn> FileParser::parseConfigurationFile(string fileName)
 	}
 
 	schema = xmlSchemaParse(parser_ctxt);
-	if (schema == NULL) 
+	if (schema == NULL)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "The XML \"%s\" schema is not valid.",PHY_PORTS_XSD);
 		/*Free the allocated resources*/
@@ -42,7 +42,7 @@ set<CheckPhysicalPortsIn> FileParser::parseConfigurationFile(string fileName)
 	}
 
 	valid_ctxt = xmlSchemaNewValidCtxt(schema);
-	if (valid_ctxt == NULL) 
+	if (valid_ctxt == NULL)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Unable to create a validation context for the XML schema \"%s\".",PHY_PORTS_XSD);
 		/*Free the allocated resources*/
@@ -69,7 +69,7 @@ set<CheckPhysicalPortsIn> FileParser::parseConfigurationFile(string fileName)
 	
 	xmlNodePtr root = xmlDocGetRootElement(doc);
 
-	for(xmlNodePtr cur_root_child=root->xmlChildrenNode; cur_root_child!=NULL; cur_root_child=cur_root_child->next) 
+	for(xmlNodePtr cur_root_child=root->xmlChildrenNode; cur_root_child!=NULL; cur_root_child=cur_root_child->next)
 	{
 #ifdef UNIFY_NFFG
 		if ((cur_root_child->type == XML_ELEMENT_NODE)&&(!xmlStrcmp(cur_root_child->name, (const xmlChar*)RESOURCES_ELEMENT)))
@@ -81,7 +81,7 @@ set<CheckPhysicalPortsIn> FileParser::parseConfigurationFile(string fileName)
 			
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "RESOURCES");
 			xmlNodePtr resources = cur_root_child;
-			for(xmlNodePtr resource = resources->xmlChildrenNode; resource != NULL; resource = resource->next) 
+			for(xmlNodePtr resource = resources->xmlChildrenNode; resource != NULL; resource = resource->next)
 			{
 				if ((resource->type == XML_ELEMENT_NODE)&&(!xmlStrcmp(resource->name, (const xmlChar*)CPU_ELEMENT)))
 				{
@@ -134,7 +134,7 @@ set<CheckPhysicalPortsIn> FileParser::parseConfigurationFile(string fileName)
 		{		
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "PORTS");
 			xmlNodePtr ports = cur_root_child;
-			for(xmlNodePtr port = ports->xmlChildrenNode; port != NULL; port = port->next) 
+			for(xmlNodePtr port = ports->xmlChildrenNode; port != NULL; port = port->next)
 			{
 				if ((port->type == XML_ELEMENT_NODE)&&(!xmlStrcmp(port->name, (const xmlChar*)PORT_ELEMENT)))
 				{
@@ -163,7 +163,7 @@ set<CheckPhysicalPortsIn> FileParser::parseConfigurationFile(string fileName)
 #ifdef UNIFY_NFFG
 					xmlNodePtr virtualizers = port;
 					
-					for(xmlNodePtr virtualized = virtualizers->xmlChildrenNode; virtualized != NULL; virtualized = virtualized->next) 
+					for(xmlNodePtr virtualized = virtualizers->xmlChildrenNode; virtualized != NULL; virtualized = virtualized->next)
 					{
 						if ((virtualized->type == XML_ELEMENT_NODE)&&(!xmlStrcmp(virtualized->name, (const xmlChar*)VIRTUALIZED_ELEMENT)))
 						{
@@ -200,11 +200,11 @@ void FileParser::freeXMLResources(xmlSchemaParserCtxtPtr parser_ctxt, xmlSchemaV
 	if(parser_ctxt!=NULL)
 	    xmlSchemaFreeParserCtxt(parser_ctxt);
 
-	if(schema_doc!=NULL)    
+	if(schema_doc!=NULL)
 		xmlFreeDoc(schema_doc);
 
 	if(doc!=NULL)
-		xmlFreeDoc(doc); 
+		xmlFreeDoc(doc);
 
 	xmlCleanupParser();
 }
