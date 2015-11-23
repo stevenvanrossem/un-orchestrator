@@ -12,13 +12,13 @@ xDPd and OvS-DPDK, which are the two vSwitches supporting VNFs executed as DPDK 
 
 In order to install xDPd and the DPDK library, you have to follow the steps below.
 
-	$ git clone https://github.com/bisdn/xdpd  
-	$ cd xdpd/  
+	$ git clone https://github.com/bisdn/xdpd
+	$ cd xdpd/
 
-	;Install all the libraries required by the README provided in this folder  
-	$ bash autogen  
-	$ cd build  
-	$ ../configure --with-hw-support=gnu-linux-dpdk --with-plugins="node_orchestrator rest"   
+	;Install all the libraries required by the README provided in this folder
+	$ bash autogen
+	$ cd build
+	$ ../configure --with-hw-support=gnu-linux-dpdk --with-plugins="node_orchestrator rest"
 	$ make
 	$sudo make install
 
@@ -35,8 +35,8 @@ configured, which can be done by launching a script that allows you to:
 
 Let's now launch the DPDK setup script:
 
-	$ cd ../libs/dpdk/tools  
-	$ sudo ./setup.sh  
+	$ cd ../libs/dpdk/tools
+	$ sudo ./setup.sh
 	
 Note that DPDK has to be reconfigured at each reboot of the machine
 
@@ -54,7 +54,7 @@ Then execute the following commands:
     $ tar -xf dpdk-2.1.0.tar.gz
     $ cd dpdk-2.1.0
     $ export DPDK_DIR=\`pwd\`
-    ; modify the file `$DPDK_DIR/config/common_linuxapp` so that 
+    ; modify the file `$DPDK_DIR/config/common_linuxapp` so that
     ; `CONFIG_RTE_BUILD_COMBINE_LIBS=y`
     ; `CONFIG_RTE_LIBRTE_VHOST=y`
 
@@ -69,7 +69,7 @@ on the [DPDK website](http://dpdk.org/)
 Now, download the Open vSwitch source code:
 
     $ git clone https://github.com/openvswitch/ovs
-    
+
 Then execute the following commands:
 
     $ cd ovs
@@ -108,7 +108,7 @@ Set up DPDK (after each reboot of the physical machine):
     ; shows how to bind eth1. Repeat the command for each network interface
     ; you want to bind.
     $ [dpdk-folder]/tools/dpdk_nic_bind.py --bind=igb_uio eth1
-        
+
 ## How to create your VNFs
 
 Please check individual README's in each sub-package.
@@ -127,12 +127,12 @@ where:
   * `$port1 ... $portN` are the ports to be used by the application
   * `$s` useless. It will be removed soon
   * `$log` name of the file to be used by the application to print log information
-  
+
 **Warning:** xDPd and OvS-DPDK use different names for the rte_rings associated with a port,
 hence your application must be properly written according to the vSwitch you plan to use:
 
   * *xDPd*: $portname`-to-nf` to be used by the application to receive packets,
 			and $portname`-to-xdpd` to be used by the application to send packets.
-  * *OvS-DPDK*: $portname`_tx` to be used by the application to receive packets, 
+  * *OvS-DPDK*: $portname`_tx` to be used by the application to receive packets,
 			and $portname`_rx` to be used by the application to send packets.
-  
+

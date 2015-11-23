@@ -156,7 +156,7 @@
 
 /*
  * Supported Openflow versions.
- */ 
+ */
 typedef enum
 {
 	OFP_10 = 1,

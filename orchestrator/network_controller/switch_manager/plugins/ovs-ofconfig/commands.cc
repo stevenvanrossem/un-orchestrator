@@ -67,7 +67,7 @@ char *num_to_string(uint64_t num) {
 	sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", pmac[7], pmac[6], pmac[5], pmac[4], pmac[3], pmac[2], pmac[1], pmac[0]);
 
 	return mac;
-  
+
 }
 
 /* rpc parameter is freed after the function call */
@@ -687,7 +687,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 	dnumber++;
 
 	/*add element "id"*/
-	rc = xmlTextWriterWriteElement(writer, BAD_CAST "id", 
+	rc = xmlTextWriterWriteElement(writer, BAD_CAST "id",
 		BAD_CAST ctr);
 	if (rc < 0) {
        		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "testXmlwriterMemory: Error at xmlTextWriterWriteElement\n");
@@ -695,7 +695,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 	}
 
 	/*add element "ip-address"*/
-	rc = xmlTextWriterWriteElement(writer, BAD_CAST "ip-address", 
+	rc = xmlTextWriterWriteElement(writer, BAD_CAST "ip-address",
 		BAD_CAST cli.getControllerAddress().c_str());
 	if (rc < 0) {
        		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "testXmlwriterMemory: Error at xmlTextWriterWriteElement\n");
@@ -703,7 +703,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 	}
 
 	/*add element "port"*/
-	rc = xmlTextWriterWriteElement(writer, BAD_CAST "port", 
+	rc = xmlTextWriterWriteElement(writer, BAD_CAST "port",
 		BAD_CAST cli.getControllerPort().c_str());
 	if (rc < 0) {
        		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "testXmlwriterMemory: Error at xmlTextWriterWriteElement\n");
@@ -711,7 +711,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 	}
 
 	/*add element local-ip-address*/
-	rc = xmlTextWriterWriteElement(writer, BAD_CAST "local-ip-address", 
+	rc = xmlTextWriterWriteElement(writer, BAD_CAST "local-ip-address",
 		BAD_CAST "127.0.0.1");
 	if (rc < 0) {
        		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "testXmlwriterMemory: Error at xmlTextWriterWriteElement\n");
@@ -719,7 +719,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 	}
 
 	/*add element "protocol"*/
-	rc = xmlTextWriterWriteElement(writer, BAD_CAST "protocol", 
+	rc = xmlTextWriterWriteElement(writer, BAD_CAST "protocol",
 		BAD_CAST "tcp");
 	if (rc < 0) {
        		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "testXmlwriterMemory: Error at xmlTextWriterWriteElement\n");
@@ -1877,7 +1877,7 @@ AddVirtualLinkOut *commands::cmd_addVirtualLink(AddVirtualLinkIn avli){
 	AddVirtualLinkOut *avlo = NULL;
 
 	const char *bridge_name = switch_id[avli.getDpidA()].c_str();
-	char vrt[64] = "VPort", trv[64] = "VPort", temp[64] = ""; 
+	char vrt[64] = "VPort", trv[64] = "VPort", temp[64] = "";
 	const char *peer_name = switch_id[avli.getDpidB()].c_str();
 
 	list<uint64_t> po;

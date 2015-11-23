@@ -43,8 +43,8 @@ using namespace std;
 			
 class RestServer
 {
-private:	 
-	 
+private:	
+	
 	struct connection_info_struct
 	{
 	};

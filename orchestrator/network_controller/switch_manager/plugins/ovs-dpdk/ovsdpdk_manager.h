@@ -58,7 +58,7 @@ public:
 	AddVirtualLinkOut *addVirtualLink(AddVirtualLinkIn avli);
 
 	//TODO: not implemented yet
-	void destroyVirtualLink(DestroyVirtualLinkIn dvli); 
+	void destroyVirtualLink(DestroyVirtualLinkIn dvli);
 
 	//TODO: not implemented yet
 	void checkPhysicalInterfaces(set<CheckPhysicalPortsIn> cppi);

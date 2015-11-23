@@ -37,7 +37,7 @@ void terminateRestServer(void);
 */
 
 void singint_handler(int sig)
-{    
+{
     logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The '%s' is terminating...",MODULE_NAME);
 
 	MHD_stop_daemon(http_daemon);
@@ -53,7 +53,7 @@ void singint_handler(int sig)
 
 int main(int argc, char *argv[])
 {
-	//Check for root privileges 
+	//Check for root privileges
 	if(geteuid() != 0)
 	{	
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Root permissions are required to run %s\n",argv[0]);
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	setenv("PYTHONPATH",PYTHON_DIRECTORY ,1);
 	Py_SetProgramName(argv[0]);  /* optional but recommended */
     Py_Initialize();
-    
+
     if(!Virtualizer::init())
     {
     	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot start the virtualizer. The %s cannot be run.",MODULE_NAME);
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);	
 	}
 
-	http_daemon = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, rest_port, NULL, NULL,&RestServer::answer_to_connection, 
+	http_daemon = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, rest_port, NULL, NULL,&RestServer::answer_to_connection,
 		NULL, MHD_OPTION_NOTIFY_COMPLETED, &RestServer::request_completed, NULL,MHD_OPTION_END);
 	
 	if (NULL == http_daemon)
@@ -223,7 +223,7 @@ static struct option lgopts[] = {
 
 	/* Check that all mandatory arguments are provided */
 
-	if (arg_f == 0) 
+	if (arg_f == 0)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Not all mandatory arguments are present in the command line");
 		return usage();

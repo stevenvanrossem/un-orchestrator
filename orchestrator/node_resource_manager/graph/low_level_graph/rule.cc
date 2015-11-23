@@ -9,7 +9,7 @@ Rule::Rule(Match match, Action action, string flowID, uint64_t priority) :
 //XXX: the flowID is not considered. In fact, this operator
 //is used to check if two rules have the same match and the
 //same action, regardless of their ID
-bool Rule::operator==(const Rule &other) const 
+bool Rule::operator==(const Rule &other) const
 {	
 	if((priority == other.priority) && (action == other.action) && (match == other.match))
 		//The two rules are identical
@@ -22,9 +22,9 @@ void Rule::fillFlowmodMessage(rofl::openflow::cofflowmod &message, uint8_t of_ve
 {
 	message.set_table_id(0);
 	
-	switch (of_version) 
+	switch (of_version)
 	{
-		case openflow10::OFP_VERSION: 
+		case openflow10::OFP_VERSION:
 		{
 			if(command == ADD_RULE)
 				message.set_command(openflow10::OFPFC_ADD);
@@ -32,7 +32,7 @@ void Rule::fillFlowmodMessage(rofl::openflow::cofflowmod &message, uint8_t of_ve
 				message.set_command(openflow10::OFPFC_DELETE_STRICT);		
 			break;
 		}
-		case openflow12::OFP_VERSION: 
+		case openflow12::OFP_VERSION:
 		{
 			if(command == ADD_RULE)
 				message.set_command(openflow12::OFPFC_ADD);
@@ -40,7 +40,7 @@ void Rule::fillFlowmodMessage(rofl::openflow::cofflowmod &message, uint8_t of_ve
 				message.set_command(openflow12::OFPFC_DELETE_STRICT);
 			break;
 		}
-		case openflow13::OFP_VERSION: 
+		case openflow13::OFP_VERSION:
 		{
 			if(command == ADD_RULE)
 				message.set_command(openflow13::OFPFC_ADD);

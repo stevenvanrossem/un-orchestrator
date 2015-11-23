@@ -32,7 +32,7 @@ private:
 	*						a sort of virtual ports to be used to connect many
 	*						garphs together (and potentially on other parameters)
 	*	@brief: GENERIC		The match is neither expressed on a port, nor on
-	*						a network function (but potentially on other 
+	*						a network function (but potentially on other
 	*						parameters)
 	*/
 	typedef enum{MATCH_GENERIC,MATCH_PORT,MATCH_NF, MATCH_ENDPOINT}match_t;
@@ -48,7 +48,7 @@ private:
 	char *input;
 	
 	/**
-	*	@brief: in case the previous attribute is a NF, this 
+	*	@brief: in case the previous attribute is a NF, this
 	*		variable represents a port of that NF (e.g., 1).
 	*		The combination of this variable and the previous
 	*		one identifies a NF port (e.g., NF:1, NF:2)
@@ -99,12 +99,12 @@ public:
 	bool matchOnPort();
 	
 	/**
-	*	@brief: return true if the match is on a NF port 
+	*	@brief: return true if the match is on a NF port
 	*/
 	bool matchOnNF();
 	
 	/**
-	*	@brief: return true if the match is on a graph endpoint 
+	*	@brief: return true if the match is on a graph endpoint
 	*/
 	bool matchOnEndPoint();
 	

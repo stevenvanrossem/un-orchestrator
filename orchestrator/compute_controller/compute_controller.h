@@ -126,12 +126,12 @@ public:
 	nf_manager_ret_t retrieveDescription(string nf);
 	
 	/**
-	*	@brief: For each NF, select an implementation. Currently, if a Docker implementation 
+	*	@brief: For each NF, select an implementation. Currently, if a Docker implementation
 	*	is available and Docker is running with the LXC engine, Docker is selected.
 	*	Otherwise, a DPDK implementation is selected. Only in case Docker and DPDK
 	*	implementations are not available, it selects a KVM implementation (if KVM is
 	*	running and a KVM implementation is available).
-	*	Summarizing, the priority of the implementations is the following 
+	*	Summarizing, the priority of the implementations is the following
 	*		- Docker
 	*		- DPDK
 	*		- KVM
@@ -155,7 +155,7 @@ public:
 	nf_t getNFType(string name);
 	
 	/**
-	*	@brief: Set the identifier of the identifier of the LSI attached to the NFs 
+	*	@brief: Set the identifier of the identifier of the LSI attached to the NFs
 	*
 	*	@param:	lsiID	Identifier of an LSI
 	*/

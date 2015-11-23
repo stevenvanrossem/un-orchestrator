@@ -49,7 +49,7 @@ public:
 	void removeRules(list<Rule> rules);
 	
 	/**
-	*	Remove  a rule starting from its ID. 
+	*	Remove  a rule starting from its ID.
 	*	Returns true if another rule with the same match and action
 	*	exists in the graph
 	*/

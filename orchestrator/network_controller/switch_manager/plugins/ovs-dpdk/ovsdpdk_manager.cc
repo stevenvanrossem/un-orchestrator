@@ -181,9 +181,9 @@ CreateLsiOut *OVSDPDKManager::createLsi(CreateLsiIn cli)
 
 AddNFportsOut *OVSDPDKManager::addNFPorts(AddNFportsIn anpi)
 { // SwitchManager implementation
-  
+
   	//TODO: not implemented yet
-  
+
 	AddNFportsOut *anpo = NULL;
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "addNFPorts(dpid: %" PRIu64 " NF:%s NFType:%d)", anpi.getDpid(), anpi.getNFname().c_str(), anpi.getNFtype());
 	list<string> nfs_ports = anpi.getNetworkFunctionsPorts();

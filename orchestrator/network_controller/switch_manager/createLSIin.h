@@ -63,8 +63,8 @@ private:
 	list<uint64_t> vlinksRemoteLsi;
 
 protected:
-	CreateLsiIn(string controllerAddress, string controllerPort, list<string> physicalPortsName, map<string,nf_t>  nf_types, map<string,list<string> > netFunctionsPortsName, list<uint64_t> vlinksRemoteLsi) 
-		: controllerAddress(controllerAddress), controllerPort(controllerPort), 
+	CreateLsiIn(string controllerAddress, string controllerPort, list<string> physicalPortsName, map<string,nf_t>  nf_types, map<string,list<string> > netFunctionsPortsName, list<uint64_t> vlinksRemoteLsi)
+		: controllerAddress(controllerAddress), controllerPort(controllerPort),
 		physicalPortsName(physicalPortsName.begin(),physicalPortsName.end()),
 		nf_types(nf_types.begin(),nf_types.end()),
 		netFunctionsPortsName(netFunctionsPortsName.begin(),netFunctionsPortsName.end()),

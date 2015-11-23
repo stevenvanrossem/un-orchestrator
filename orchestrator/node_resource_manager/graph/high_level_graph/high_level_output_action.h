@@ -52,9 +52,9 @@ public:
 protected:
 	Action(action_t type);
 	
-	/** 
+	/**
 	*	The outuput action contains a list of generic actions!
-	*	The code is organized in this way, because the output action is 
+	*	The code is organized in this way, because the output action is
 	*	mandatory in each rule.
 	**/
 	list<GenericAction*> genericActions;

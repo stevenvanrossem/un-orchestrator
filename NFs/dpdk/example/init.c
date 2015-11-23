@@ -148,7 +148,7 @@ int parse_command_line(int argc, char *argv[])
 
 	if((strcmp(logfilename,"stdout") != 0) && (strcmp(logfilename,"stderr") != 0))
 	{
-		logFile = fopen (logfilename,"w"); 
+		logFile = fopen (logfilename,"w");
 		if (logFile==NULL)
 		{
 			fprintf(stderr,"[%s] Unable to open file to log!\n",logfilename);
@@ -174,7 +174,7 @@ int parse_command_line(int argc, char *argv[])
 }
 
 /**
-*	@brief 	The NF attaches to the resources used to exchange 
+*	@brief 	The NF attaches to the resources used to exchange
 *			packets with the xDPD
 */
 void init_shared_resources(void)
@@ -227,7 +227,7 @@ void sig_handler(int received_signal)
 
     if (received_signal == SIGINT)
     {
-#ifdef ENABLE_SEMAPHORE   
+#ifdef ENABLE_SEMAPHORE
     	sem_unlink(nf_params.sem_name);
 #endif
         exit(0);

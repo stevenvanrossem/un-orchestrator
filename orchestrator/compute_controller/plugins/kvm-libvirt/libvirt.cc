@@ -230,7 +230,6 @@ bool Libvirt::startNF(StartNFIn sni)
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "This function is KVM-USVHOST");
 
 	/* Create NICs */
-
 	for(list<string>::iterator pn = namesOfPortsOnTheSwitch.begin(); pn != namesOfPortsOnTheSwitch.end(); pn++)
 	{
 
@@ -275,7 +274,6 @@ bool Libvirt::startNF(StartNFIn sni)
 
 	    xmlNodePtr modeln = xmlNewChild(ifn, NULL, BAD_CAST "model", NULL);
 	    xmlNewProp(modeln, BAD_CAST "type", BAD_CAST "virtio");
-
 	    xmlNodePtr virt = xmlNewChild(ifn, NULL, BAD_CAST "virtualport", NULL);
 	    xmlNewProp(virt, BAD_CAST "type", BAD_CAST "openvswitch");
 	}
@@ -371,7 +369,6 @@ bool Libvirt::startNF(StartNFIn sni)
 					if(strcmp((const char*)attr_type,"file")==0 && strcmp((const char*)attr_device,"disk")==0)
 					{
 						xmlNodePtr disk = device;
-
 						//we are in the proper disk
 						for(xmlNodePtr indisk = disk->xmlChildrenNode; indisk != NULL; indisk = indisk->next)
 						{

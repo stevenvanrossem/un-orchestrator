@@ -8,10 +8,10 @@ bool Virtualizer::init()
 	PyObject *pythonFileName = PyString_FromString(PYTHON_MAIN_FILE);
 	PyObject *pythonFile = PyImport_Import(pythonFileName);
 	Py_DECREF(pythonFileName);
-	if (pythonFile != NULL) 
-    {  
+	if (pythonFile != NULL)
+    {
 		PyObject *pythonFunction = PyObject_GetAttrString(pythonFile, PYTHON_INIT);
-		if (pythonFunction && PyCallable_Check(pythonFunction)) 
+		if (pythonFunction && PyCallable_Check(pythonFunction))
         {
 	    	PyObject *pythonRetVal;
 	    	
@@ -19,9 +19,9 @@ bool Virtualizer::init()
 	    	//Call the python function
 	    	pythonRetVal = PyObject_CallObject(pythonFunction, NULL);
             long int retVal = PyInt_AsLong(pythonRetVal);
-                
+
             logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Result of call: %d\n", retVal);
-            
+
 			Py_DECREF(pythonRetVal);
             Py_XDECREF(pythonFunction);
 	    	Py_DECREF(pythonFile);
@@ -31,7 +31,7 @@ bool Virtualizer::init()
 	    	else
 	    		return false;
 	    }
-	    else 
+	    else
         {
             if (PyErr_Occurred())
                 PyErr_Print();
@@ -56,10 +56,10 @@ void Virtualizer::terminate()
 	PyObject *pythonFileName = PyString_FromString(PYTHON_MAIN_FILE);
 	PyObject *pythonFile = PyImport_Import(pythonFileName);
 	Py_DECREF(pythonFileName);
-	if (pythonFile != NULL) 
-    {  
+	if (pythonFile != NULL)
+    {
 		PyObject *pythonFunction = PyObject_GetAttrString(pythonFile, PYTHON_TERMINATE);
-		if (pythonFunction && PyCallable_Check(pythonFunction)) 
+		if (pythonFunction && PyCallable_Check(pythonFunction))
         {
 	    	//Call the python function
 	    	PyObject_CallObject(pythonFunction, NULL);
@@ -67,7 +67,7 @@ void Virtualizer::terminate()
             Py_XDECREF(pythonFunction);
 	    	Py_DECREF(pythonFile);
 	    }
-	    else 
+	    else
         {
             if (PyErr_Occurred())
                 PyErr_Print();
@@ -88,10 +88,10 @@ bool Virtualizer::addResources(int cpu, int memory, char *memory_unit, int stora
 	PyObject *pythonFileName = PyString_FromString(PYTHON_MAIN_FILE);
 	PyObject *pythonFile = PyImport_Import(pythonFileName);
 	Py_DECREF(pythonFileName);
-	if (pythonFile != NULL) 
-    {  
+	if (pythonFile != NULL)
+    {
 		PyObject *pythonFunction = PyObject_GetAttrString(pythonFile, PYTHON_ADDRESOURCES);
-		if (pythonFunction && PyCallable_Check(pythonFunction)) 
+		if (pythonFunction && PyCallable_Check(pythonFunction))
         {
 	    	PyObject *pythonArgs = NULL, *pythonRetVal, *pythonValue;
 	    		    	
@@ -112,8 +112,8 @@ bool Virtualizer::addResources(int cpu, int memory, char *memory_unit, int stora
 	    	//Call the python function
 	    	pythonRetVal = PyObject_CallObject(pythonFunction, pythonArgs);
             Py_DECREF(pythonArgs);
-            
-			long int retVal = PyInt_AsLong(pythonRetVal);    
+
+			long int retVal = PyInt_AsLong(pythonRetVal);
             logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Result of call: %d\n", retVal);
                 			
 			Py_DECREF(pythonRetVal);
@@ -125,11 +125,11 @@ bool Virtualizer::addResources(int cpu, int memory, char *memory_unit, int stora
 	    	else
 	    		return false;
 	    }
-	    else 
+	    else
         {
             if (PyErr_Occurred())
                 PyErr_Print();
-            
+
 		   	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot load python method \"%s\"",PYTHON_HANDLE_REQ);
 		   	Py_XDECREF(pythonFunction);
 	        Py_DECREF(pythonFile);
@@ -149,10 +149,10 @@ bool Virtualizer::addPort(char *physicalName, char *name, char *type)
 	PyObject *pythonFileName = PyString_FromString(PYTHON_MAIN_FILE);
 	PyObject *pythonFile = PyImport_Import(pythonFileName);
 	Py_DECREF(pythonFileName);
-	if (pythonFile != NULL) 
-    {  
+	if (pythonFile != NULL)
+    {
 		PyObject *pythonFunction = PyObject_GetAttrString(pythonFile, PYTHON_ADDNODEPORT);
-		if (pythonFunction && PyCallable_Check(pythonFunction)) 
+		if (pythonFunction && PyCallable_Check(pythonFunction))
         {
 	    	PyObject *pythonArgs = NULL, *pythonRetVal, *pythonValue;
 	    		    	
@@ -167,8 +167,8 @@ bool Virtualizer::addPort(char *physicalName, char *name, char *type)
 	    	//Call the python function
 	    	pythonRetVal = PyObject_CallObject(pythonFunction, pythonArgs);
             Py_DECREF(pythonArgs);
-            
-			long int retVal = PyInt_AsLong(pythonRetVal);    
+
+			long int retVal = PyInt_AsLong(pythonRetVal);
             logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Result of call: %d\n", retVal);
                 			
 			Py_DECREF(pythonRetVal);
@@ -185,11 +185,11 @@ bool Virtualizer::addPort(char *physicalName, char *name, char *type)
 	    	else
 	    		return false;
 	    }
-	    else 
+	    else
         {
             if (PyErr_Occurred())
                 PyErr_Print();
-            
+
 		   	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot load python method \"%s\"",PYTHON_HANDLE_REQ);
 		   	Py_XDECREF(pythonFunction);
 	        Py_DECREF(pythonFile);
@@ -216,10 +216,10 @@ bool Virtualizer::EditPortID(string physicalPortName, unsigned int ID)
 	PyObject *pythonFileName = PyString_FromString(PYTHON_MAIN_FILE);
 	PyObject *pythonFile = PyImport_Import(pythonFileName);
 	Py_DECREF(pythonFileName);
-	if (pythonFile != NULL) 
-	{ 
+	if (pythonFile != NULL)
+	{
     	PyObject *pythonFunction = PyObject_GetAttrString(pythonFile, PYTHON_EDIT_PORT_ID);
-    	if (pythonFunction && PyCallable_Check(pythonFunction)) 
+    	if (pythonFunction && PyCallable_Check(pythonFunction))
     	{
     		//Set the arguments to the python function
 	    	//TODO: check that pythonValue is not NULL
@@ -232,8 +232,8 @@ bool Virtualizer::EditPortID(string physicalPortName, unsigned int ID)
 	    	//Call the python function
 	    	PyObject *pythonRetVal = PyObject_CallObject(pythonFunction, pythonArgs);
             Py_DECREF(pythonArgs);
-            
-            long int retVal = PyInt_AsLong(pythonRetVal);    
+
+            long int retVal = PyInt_AsLong(pythonRetVal);
             logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Result of call: %d\n", retVal);
 
             Py_DECREF(pythonRetVal);
@@ -245,7 +245,7 @@ bool Virtualizer::EditPortID(string physicalPortName, unsigned int ID)
 	    	else
 	    		return false;
     	}
-    	else 
+    	else
         {
             if (PyErr_Occurred())
                 PyErr_Print();
@@ -268,10 +268,10 @@ bool Virtualizer::addSupportedVNFs(set<NF*> nfs)
 	PyObject *pythonFileName = PyString_FromString(PYTHON_MAIN_FILE);
 	PyObject *pythonFile = PyImport_Import(pythonFileName);
 	Py_DECREF(pythonFileName);
-	if (pythonFile != NULL) 
-	{ 
+	if (pythonFile != NULL)
+	{
 		PyObject *pythonFunction = PyObject_GetAttrString(pythonFile, PYTHON_ADD_SUPPORTED_VNFs);
-		if (pythonFunction && PyCallable_Check(pythonFunction)) 
+		if (pythonFunction && PyCallable_Check(pythonFunction))
 		{
 			//Iterate on all the NFs
 			for(set<NF*>::iterator nfIt = nfs.begin(); nfIt != nfs.end(); nfIt++)
@@ -308,8 +308,8 @@ bool Virtualizer::addSupportedVNFs(set<NF*> nfs)
 				//Call the python function
 				PyObject *pythonRetVal = PyObject_CallObject(pythonFunction, pythonArgs);
 			    Py_DECREF(pythonArgs);
-			    
-			    long int retVal = PyInt_AsLong(pythonRetVal);    
+			
+			    long int retVal = PyInt_AsLong(pythonRetVal);
 			    logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Result of call: %d\n", retVal);
 
 			    Py_DECREF(pythonRetVal);
@@ -325,7 +325,7 @@ bool Virtualizer::addSupportedVNFs(set<NF*> nfs)
 			Py_XDECREF(pythonFunction);
 			Py_DECREF(pythonFile);
 		}
-    	else 
+    	else
         {
             if (PyErr_Occurred())
                 PyErr_Print();
@@ -352,10 +352,10 @@ handleRequest_status_t Virtualizer::handleRestRequest(char *message, char **answ
 	PyObject *pythonFileName = PyString_FromString(PYTHON_MAIN_FILE);
 	PyObject *pythonFile = PyImport_Import(pythonFileName);
 	Py_DECREF(pythonFileName);
-	if (pythonFile != NULL) 
-    {  
+	if (pythonFile != NULL)
+    {
 		PyObject *pythonFunction = PyObject_GetAttrString(pythonFile, PYTHON_HANDLE_REQ);
-		if (pythonFunction && PyCallable_Check(pythonFunction)) 
+		if (pythonFunction && PyCallable_Check(pythonFunction))
         {
 	    	PyObject *pythonArgs = NULL, *pythonValue;
 	    	
@@ -371,14 +371,14 @@ handleRequest_status_t Virtualizer::handleRestRequest(char *message, char **answ
 			{
 				pythonValue = PyString_FromString(message);
 				PyTuple_SetItem(pythonArgs, 2, pythonValue);
-			}        
+			}
 	    	
 	    	//Call the python function
 	    	PyObject *pythonRetVal = PyObject_CallObject(pythonFunction, pythonArgs);
 	    	Py_DECREF(pythonArgs);
 
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Result of call: %s\n", PyString_AsString(pythonRetVal));
-            
+
             string retVal = PyString_AsString(pythonRetVal);
 	    	
 	    	Py_DECREF(pythonRetVal);
@@ -393,7 +393,7 @@ handleRequest_status_t Virtualizer::handleRestRequest(char *message, char **answ
 		 		*answer = (char*)malloc(sizeof(char) * (retVal.size()+1));
 		 		memcpy((*answer), retVal.c_str(),retVal.size()+1);
 		 		(*answer)[retVal.size()] = '\0';
-			    
+			
 			    if(retVal == "config updated")
 			    	return HR_EDIT_CONFIG;
 			    else
@@ -402,15 +402,15 @@ handleRequest_status_t Virtualizer::handleRestRequest(char *message, char **answ
 			else
 				return HR_INTERNAL_ERROR;
 	    }
-	    else 
+	    else
         {
             if (PyErr_Occurred())
                 PyErr_Print();
-            
+
 		   	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot load python method \"%s\"",PYTHON_HANDLE_REQ);
 			Py_XDECREF(pythonFunction);
 	        Py_DECREF(pythonFile);
-	        
+	
 	        return HR_INTERNAL_ERROR;			
 		}
     }

@@ -97,7 +97,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 
     unsigned int i=0;	
     int nwritten = 0;
-    
+
     ssize_t r = 0;
 	char read_buf[4096] = "";
 
@@ -107,7 +107,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 	list<pair<unsigned int, unsigned int> > virtual_links;
 	
     int dnumber_new = 0, nfnumber_old = 0;
-    
+
     //list of ports
 	list<string> ports = cli.getPhysicalPortsName();
 
@@ -128,20 +128,20 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 
 	char sw[64] = "Bridge", tcp_s[64] = "tcp:", ctr[64] = "ctrl", vrt[64] = "VirtualPort", trv[64] = "vport";
 	char temp[64] = "", tmp[64] = "", of_version[64] = "";
-    
+
     /*force to use OpenFlow12*/
     strcpy(of_version, "OpenFlow12");
-    
+
     //connect socket
     s = cmd_connect();
-    
+
     /*root object contained three object [method, params, id]*/
     Object root;
     root["method"] = "transact";
 
     Array params;
     params.push_back("Open_vSwitch");
-    
+
     Object first_obj;
     Object row;
     Array iface;
@@ -159,9 +159,9 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 	Array peer;
     Array peer1;
     Array peer2;
-    
+
     int l = 0;
-    
+
     //Create controller
     /*Create the current target of a controller*/
 	strcat(tcp_s, cli.getControllerAddress().c_str());
@@ -171,44 +171,44 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 	
 	first_obj["op"] = "insert";
     first_obj["table"] = "Controller";
-    
+
     /*insert a Controller*/
     row["target"] = temp;
     row["local_ip"] = "127.0.0.1";
     row["connection_mode"] = "out-of-band";
     row["is_connected"] = true;
-    
+
     first_obj["row"] = row;
-    
+
     //create the current name of a controller --> ctrl+dnumber
     sprintf(temp, "%s%" PRIu64, ctr, dnumber);
-    
+
     first_obj["uuid-name"] = temp;
-    
+
     params.push_back(first_obj);
-    
+
     row.clear();
     first_obj.clear();
-    
+
 	first_obj["op"] = "insert";
     first_obj["table"] = "Bridge";
-    
+
     /*insert a bridge*/
     row["name"] = sw;
-    
+
     Array port;
 	Array port1;
 	Array port2;
 	
 	port.push_back("set");
-    
+
 	port.push_back(port1);
 	
 	row["ports"] = port;
 	
 	port1.clear();
 	port.clear();
-    
+
     Array ctrl;
     ctrl.push_back("set");
 
@@ -222,11 +222,11 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 	ctrl2.push_back(tmp);
 	
 	ctrl1.push_back(ctrl2);
-	 
+	
 	ctrl.push_back(ctrl1);
-    
+
     row["controller"] = ctrl;
-    
+
 	peer.push_back("map");
 	
 	peer2.push_back("disable-in-band");
@@ -234,17 +234,17 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 			
 	peer1.push_back(peer2);
 	peer.push_back(peer1);
-    
+
     row["other_config"] = peer;
-    
+
     row["protocols"] = of_version;
-    
+
     first_obj["row"] = row;
-    
+
     first_obj["uuid-name"] = sw;
-    
+
     params.push_back(first_obj);
-    
+
     row.clear();
     first_obj.clear();
     port.clear();
@@ -256,50 +256,50 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
     peer.clear();
     peer1.clear();
     peer2.clear();
-    
+
     dnumber_new = dnumber;
-    
+
     /*Object with four items [op, table, where, mutations]*/
     Object second_obj;
     second_obj["op"] = "mutate";
     second_obj["table"] = "Open_vSwitch";
-    
+
     /*Empty array [where]*/
     Array where;
     second_obj["where"] = where;
-    
+
     /*Array with one element*/
     Array w_array;
-    
+
     /*Array  with three elements*/
     Array m_array;
     m_array.push_back("bridges");
     m_array.push_back("insert");
-    
+
     /*Array with two elements*/
     Array i_array;
     i_array.push_back("set");
-    
+
     /*Array with one element*/
     Array s_array;
-    
+
     /*Array with two element*/
     Array a_array;
     a_array.push_back("named-uuid");
     a_array.push_back(sw);
-    
+
     s_array.push_back(a_array);
-    
+
     i_array.push_back(s_array);
-    
+
     m_array.push_back(i_array);
-    
+
     w_array.push_back(m_array);
-    
+
     second_obj["mutations"] = w_array;
-    
+
     params.push_back(second_obj);
-    
+
     root["params"] = params;
 	root["id"] = id;
 
@@ -311,19 +311,19 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 	
 	//Increment transaction id
 	id++;
-    
+
     string *strr = new string[256];
-    
+
     stringstream ss;
  	write_formatted(root, ss);
-    
+
     nwritten = sock_send(s, ss.str().c_str(), strlen(ss.str().c_str()), ErrBuf, sizeof(ErrBuf));
 	if (nwritten == sockFAILURE)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error sending data: %s", ErrBuf);
 		throw commandsException();
 	}
-    
+
     r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 	if (r == sockFAILURE)
 	{
@@ -345,7 +345,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
     {
     	const string name = (*it).first;
         const Value &node = (*it).second;
-        
+
         if (name == "result")
         {
      		const Array &result = node.getArray();
@@ -368,7 +368,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 				}	
      		}	
         }
-	} 
+	}
 
 	//store the switch-uuid
     switch_uuid[dnumber] = strr[i-2];
@@ -485,7 +485,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 	
     //increment switch number
     dnumber++;
-    
+
     root.clear();
     params.clear();
     row.clear();
@@ -496,11 +496,11 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
     peer.clear();
     peer1.clear();
     peer2.clear();
-    
+
     pnumber = nfnumber_old;
-    
+
     uint64_t pi = 0;
-    
+
     Array ma;
 	Array maa;
 	
@@ -557,7 +557,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 			cmd_disconnect(s);
 		}
 	}
-  
+
     clo = new CreateLsiOut(dnumber_new, physical_ports, network_functions_ports, out_nf_ports_name_on_switch, virtual_links);
     	
 	return clo;
@@ -685,7 +685,7 @@ void commands::add_ports(string p, uint64_t dnumber, int nf, int s){
 		
 	first_obj["op"] = "update";
 	first_obj["table"] = "Bridge";
-			   
+			
 	third_object.push_back("_uuid");
 	third_object.push_back("==");
 		
@@ -730,7 +730,7 @@ void commands::add_ports(string p, uint64_t dnumber, int nf, int s){
 		
 	/*Array with two elements*/
 	i_array.push_back("set");
-		   
+		
 	i_array.push_back(port1);
 		
 	row["ports"] = i_array;
@@ -786,7 +786,7 @@ void commands::add_ports(string p, uint64_t dnumber, int nf, int s){
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error sending data: %s", ErrBuf);
 		throw commandsException();
 	}
-    
+
     r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 	if (r == sockFAILURE)
 	{
@@ -849,7 +849,7 @@ void commands::add_ports(string p, uint64_t dnumber, int nf, int s){
 
 	//disconnect socket
     cmd_disconnect(s);
-    
+
     //XXX: this code is a trick that activates a VNF ports through ifconfig. In fact, we noted that on some system
     //this operation has not done by OVSDB
     if(nf != 0)
@@ -909,7 +909,7 @@ void commands::cmd_editconfig_lsi_delete(uint64_t dpi, int s){
 				
 	first_obj["op"] = "update";
 	first_obj["table"] = "Open_vSwitch";
-			   
+			
 	first_obj["where"] = where;
 	
 	switch_uuid.erase(dpi);
@@ -925,7 +925,7 @@ void commands::cmd_editconfig_lsi_delete(uint64_t dpi, int s){
 		
 	/*Array with two elements*/
 	i_array.push_back("set");
-		   
+		
 	i_array.push_back(port1);
 		
 	row["bridges"] = i_array;
@@ -981,7 +981,7 @@ void commands::cmd_editconfig_lsi_delete(uint64_t dpi, int s){
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error sending data: %s", ErrBuf);
 		throw commandsException();
 	}
-    
+
     r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 	if (r == sockFAILURE)
 	{
@@ -1137,7 +1137,7 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int s){
 		
 		first_obj["op"] = "update";
 		first_obj["table"] = "Bridge";
-			   
+			
 		third_object.push_back("_uuid");
 		third_object.push_back("==");
 		
@@ -1194,7 +1194,7 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int s){
 		}
 		
 		/*Array with two elements*/
-		i_array.push_back("set");		   
+		i_array.push_back("set");		
 		i_array.push_back(port1);
 		row["ports"] = i_array;
 		first_obj["row"] = row;
@@ -1247,7 +1247,7 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int s){
 			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error sending data: %s", ErrBuf);
 			throw commandsException();
 		}
-    
+
     	r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 		if (r == sockFAILURE)
 		{
@@ -1346,7 +1346,7 @@ void commands::cmd_editconfig_NFPorts_delete(DestroyNFportsIn dnpi, int s){
 		
 		first_obj["op"] = "update";
 		first_obj["table"] = "Bridge";
-			   
+			
 		third_object.push_back("_uuid");
 		third_object.push_back("==");
 		
@@ -1401,7 +1401,7 @@ void commands::cmd_editconfig_NFPorts_delete(DestroyNFportsIn dnpi, int s){
 		
 		/*Array with two elements*/
 		i_array.push_back("set");
-		   
+		
 		i_array.push_back(port1);
 		
 		row["ports"] = i_array;
@@ -1457,7 +1457,7 @@ void commands::cmd_editconfig_NFPorts_delete(DestroyNFportsIn dnpi, int s){
 			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error sending data: %s", ErrBuf);
 			throw commandsException();
 		}
-    
+
     	r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 		if (r == sockFAILURE)
 		{
@@ -1597,7 +1597,7 @@ void commands::cmd_add_virtual_link(string vrt, string trv, char ifac[64], uint6
 			
 	peer1.push_back(peer2);
 	peer.push_back(peer1);
-    
+
     row["options"] = peer;
 		
 	first_obj["row"] = row;
@@ -1642,7 +1642,7 @@ void commands::cmd_add_virtual_link(string vrt, string trv, char ifac[64], uint6
 		
 	first_obj["op"] = "update";
 	first_obj["table"] = "Bridge";
-			   
+			
 	third_object.push_back("_uuid");
 	third_object.push_back("==");
 		
@@ -1687,7 +1687,7 @@ void commands::cmd_add_virtual_link(string vrt, string trv, char ifac[64], uint6
 		
 	/*Array with two elements*/
 	i_array.push_back("set");
-		   
+		
 	i_array.push_back(port1);
 		
 	row["ports"] = i_array;
@@ -1743,7 +1743,7 @@ void commands::cmd_add_virtual_link(string vrt, string trv, char ifac[64], uint6
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error sending data: %s", ErrBuf);
 		throw commandsException();
 	}
-    
+
     r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 	if (r == sockFAILURE)
 	{
@@ -1863,7 +1863,7 @@ void commands::cmd_delete_virtual_link(uint64_t dpi, uint64_t idp, int s){
 				
 	first_obj["op"] = "update";
 	first_obj["table"] = "Bridge";
-			   
+			
 	third_object.push_back("_uuid");
 	third_object.push_back("==");
 		
@@ -1917,7 +1917,7 @@ void commands::cmd_delete_virtual_link(uint64_t dpi, uint64_t idp, int s){
 		
 	/*Array with two elements*/
 	i_array.push_back("set");
-		   
+		
 	i_array.push_back(port1);
 		
 	row["ports"] = i_array;
@@ -1973,7 +1973,7 @@ void commands::cmd_delete_virtual_link(uint64_t dpi, uint64_t idp, int s){
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error sending data: %s", ErrBuf);
 		throw commandsException();
 	}
-    
+
     r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 	if (r == sockFAILURE)
 	{

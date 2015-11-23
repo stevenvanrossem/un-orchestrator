@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #Author: UNIFY Consortium
-#Date: 2015-07-02 
+#Date: 2015-07-02
 #Brief: Create a bridge
 
 #$1 LSI id
@@ -25,6 +25,11 @@ ovs-vsctl --no-wait add-br $bridgeName
 ovs-vsctl --no-wait set bridge $bridgeName datapath_type=netdev
 ovs-vsctl --no-wait set bridge $bridgeName protocols=$ofp_version
 ovs-vsctl --no-wait set-controller $bridgeName tcp:$controller_ip:$controller_port
+
+#XXX The two following commands are used to remove in-band controller, which causes
+#loops in particular configurations
+ovs-vsctl --no-wait set controller $bridgeName connection-mode=out-of-band
+ovs-vsctl --no-wait set $bridgeName other-config:disable-in-band=true
 
 exit 1
 

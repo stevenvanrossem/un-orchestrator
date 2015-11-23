@@ -9,7 +9,7 @@ ActionPort::ActionPort(string port) :
 
 }
 
-ActionPort::~ActionPort() 
+ActionPort::~ActionPort()
 {
 
 }

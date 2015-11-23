@@ -186,7 +186,7 @@ void *Controller::loop(void *param)
 	Controller *controller = (Controller*)param;
 
 	rofl::cparams socket_params = csocket::get_default_params(rofl::csocket::SOCKET_TYPE_PLAIN);
-	socket_params.set_param(csocket::PARAM_KEY_LOCAL_PORT).set_string() = controller->controllerPort; 
+	socket_params.set_param(csocket::PARAM_KEY_LOCAL_PORT).set_string() = controller->controllerPort;
 
 	controller->add_dpt_listening(0,rofl::csocket::SOCKET_TYPE_PLAIN, socket_params);
 
