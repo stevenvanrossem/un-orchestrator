@@ -245,7 +245,7 @@ Forwarding Graph (NF-FG) defined in WP3.
 
 	; Retrieve the NF-FG library.
 	$ cd [un-orchestrator]
-	$ git submodule update --init --recursive	
+	$ git submodule update --init --recursive
 
 Finally, remember to select the proper `cmake` option when compiling the `un-orchestrator`.
 
