@@ -244,9 +244,8 @@ These steps are mandatory only if you plan to use the Network Functions -
 Forwarding Graph (NF-FG) defined in WP3.
 
 	; Retrieve the NF-FG library.
-	
-	; Copy the library in the un-orchestrator folder
-	$ cp [nffg]/virtualizer3.pyc [un-orchestrator]/orchestrator/node_resource_manager/virtualizer
+	$ cd [un-orchestrator]
+	$ git submodule update --init --recursive	
 
 Finally, remember to select the proper `cmake` option when compiling the `un-orchestrator`.
 
