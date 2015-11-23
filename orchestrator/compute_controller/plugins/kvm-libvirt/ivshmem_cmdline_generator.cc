@@ -71,7 +71,7 @@ bool IvshmemCmdLineGenerator::dpdk_init(void)
 	nCores = sysconf(_SC_NPROCESSORS_ONLN);
 
 	c = CPU_ALLOC(nCores);
-	for(int i = 0;  i < nCores; i++)
+	for(i = 0;  i < nCores; i++)
 		CPU_SET(i, c);
 
 	sched_setaffinity(0, nCores, c);

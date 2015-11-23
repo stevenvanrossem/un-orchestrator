@@ -2,7 +2,11 @@
 __author__ = 'Ivano Cerrato'
 
 #NF-FG library
-from virtualizer3 import *
+import sys
+sys.path.append('virtualizer')
+import os, imp
+imp.load_source("virtualizer", os.path.join(os.path.dirname(__file__), "../../virtualizer/virtualizer3.py"))
+
 #Constants used by the parser
 import constants
 
@@ -46,7 +50,7 @@ def init():
 	LOG.debug("Initializing the virtualizer...")
 	
 	v = Virtualizer(id=constants.INFRASTRUCTURE_ID, name=constants.INFRASTRUCTURE_NAME)
-		
+				
 	v.nodes.add(
 		Infra_node(
 			id=constants.NODE_ID,
@@ -59,7 +63,7 @@ def init():
 			)
 		)
 	)
-
+	
 	try:
 		tmpFile = open(constants.CONFIGURATION_FILE, "w")
 		tmpFile.write(v.xml())
