@@ -256,7 +256,7 @@ command uses that endpoint.
 
 ## Supported matches
 
-Within the "match" element of the NF-FG description, the following fields are allowed
+Within the `match` element of the NF-FG description, the following fields are allowed
 (all the values must be specified as strings):
 
 	"port"         //only if "VNF_id" and "endpoint_id" are not specified
@@ -306,7 +306,7 @@ Within the "match" element of the NF-FG description, the following fields are al
 
 ## Supported actions
 
-Within the "action" element of the NF-FG description, one and only one of the
+Within the `action` element of the NF-FG description, one and only one of the
 following fields **MUST** be specified:
 
 	"port"         //only if "VNF_id" and "endpoint_id" are not specified

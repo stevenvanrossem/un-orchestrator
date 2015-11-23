@@ -116,7 +116,7 @@ Set up DPDK (after each reboot of the physical machine):
     ; Bind the physical network device to `igb_uio`. The following row
     ; shows how to bind eth1. Repeat the command for each network interface
     ; you want to bind.
-    $ [dpdk-folder]/tools/dpdk_nic_bind.py --bind=igb_uio eth1
+    $ sudo [dpdk-folder]/tools/dpdk_nic_bind.py --bind=igb_uio eth1
 
 Start `ovsdb-server`:
 

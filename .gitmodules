@@ -1,0 +1,3 @@
+[submodule "orchestrator/unify-virtualizer"]
+	path = orchestrator/virtualizer
+	url = https://github.com/Ericsson/unify-virtualizer

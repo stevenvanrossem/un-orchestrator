@@ -34,6 +34,7 @@ In the following we list the steps required on an **Ubuntu 14.04**.
 	$ git clone https://github.com/bisdn/rofl-common
 	; alternatively, a copy of ROFL-common is provided in `[un-orchestrator]/contrib/rofl-common.zip`
 	$ cd rofl-common/
+	$ git checkout stable-0.6
 
 	; Now install the above library according to the description provided
 	; in the cloned folder
@@ -243,9 +244,8 @@ These steps are mandatory only if you plan to use the Network Functions -
 Forwarding Graph (NF-FG) defined in WP3.
 
 	; Retrieve the NF-FG library.
-	
-	; Copy the library in the un-orchestrator folder
-	$ cp [nffg]/virtualizer3.pyc [un-orchestrator]/orchestrator/node_resource_manager/virtualizer
+	$ cd [un-orchestrator]
+	$ git submodule update --init --recursive
 
 Finally, remember to select the proper `cmake` option when compiling the `un-orchestrator`.
 

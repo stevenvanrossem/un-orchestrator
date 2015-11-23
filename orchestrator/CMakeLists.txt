@@ -480,11 +480,6 @@ ENDIF(UNIFY_NFFG)
 
 #Check unsupported configurations
 
-IF(ENABLE_DOCKER AND (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 2) )
-	#This configuration (ovs-dpdk + docker) is not supported 
-	message(FATAL_ERROR "OvS-DPDK not supported with Docker")
-ENDIF(ENABLE_DOCKER AND (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 2) )
-
 IF(ENABLE_DPDK_PROCESSES AND ( (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 1) OR (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 3) ) )
 	#This configuration (ovs (ofconfig/ovsdb) + dpdk processes) is not supported 
 	message(FATAL_ERROR "OvS not supported with Dpdk processes")
@@ -504,6 +499,11 @@ IF( (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 2) AND (${ENABLE_KVM_INDEX} EQUAL 1) 
 	#In case of ovs-dpdk, dpdk processes and kvm (usvhost) cannot be supported at the same time
 	message(FATAL_ERROR "OvS-DPDK does not support DPDK processes and KVM at the same time")
 ENDIF( (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 2) AND (${ENABLE_KVM_INDEX} EQUAL 1) AND ENABLE_DPDK_PROCESSES )
+
+IF( (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 2) AND ENABLE_DOCKER AND ((${ENABLE_KVM_INDEX} EQUAL 2) OR (ENABLE_DPDK_PROCESSES) ) )
+	#In case of ovs-dpdk, dpdk processes and/or ivshmem cannot be supported with Docker containers
+	message(FATAL_ERROR "OvS-DPDK does not support Docker containers together with DPDK processes and/or KVM-IVSHMEM")
+ENDIF( (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 2) AND ENABLE_DOCKER AND ((${ENABLE_KVM_INDEX} EQUAL 2) OR (ENABLE_DPDK_PROCESSES) ) )
 
 IF( (NOT ENABLE_DOCKER) AND (NOT ENABLE_DPDK_PROCESSES) AND (${ENABLE_KVM_INDEX} EQUAL 0) )
 	#No execution environment is selected

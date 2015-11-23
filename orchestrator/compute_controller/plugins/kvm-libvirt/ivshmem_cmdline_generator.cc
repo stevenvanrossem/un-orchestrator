@@ -1,5 +1,9 @@
 #include "ivshmem_cmdline_generator.h"
 
+#include <sched.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <rte_config.h>
 #include <rte_eal.h>
 #include <rte_ivshmem.h>
@@ -22,10 +26,10 @@ IvshmemCmdLineGenerator::IvshmemCmdLineGenerator()
 
 bool IvshmemCmdLineGenerator::dpdk_init(void)
 {
-	pthread_mutex_lock(&IvshmemCmdLineGenerator_mutex);
+	cpu_set_t *c;
+	int nCores = 0;
 
-	if(init)
-		return true;
+	pthread_mutex_lock(&IvshmemCmdLineGenerator_mutex);
 
 	/* does not exist a nicer way to do it? */
 	/* XXX: why -n is not required? */
@@ -41,6 +45,9 @@ bool IvshmemCmdLineGenerator::dpdk_init(void)
 		NULL
 	};
 
+	if(init)
+		goto generated;
+
 	if(rte_eal_init(sizeof(arg)/sizeof(*arg) -1, (char**)arg) < 0)
 	{
 		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "DPDK can not be initialized");
@@ -50,6 +57,19 @@ bool IvshmemCmdLineGenerator::dpdk_init(void)
 
 	init = true;
 
+	/*
+	 * rte_eal_init changes the core mask of the thread.
+	 * Change it back to all cores
+	 */
+	nCores = sysconf(_SC_NPROCESSORS_ONLN);
+
+	c = CPU_ALLOC(nCores);
+	for(int i = 0;  i < nCores; i++)
+		CPU_SET(i, c);
+
+	sched_setaffinity(0, nCores, c);
+
+generated:
 	pthread_mutex_unlock(&IvshmemCmdLineGenerator_mutex);
 	return true;
 }
@@ -123,11 +143,11 @@ bool IvshmemCmdLineGenerator::get_cmdline(const char * port_name, char * cmdline
 		return false;
 	}
 
-	if(rte_ivshmem_metadata_add_mempool(packets_pool, port_name) < 0)
-	{
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "OVS packets mmepool can not be added to metadatafile");
-		return false;
-	}
+	//if(rte_ivshmem_metadata_add_mempool(packets_pool, port_name) < 0)
+	//{
+	//	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "OVS packets mmepool can not be added to metadatafile");
+	//	return false;
+	//}
 
 	if (rte_ivshmem_metadata_cmdline_generate(cmdline, size, port_name) < 0)
 	{
