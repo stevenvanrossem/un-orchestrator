@@ -34,6 +34,7 @@ In the following we list the steps required on an **Ubuntu 14.04**.
 	$ git clone https://github.com/bisdn/rofl-common
 	; alternatively, a copy of ROFL-common is provided in `[un-orchestrator]/contrib/rofl-common.zip`
 	$ cd rofl-common/
+	$ git checkout stable-0.6
 
 	; Now install the above library according to the description provided
 	; in the cloned folder
