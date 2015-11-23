@@ -39,16 +39,23 @@ bool IvshmemCmdLineGenerator::dpdk_init(void)
 		"--proc-type=secondary",
 		"-c",
 		"0x01",
-		/*"-n",
-		"2",*/
 		"--",
 		NULL
 	};
 
+	int argv = sizeof(arg)/sizeof(*arg) - 1;
+
 	if(init)
 		goto generated;
 
-	if(rte_eal_init(sizeof(arg)/sizeof(*arg) -1, (char**)arg) < 0)
+	/*
+	 * XXX: DPDK versions before bb7c5ab does not reset the getopt library before
+	 * using it, so if such library has been used before calling rte_eal_init it
+	 * could fail.
+	 * bb7c5ab solves the issue and should be included in dpdk 2.2.0
+	 */
+	optind = 1;
+	if(rte_eal_init(argv, (char**)arg) < 0)
 	{
 		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "DPDK can not be initialized");
 		pthread_mutex_unlock(&IvshmemCmdLineGenerator_mutex);
