@@ -62,10 +62,14 @@ bool IvshmemCmdLineGenerator::dpdk_init(void)
 	 * Change it back to all cores
 	 */
 <<<<<<< HEAD
+<<<<<<< HEAD
 	int nCores = sysconf(_SC_NPROCESSORS_ONLN);
+=======
+	nCores = sysconf(_SC_NPROCESSORS_ONLN);
+>>>>>>> 8675bdd260f34e929954a88985e40b18f0285153
 
-	cpu_set_t *c;
 	c = CPU_ALLOC(nCores);
+<<<<<<< HEAD
 	int i = 0;
 	for(i = 0;  i < nCores; i++)
 =======
@@ -74,14 +78,21 @@ bool IvshmemCmdLineGenerator::dpdk_init(void)
 	c = CPU_ALLOC(nCores);
 	for(int i = 0;  i < nCores; i++)
 >>>>>>> master
+=======
+	for(int i = 0;  i < nCores; i++)
+>>>>>>> 8675bdd260f34e929954a88985e40b18f0285153
 		CPU_SET(i, c);
 
 	sched_setaffinity(0, nCores, c);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 generated:
 >>>>>>> master
+=======
+generated:
+>>>>>>> 8675bdd260f34e929954a88985e40b18f0285153
 	pthread_mutex_unlock(&IvshmemCmdLineGenerator_mutex);
 	return true;
 }
