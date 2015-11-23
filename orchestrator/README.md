@@ -80,12 +80,14 @@ hypervisor, please check the file [compute_controller/README.md](compute_control
 The following table shows which execution environments
 are supported with the different vSwitches.
 
-|                            |   Docker     |    KVM  |   KVM-DPDK (ivshmem)   |     DPDK processes     |
-|----------------------------|--------------|---------|------------------------|------------------------|
-| **xDPd**                   |    **Yes**   | **Yes** |          No            |         **Yes**        |
-| **OvS (OVSDB / OFconfig)** |    **Yes**   | **Yes** | No (requires OvS-DPDK) | No (requires OvS-DPDK) |
-| **OvS-DPDK**               |      No      | **Yes** |        **Yes**         |         **Yes**        |
+|                            |   Docker       |    KVM    |   KVM-DPDK (ivshmem)   |     DPDK processes     |
+|----------------------------|----------------|-----------|------------------------|------------------------|
+| **xDPd**                   |    **Yes\***   | **Yes\*** |          No            |         **Yes**        |
+| **OvS (OVSDB / OFconfig)** |    **Yes**     | **Yes**   | No (requires OvS-DPDK) | No (requires OvS-DPDK) |
+| **OvS-DPDK**               |    **Yes\***   | **Yes**   |        **Yes**         |         **Yes**        |
 
+\* In this case the packet exchange between the virtual switch and the execution
+environment is not optimized.
 
 ### NF-FG
 
