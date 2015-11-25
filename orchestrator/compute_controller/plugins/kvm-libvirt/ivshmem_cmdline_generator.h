@@ -19,6 +19,8 @@ private:
 	static pthread_mutex_t IvshmemCmdLineGenerator_mutex;
 
 	static bool init;
+	static bool memorypool_generated;
+	static pthread_mutex_t memory_pool_mutex;
 
 	static bool dpdk_init(void);
 
@@ -26,13 +28,21 @@ public:
 	IvshmemCmdLineGenerator();
 
 	/*
-	* @brief:	initializes dpdk as a secondary process using fake arguments
+	* @brief:	generates the command line for adding a port to a guest
 	*
 	* @param:	port_name	Name of the port related to the command line to be generated
-	* @param:	cmdline		Empty string that will contain the command line after the execution of the function
+	* @param:	cmdline		Buffer where the command line will be saved
 	* @param:	size		Size of the buffer for the command line
 	*/
-	bool get_cmdline(const char * port_name, char * cmdline, int size);
+	bool get_port_cmdline(const char * port_name, char * cmdline, int size);
+
+	/*
+	* @brief:	generates the command line for map ovs mempool into a guest
+	*
+	* @param:	cmdline		Buffer where the command line will be saved
+	* @param:	size		Size of the buffer for the command line
+	*/
+	bool get_mempool_cmdline(char * cmdline, int size);
 };
 
 #endif //IVSHMEM_CMDLINE_GENERATOR_H
