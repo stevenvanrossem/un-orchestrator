@@ -151,8 +151,7 @@ typedef enum
 	OFP_10 = 1,
 	OFP_12,
 	OFP_13
-}ofp_version_t;
-extern ofp_version_t OFP_VERSION;
+}
 
 /*
  * Constants used by Libvirt

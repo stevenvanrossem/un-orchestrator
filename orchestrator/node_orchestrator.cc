@@ -12,11 +12,6 @@
 #include <string.h>
 
 /**
-*	Global variables (defined in ../utils/constants.h)
-*/
-ofp_version_t OFP_VERSION;
-
-/**
 *	Private variables
 */
 struct MHD_Daemon *http_daemon = NULL;
