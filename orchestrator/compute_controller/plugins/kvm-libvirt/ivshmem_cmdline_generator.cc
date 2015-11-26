@@ -44,14 +44,6 @@ bool IvshmemCmdLineGenerator::dpdk_init(void)
 		"--proc-type=secondary",
 		"-c",
 		"0x01",
-<<<<<<< HEAD
-<<<<<<< HEAD
-		/*"-n",
-		"2",*/
-=======
->>>>>>> master
-=======
->>>>>>> d09d8206a5c1a5b51408a0dbbbd6a620c2e0c264
 		"--",
 		NULL
 	};
