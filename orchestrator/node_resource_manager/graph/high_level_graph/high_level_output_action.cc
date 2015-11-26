@@ -9,7 +9,7 @@ Action::Action(action_t type) :
 
 }
 
-Action::~Action() 
+Action::~Action()
 {
 
 }

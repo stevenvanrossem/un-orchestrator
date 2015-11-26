@@ -58,6 +58,13 @@ private:
 	map<string,map<string, unsigned int> >  network_functions;
 	
 	/**
+	*	@brief: Names of the ports connected to the LSI and related to network functions
+	*		The map is
+	*			<nf name, list<nf ports name> >
+	*/
+    map<string,list<string> > networkFunctionsPortsNameOnSwitch;
+	
+	/**
 	*	@brief: type of the NFs connected to the LSI.
 	*		The map is
 	*			<nf_name, nf_type>
@@ -108,6 +115,7 @@ public:
 	map<string,string> getPortsType();
 
 	map<string,unsigned int> getNetworkFunctionsPorts(string nf);
+	list<string> getNetworkFunctionsPortsNameOnSwitch(string nf);
 
 	map<string,nf_t> getNetworkFunctionsType();
 
@@ -135,6 +143,8 @@ protected:
 	bool setPhysicalPortID(string port, uint64_t id);
 	bool setNfPortsID(string nf, map<string, unsigned int>);
 	void setVLinkIDs(unsigned int position, unsigned int localID, unsigned int remoteID);
+	
+	void setNetworkFunctionsPortsNameOnSwitch(string nf, list<string> names);
 
 	int addVlink(VLink vlink);
 	void removeVlink(uint64_t ID);

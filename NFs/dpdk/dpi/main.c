@@ -4,7 +4,7 @@
 int MAIN(int argc, char *argv[])
 {
 
-	//Check for root privileges 
+	//Check for root privileges
 	if(geteuid() != 0)
 	{
 		fprintf(stderr,"[%s] Root permissions are required to run %s\n",NAME,argv[0]);	
@@ -33,9 +33,9 @@ int MAIN(int argc, char *argv[])
 
 	//In this version, the NF uses just one lcores.. Other potential lcores are no
 	//used
-	RTE_LCORE_FOREACH_SLAVE(lcore) 
-	{ 
-		if (rte_eal_wait_lcore(lcore)/*Wait until an lcore finishes its job.*/ < 0) 
+	RTE_LCORE_FOREACH_SLAVE(lcore)
+	{
+		if (rte_eal_wait_lcore(lcore)/*Wait until an lcore finishes its job.*/ < 0)
 		{
 			return -1;
 		}

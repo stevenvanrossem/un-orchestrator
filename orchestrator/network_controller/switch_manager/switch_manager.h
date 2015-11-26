@@ -28,7 +28,7 @@ class SwitchManager
 public:
 
 	/**
-	*	@brief: Cretes a new LSI
+	*	@brief: Creates a new LSI
 	*
 	*	@param: cli		Description of the lsi to be created
 	*	@return: 		Information related to the lsi created
@@ -70,7 +70,7 @@ public:
 	*
 	*	@param: dvli	Information related to the connection to be destroyed
 	*/
-	virtual void destroyVirtualLink(DestroyVirtualLinkIn dvli) = 0; 
+	virtual void destroyVirtualLink(DestroyVirtualLinkIn dvli) = 0;
 
 	/**
 	*	@brief: Check if the physical interfaces required are supported by the virtual switch

@@ -2,7 +2,11 @@
 __author__ = 'Ivano Cerrato'
 
 #NF-FG library
-from virtualizer3 import *
+import sys
+sys.path.append('virtualizer')
+import os, imp
+imp.load_source("virtualizer", os.path.join(os.path.dirname(__file__), "../../virtualizer/virtualizer3.py"))
+
 #Constants used by the parser
 import constants
 
@@ -46,20 +50,20 @@ def init():
 	LOG.debug("Initializing the virtualizer...")
 	
 	v = Virtualizer(id=constants.INFRASTRUCTURE_ID, name=constants.INFRASTRUCTURE_NAME)
-		
+				
 	v.nodes.add(
 		Infra_node(
 			id=constants.NODE_ID,
 			name=constants.NODE_NAME,
 			type=constants.NODE_TYPE,
-			resources=NodeResources(
+			resources=Software_resource(
 				cpu='0',
 				mem='0',
 				storage='0'
 			)
 		)
 	)
-
+	
 	try:
 		tmpFile = open(constants.CONFIGURATION_FILE, "w")
 		tmpFile.write(v.xml())
@@ -117,11 +121,10 @@ def addResources(cpu, memory, memory_unit, storage, storage_unit):
 	infrastructure = Virtualizer.parse(root=tree.getroot())
 	
 	universal_node = infrastructure.nodes.node[constants.NODE_ID]
-	
 	resources = universal_node.resources
-	resources.cpu.setValue(str(cpu) + " VCPU")
-	resources.mem.setValue(str(memory) + " " + memory_unit)
-	resources.storage.setValue(str(storage) + " " + storage_unit)
+	resources.cpu.set_value(str(cpu) + " VCPU")
+	resources.mem.set_value(str(memory) + " " + memory_unit)
+	resources.storage.set_value(str(storage) + " " + storage_unit)
 	
 	try:
 		tmpFile = open(constants.CONFIGURATION_FILE, "w")
@@ -199,9 +202,9 @@ def editPortID(portName, portID):
 	ports = universal_node.ports
 			
 	for port in ports:
-		LOG.debug("Considering port: '%s'",port.name.getValue())
-		if port.name.getValue() == portName:
-			port.id.setValue(str(portID))
+		LOG.debug("Considering port: '%s'",port.name.get_value())
+		if port.name.get_value() == portName:
+			port.id.set_value(str(portID))
 			found = True
 				
 	if not found:
@@ -441,7 +444,7 @@ def extractVNFsInstantiated(content):
 	supportedNFs = tmpInfrastructure.nodes.node[constants.NODE_ID].capabilities.supported_NFs
 	supportedTypes = []
 	for nf in supportedNFs:
-		nfType = nf.type.getValue()
+		nfType = nf.type.get_value()
 		supportedTypes.append(nfType)
 	
 	LOG.debug("Extracting the network functions (to be) deployed on the universal node")
@@ -469,7 +472,7 @@ def extractVNFsInstantiated(content):
 			#This network function has to be removed from the universal node
 			continue
 			
-		vnfType = instance.type.getValue()
+		vnfType = instance.type.get_value()
 		if vnfType not in supportedTypes:
 			LOG.warning("VNF of type '%s' is not supported by the UN!",vnfType)
 			error = True
@@ -485,7 +488,7 @@ def extractVNFsInstantiated(content):
 			
 		vnf['id'] = vnfType
 		nfinstances.append(vnf)
-		LOG.debug("Required VNF: '%s'",instance.type.getValue())
+		LOG.debug("Required VNF: '%s'",instance.type.get_value())
 		
 	return nfinstances
 	
@@ -520,8 +523,8 @@ def extractRules(content):
 	
 		rule = {}
 		
-		f_id = flowentry.id.getValue()
-		priority = flowentry.priority.getValue()	
+		f_id = flowentry.id.get_value()
+		priority = flowentry.priority.get_value()	
 		
 		#Iterate on the match in order to translate it into the json syntax
 		#supported internally by the universal node
@@ -541,8 +544,8 @@ def extractRules(content):
 					
 		#The content of <port> must be added to the match
 		#XXX: the following code is quite dirty, but it is a consequence of the nffg library
-		portPath = flowentry.port.getTarget().getPath()
-		port = flowentry.port.getTarget()	
+		portPath = flowentry.port.get_target().get_path()
+		port = flowentry.port.get_target()	
 		tokens = portPath.split('/');
 		if len(tokens) is not 5 and len(tokens) is not 7:
 			LOG.error("Invalid port '%s' defined in a flowentry",portPath)
@@ -551,13 +554,13 @@ def extractRules(content):
 						
 		if tokens[3] == 'ports':
 			#This is a port of the universal node. We have to extract the virtualized port name
-			match['port'] = port.name.getValue()			
+			match['port'] = port.name.get_value()			
 		elif tokens[3] == 'NF_instances':
 			#This is a port of the NF. I have to extract the port ID and the type of the NF.
 			#XXX I'm using the port ID as name of the port
-			vnf = port.getParent().getParent()
-			vnfType = vnf.type.getValue()
-			portID = port.id.getValue()
+			vnf = port.get_parent().get_parent()
+			vnfType = vnf.type.get_value()
+			portID = port.id.get_value()
 			match['VNF_id'] = vnfType + ":" + portID
 		else:
 			LOG.error("Invalid port '%s' defined in a flowentry",port)
@@ -581,8 +584,8 @@ def extractRules(content):
 							
 		#The content of <out> must be added to the action
 		#XXX: the following code is quite dirty, but it is a consequence of the nffg library
-		portPath = flowentry.out.getTarget().getPath()
-		port = flowentry.out.getTarget()	
+		portPath = flowentry.out.get_target().get_path()
+		port = flowentry.out.get_target()	
 		tokens = portPath.split('/');
 		if len(tokens) is not 5 and len(tokens) is not 7:
 			LOG.error("Invalid port '%s' defined in a flowentry",portPath)
@@ -593,13 +596,13 @@ def extractRules(content):
 			#This is a port of the universal node. We have to extract the ID
 			#Then, I have to retrieve the virtualized port name, and from there
 			#the real name of the port on the universal node
-			action['port'] = port.name.getValue()			
+			action['port'] = port.name.get_value()			
 		elif tokens[3] == 'NF_instances':
 			#This is a port of the NF. I have to extract the port ID and the type of the NF.
 			#XXX I'm using the port ID as name of the port
-			vnf = port.getParent().getParent()
-			vnfType = vnf.type.getValue()
-			portID = port.id.getValue()
+			vnf = port.get_parent().get_parent()
+			vnfType = vnf.type.get_value()
+			portID = port.id.get_value()
 			action['VNF_id'] = vnfType + ":" + portID
 		else:
 			LOG.error("Invalid port '%s' defined in a flowentry",port)
@@ -641,7 +644,7 @@ def extractToBeRemovedRules(content):
 	flowtable = tmpInfrastructure.nodes.node[constants.NODE_ID].flowtable
 	rulesDeployed = []
 	for flowrule in flowtable:
-		fid = flowrule.id.getValue()
+		fid = flowrule.id.get_value()
 		rulesDeployed.append(fid)
 
 	LOG.debug("Identifying the flowrules to be removed from the universal node")
@@ -660,7 +663,7 @@ def extractToBeRemovedRules(content):
 	ids = []
 	for flowentry in flowtable:
 		if flowentry.operation == 'delete':
-			f_id = flowentry.id.getValue()
+			f_id = flowentry.id.get_value()
 			if f_id not in rulesDeployed:
 				LOG.warning("Rule with ID '%d' is not deployed in the UN!",int(f_id))
 				LOG.warning("The rule cannot be removed!")
@@ -694,7 +697,7 @@ def	extractToBeRemovedVNFs(content):
 	
 	vnfsDeployed = []
 	for vnf in nf_instances:
-		ftype = vnf.type.getValue()
+		ftype = vnf.type.get_value()
 		vnfsDeployed.append(ftype)
 		
 	LOG.debug("Identifying the network functions to be removed from the universal node")
@@ -713,7 +716,7 @@ def	extractToBeRemovedVNFs(content):
 	nfinstances = []
 	for instance in instances:
 		if instance.operation == 'delete':
-			vnfType = instance.type.getValue()
+			vnfType = instance.type.get_value()
 			if vnfType not in vnfsDeployed:
 				LOG.warning("Network function with type '%s' is not deployed in the UN!",vnfType)
 				LOG.warning("The network function cannot be removed!")

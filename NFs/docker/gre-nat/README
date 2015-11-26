@@ -1,2 +1,0 @@
-This is a container the provides NAT to traffic coming out of a bunch of GRE tunnels.
-NAT is based on iptables.

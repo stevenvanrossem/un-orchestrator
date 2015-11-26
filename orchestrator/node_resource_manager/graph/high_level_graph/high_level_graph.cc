@@ -23,26 +23,6 @@ map<string, list<unsigned int> > Graph::getNetworkFunctions()
 	return networkFunctions;
 }
 
-map<unsigned int,string> Graph::getNetworkFunctionEthernetPortsRequirements(string nf)
-{
-	if(networkFunctionsEthernetPortRequirements.count(nf) != 0)
-		return (networkFunctionsEthernetPortRequirements.find(nf))->second;
-		
-	//No requirements are specified for this NF
-	map<unsigned int,string> empty;
-	return empty;
-}
-
-map<unsigned int,pair<string,string> > Graph::getNetworkFunctionIPv4PortsRequirements(string nf)
-{
-	if(networkFunctionsIPv4PortRequirements.count(nf) != 0)
-		return (networkFunctionsIPv4PortRequirements.find(nf))->second;
-		
-	//No requirements are specified for this NF
-	map<unsigned int,pair<string,string> > empty;
-	return empty;
-}
-
 list<Rule> Graph::getRules()
 {
 	return rules;
@@ -81,58 +61,6 @@ bool Graph::updateNetworkFunction(string nf, unsigned int port)
 	ports.push_back(port);
 	
 	networkFunctions[nf] = ports;
-	
-	return true;
-}
-
-bool Graph::updateNetworkFunctionIPv4PortsRequirements(string nf, unsigned int port, string address, string netmask)
-{
-	if(networkFunctions.count(nf) == 0)
-	{
-		logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "NF \"%s\" does not exist",nf.c_str());
-		return false;
-	}
-	
-	map<unsigned int,pair<string,string> > ports;
-	if(networkFunctionsIPv4PortRequirements.count(nf) != 0)
-	{
-		ports = networkFunctionsIPv4PortRequirements[nf];	
-
-		if(ports.count(port) != 0)
-		{
-			logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "The configuration for the port \"%s:%d\" has already been specified",nf.c_str(),port);
-			return false;
-		}
-	}
-	ports[port] = make_pair<string,string>(address,netmask);
-										
-	networkFunctionsIPv4PortRequirements[nf] = ports;
-	
-	return true;
-}
-
-bool Graph::updateNetworkFunctionEthernetPortsRequirements(string nf, unsigned int port, string address)
-{
-	if(networkFunctions.count(nf) == 0)
-	{
-		logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "NF \"%s\" does not exist",nf.c_str());
-		return false;
-	}
-	
-	map<unsigned int,string> ports;
-	if(networkFunctionsEthernetPortRequirements.count(nf) != 0)
-	{
-		ports = networkFunctionsEthernetPortRequirements[nf];	
-
-		if(ports.count(port) != 0)
-		{
-			logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "The configuration for the port \"%s:%d\" has already been specified",nf.c_str(),port);
-			return false;
-		}
-	}
-	ports[port] = address;
-										
-	networkFunctionsEthernetPortRequirements[nf] = ports;
 	
 	return true;
 }

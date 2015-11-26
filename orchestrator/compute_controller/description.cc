@@ -19,14 +19,14 @@ Description::Description(string type, string uri, string cores, string location)
 	{
 		this->type = DOCKER;
 		return;
-	} 
+	}
 #endif	
 #ifdef ENABLE_KVM
 	else if(type == "kvm")
 	{
 		this->type = KVM;
 		return;
-	} 
+	}
 #endif	
 
 	//[+] Add here other implementations for the execution environment
@@ -52,7 +52,7 @@ string Description::getCores()
 
 string Description::getLocation()
 {
-	assert(type == DPDK 
+	assert(type == DPDK
 #ifdef ENABLE_KVM
 	|| type == KVM
 #endif

@@ -30,7 +30,12 @@ bool RestServer::init(char *nffg_filename,int core_mask, char *ports_file_name)
 	if(nffg_filename != NULL)
 	{	
 		sleep(2); //XXX This give time to the controller to be initialized
-		return readGraphFromFile(nffg_filename);
+		
+		if(!readGraphFromFile(nffg_filename))
+		{
+			delete gm;
+			return false;
+		}
 	}
 			
 	return true;
@@ -49,10 +54,10 @@ bool RestServer::readGraphFromFile(char *nffg_filename)
 	}
 
 	stringstream stream;
-	string str; 
+	string str;
 	while (std::getline(file, str))
 	    stream << str << endl;
-	        
+	
 	if(createGraphFromFile(stream.str()) == 0)
 		return false;
 		
@@ -73,13 +78,13 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 	}
 
 	stringstream stream;
-	string str; 
+	string str;
 	while (std::getline(file, str))
 	    stream << str << endl;
-	        
-	list<string> vnfsToBeRemoved; 
+	
+	list<string> vnfsToBeRemoved;
 	list<string> rulesToBeRemoved;
-	        
+	
 	//Parse the content of the file
 	Value value;
 	read(stream.str(), value);
@@ -94,7 +99,7 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 		{
 	 	    const string& name  = i->first;
 		    const Value&  value = i->second;
-		    
+		
 		    if(name == FLOW_GRAPH)
 		    {
 		    	foundFlowGraph = true;
@@ -112,7 +117,7 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 				    	foundVNFs = true;
 				    	const Array& vnfs_array = fg_value.getArray();
 				    					    	
-				    	//Itearate on the VNFs
+				    	//Iterate on the VNFs
 				    	for( unsigned int vnf = 0; vnf < vnfs_array.size(); ++vnf )
 						{
 							//This is a VNF, with an ID and a template
@@ -138,7 +143,7 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 							}
 							if(!foundID)
 							{
-								logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in an elmenet of \"%s\"",_ID,VNFS);
+								logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in an element of \"%s\"",_ID,VNFS);
 								return false;
 							}
 						}
@@ -148,7 +153,7 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 				    	const Array& ids_array = fg_value.getArray();
 						foundFlowRules = true;
 					
-						//Itearate on the IDs
+						//Iterate on the IDs
 						for( unsigned int id = 0; id < ids_array.size(); ++id )
 						{
 							Object id_object = ids_array[id].getObject();
@@ -236,7 +241,7 @@ void RestServer::request_completed (void *cls, struct MHD_Connection *connection
 {
 	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
 
-	if (NULL == con_info) 
+	if (NULL == con_info)
 		return;
 
 	if(con_info->length != 0)
@@ -265,7 +270,7 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 		con_info = (struct connection_info_struct*)malloc (sizeof (struct connection_info_struct));
 		
 		assert(con_info != NULL);		
-		if (NULL == con_info) 
+		if (NULL == con_info)
 			return MHD_NO;
 		
 		if ((0 == strcmp (method, PUT)) || (0 == strcmp (method, DELETE)) )
@@ -291,7 +296,7 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 	assert(con_info != NULL);
 	if (0 != strcmp (method, GET))
 	{
-        //Extract the body of the HTTP request		        
+        //Extract the body of the HTTP request		
 		if (*upload_data_size != 0)
 		{
 			strcpy(&con_info->message[con_info->length],upload_data);
@@ -324,7 +329,7 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 		if(retVal == HR_EDIT_CONFIG)
 		{
 			//Handle the graph received from the network
-			//Handle the rules to be removed as required 
+			//Handle the rules to be removed as required
 			if(!readGraphFromFile(NEW_GRAPH_FILE) || !toBeRemovedFromFile(REMOVE_GRAPH_FILE))
 			{
 				//Something wrong happened during the manipulation of the graph
@@ -346,7 +351,7 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 		int ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
 		return ret;
 	}
-   
+
 #else
 	if (0 == strcmp (method, GET))
 		return doGet(connection,url);
@@ -419,7 +424,7 @@ int RestServer::doPut(struct MHD_Connection *connection, const char *url, void *
 	strcpy(tmp,url);
 	pnt=strtok(tmp, delimiter);
 	int i = 0;
-	while( pnt!= NULL ) 
+	while( pnt!= NULL )
 	{
 		switch(i)
 		{
@@ -600,13 +605,6 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 	//for each NF, contains the set of ports it requires
 	map<string,set<unsigned int> > nfs_ports_found;
 
-	//for each NF, contains a list of ports - mac addresses
-	map<string,list<pair<unsigned int,string> > > portsMacAddress;
-	//for each NF, contains a list of ports - ip addresses
-	map<string,list<pair<unsigned int,string> > > portsAddress;
-	//for each NF, contains a list of ports - netmask
-	map<string,list<pair<unsigned int,string > > > portsMask;
-
 	try
 	{
 		Object obj = value.getObject();
@@ -618,7 +616,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 		{
 	 	    const string& name  = i->first;
 		    const Value&  value = i->second;
-		    
+		
 		    if(name == FLOW_GRAPH)
 		    {
 		    	foundFlowGraph = true;
@@ -679,161 +677,6 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 									//XXX: currently, this information is ignored
 #endif
 								}
-								else if(nf_name == PORTS_WITH_REQ)
-								{
-									const Array& ports_requirements_array = nf_value.getArray();
-									if(ports_requirements_array.size() == 0)
-									{
-										logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Wrong value for key \"%s\"",PORTS_WITH_REQ);
-										return false;
-									}
-									//Itearate on the ports with requirements
-							    	for(unsigned int port = 0; port < ports_requirements_array.size(); ++port )
-									{
-										//This is a port with requirements, with a name and IPv4 information
-										Object requirements = ports_requirements_array[port].getObject();
-										bool foundName = false;
-										bool foundIPv4 = false;
-										bool foundEthernet = false;
-										
-										string portName, mac, address, netmask;
-										
-										for(Object::const_iterator rq = requirements.begin(); rq != requirements.end(); rq++)
-										{
-											const string& rq_name  = rq->first;
-											const Value&  rq_value = rq->second;
-					
-											if(rq_name == PORT_NAME)
-											{
-												foundName = true;
-												logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",VNFS,PORTS_WITH_REQ,rq_value.getString().c_str());
-												portName = rq_value.getString();
-											}
-											else if(rq_name == ETHERNET)
-											{
-												foundEthernet = true;
-												Object eth_parameters = rq_value.getObject();
-												bool foundAddress = false;
-												for(Object::const_iterator eth = eth_parameters.begin(); eth != eth_parameters.end(); eth++)
-												{
-													const string& eth_name  = eth->first;
-													const Value&  eth_value = eth->second;
-																				
-													if(eth_name == ADDRESS)
-													{
-														foundAddress = true;
-														logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\"->\"%s\"->\"%s\": \"%s\"",VNFS,PORTS_WITH_REQ,ETHERNET,ADDRESS,eth_value.getString().c_str());
-														if(!MatchParser::validateMac(eth_value.getString().c_str()))
-														{
-															logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",ADDRESS,eth_value.getString().c_str());
-															return false;
-														}
-														mac = eth_value.getString();
-													}
-													else
-													{
-														logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key \"%s\" in a port of \"%s\"",eth_name.c_str(),ETHERNET);
-														return false;
-													}
-												}
-												if(!foundAddress)
-												{
-													logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in an element of \"%s\"",ADDRESS,MASK,ETHERNET);
-													return false;
-												}
-											}
-											else if(rq_name == IP4)
-											{
-												foundIPv4 = true;
-												Object ipv4_parameters = rq_value.getObject();
-												bool foundAddress = false;
-												bool foundMask = false;
-												for(Object::const_iterator ip4 = ipv4_parameters.begin(); ip4 != ipv4_parameters.end(); ip4++)
-												{
-													const string& ip4_name  = ip4->first;
-													const Value&  ip4_value = ip4->second;
-																				
-													if(ip4_name == ADDRESS)
-													{
-														foundAddress = true;
-														logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\"->\"%s\"->\"%s\": \"%s\"",VNFS,PORTS_WITH_REQ,IP4,ADDRESS,ip4_value.getString().c_str());
-														if(!MatchParser::validateIpv4(ip4_value.getString()))
-														{
-															logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",ADDRESS,ip4_value.getString().c_str());
-															return false;
-														}
-														address = ip4_value.getString();
-													}
-													else if(ip4_name == MASK)
-													{
-														foundMask = true;
-														foundAddress = true;
-														logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\"->\"%s\"->\"%s\": \"%s\"",VNFS,PORTS_WITH_REQ,IP4,MASK,ip4_value.getString().c_str());
-														if(!MatchParser::validateIpv4Netmask(ip4_value.getString()))
-														{
-															logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",MASK,ip4_value.getString().c_str());
-															return false;
-														}
-														netmask = ip4_value.getString();
-													}
-													else
-													{
-														logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key \"%s\" in a port of \"%s\"",ip4_name.c_str(),IP4);
-														return false;
-													}
-												}
-												if(!foundAddress || !foundMask)
-												{
-													logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\", or key \"%s\", or both not found in an element of \"%s\"",ADDRESS,MASK,IP4);
-													return false;
-												}
-											}
-											else
-											{
-												logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key \"%s\" in a port of \"%s\"",rq_name.c_str(),PORTS_WITH_REQ);
-												return false;
-											}
-										}
-										if(!foundName || !(foundIPv4 || foundEthernet))
-										{
-											logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\", or key \"%s\", or key \"%s\" or all of them not found in an element of \"%s\"",PORT_NAME,ETHERNET,IP4,PORTS_WITH_REQ);
-											return false;
-										}
-										logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Port \"%s\" configuration - ipv4: %s - netmask: %s -mac: %s",portName.c_str(), address.c_str(), netmask.c_str(), mac.c_str());
-										
-										string theName = MatchParser::nfName(portName);
-										unsigned int nf_port = MatchParser::nfPort(portName);
-										
-										//TODO: controllare che theName sia uguale al nome della funzione che si sta descrivendo
-										
-										
-										if(foundEthernet)
-										{
-											//Save the MAC address
-											list<pair<unsigned int,string> > list_mac_addresses;
-											if(portsMacAddress.count(theName) != 0)
-													list_mac_addresses = portsMacAddress[theName];
-											list_mac_addresses.push_back(make_pair<unsigned int,string>(nf_port,mac));
-											portsMacAddress[theName] = list_mac_addresses;
-										}
-										
-										if(foundIPv4)
-										{
-											//Save the IP address
-											list<pair<unsigned int,string> > list_addresses;
-											if(portsAddress.count(theName) != 0)
-													list_addresses = portsAddress[theName];
-											list_addresses.push_back(make_pair<unsigned int,string>(nf_port,address));
-											portsAddress[theName] = list_addresses;
-										
-											list<pair<unsigned int,string> > list_masks;
-											if(portsMask.count(theName) != 0)
-													list_masks = portsMask[theName];
-											list_masks.push_back(make_pair<unsigned int,string>(nf_port,netmask));
-											portsMask[theName] = list_masks;
-										}
-									}
-								}
 								else
 								{
 									logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key \"%s\" in a VNF of \"%s\"",nf_name.c_str(),VNFS);
@@ -842,7 +685,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 							}
 							if(
 #ifdef POLITO_MESSAGE							
-							!foundTemplate || 
+							!foundTemplate ||
 #endif							
 							!foundID)
 							{
@@ -1132,7 +975,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The content does not respect the JSON syntax: ",e.what());
 		return false;
 	}
-    
+
 #ifndef UNIFY_NFFG
 	//XXX The number of ports is provided by the name resolver, and should not depend on the flows inserted. In fact,
 	//it should be possible to start VNFs without setting flows related to such a function!
@@ -1141,7 +984,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 		set<unsigned int> ports = it->second;
 		assert(ports.size() != 0);
 		
-		for(set<unsigned int>::iterator p = ports.begin(); p != ports.end(); p++) 
+		for(set<unsigned int>::iterator p = ports.begin(); p != ports.end(); p++)
 		{
 			if(!graph.updateNetworkFunction(it->first,*p))
 			{
@@ -1149,7 +992,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 					return false;
 				else
 				{
-					//The message does not describe the current NF into the section "VNFs". However, this NF could be 
+					//The message does not describe the current NF into the section "VNFs". However, this NF could be
 					//already part of the graph, and in this case the match/action using it is valid. On the contrary,
 					//if the NF is no longer part of the graph, there is an error, and the graph cannot be updated.
 					if(gm->graphContainsNF(graph.getID(),it->first))
@@ -1169,58 +1012,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 	}
 #endif	
 	
-	//Save the mac addresses
-	map<string,list<pair<unsigned int,string> > >::iterator macAddr = portsMacAddress.begin();
-	 
-	for(; macAddr != portsMacAddress.end(); macAddr++)
-	{
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "NF \"%s\" requires the following parameters:",macAddr->first.c_str());
-	
-		list<pair<unsigned int,string> > addresses = macAddr->second;
-
-		list<pair<unsigned int,string> >::iterator a = addresses.begin();
-		for(; a != addresses.end(); a++) 
-		{
-			
-			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "\tPort %d - mac address: %s",a->first,a->second.c_str());
-		
-			if(!graph.updateNetworkFunctionEthernetPortsRequirements(macAddr->first,a->first,a->second))
-				return false;
-		}
-	}
-	
-	//Save the IPv4 addresses
-	assert(portsAddress.size() == portsMask.size());
-	
-	map<string,list<pair<unsigned int,string> > >::iterator addr = portsAddress.begin();
-	map<string,list<pair<unsigned int,string > > >::iterator mask = portsMask.begin();
-	 
-	for(; addr != portsAddress.end(); addr++, mask++)
-	{
-		assert(addr->first == mask->first);
-	
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "NF \"%s\" requires the following parameters for ports:",addr->first.c_str());
-	
-		list<pair<unsigned int,string> > addresses = addr->second;
-		list<pair<unsigned int,string> > netmasks = mask->second;
-
-		assert((addresses.size() != 0) && (addresses.size() == netmasks.size()));
-		
-		list<pair<unsigned int,string> >::iterator a = addresses.begin();
-		list<pair<unsigned int,string> >::iterator m = netmasks.begin();
-
-		for(; a != addresses.end(); a++, m++) 
-		{
-			assert(a->first == m->first);
-			
-			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "\tPort %d - address: %s - netmask: %s",a->first,a->second.c_str(),m->second.c_str());
-		
-			if(!graph.updateNetworkFunctionIPv4PortsRequirements(addr->first,a->first,a->second,m->second))
-				return false;
-		}
-	}
-	
-    return true;
+	return true;
 }
 
 int RestServer::doGet(struct MHD_Connection *connection, const char *url)
@@ -1239,7 +1031,7 @@ int RestServer::doGet(struct MHD_Connection *connection, const char *url)
 	strcpy(tmp,url);
 	pnt=strtok(tmp, delimiter);
 	int i = 0;
-	while( pnt!= NULL ) 
+	while( pnt!= NULL )
 	{
 		switch(i)
 		{
@@ -1268,7 +1060,7 @@ get_malformed_url:
 	if( (!request && i != 2) || (request && i != 1) )
 	{
 		//the URL is malformed
-		goto get_malformed_url; 
+		goto get_malformed_url;
 	}
 	
 	if(MHD_lookup_connection_value (connection,MHD_HEADER_KIND, "Host") == NULL)
@@ -1375,7 +1167,7 @@ int RestServer::doDelete(struct MHD_Connection *connection, const char *url, voi
 	strcpy(tmp,url);
 	pnt=strtok(tmp, delimiter);
 	int i = 0;
-	while( pnt!= NULL ) 
+	while( pnt!= NULL )
 	{
 		switch(i)
 		{
@@ -1451,7 +1243,7 @@ delete_malformed_url:
 				MHD_destroy_response (response);
 				return ret;
 			}
-			else 
+			else
 				logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The graph has been properly deleted!");
 				logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "");
 		}

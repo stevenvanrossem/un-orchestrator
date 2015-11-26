@@ -1,54 +1,40 @@
-This network function implements a DPI on packets coming from its first interface.
-It works with two interfaces, and implements a bridge between them.
+## DPDK-based DPI VNF
 
-By default, it drops the HTTP containing the words "porn" and "sex". You can
-add other words by exiting the file "runtime.c"
+This file contains the instructions to build a DPI that exchanges packets with the virtual switch
+through the DPDK rte_rings.
 
-===============================================================================
+The virtual network function analyzes packets coming from the first interfaces and, if a packet is
+allowed, forwards it on the second interface. Packets flowing in the opposite direction are instead
+forwarded without any analysis.
 
-Reqiured libraries:
+By default, the DPI drops the HTTP containing the words "porn" and "sex".
 
-* DPDK  
-     git clone https://github.com/bisdn/dpdk-dev
-     
-* libpcre  
-    apt-get install libpcre3 libpcre3-dev
+### Configuring the DPI
 
-===============================================================================
+The configuration of the DPI has to be embedded in the source code; right now, we cannot change dynamically (at run-time) the configuration.
 
-Compile it as follows:
-* export RTE_SDK=absolute_path_dpdk  
-  (e.g., export RTE_SDK=~/Desktop/dpdk-dev)  
-* make
+To change the configuration of the DPI (e.g., changing the network interfaces it binds to, the rules used to allow/block the traffic, etc.), edit the file `runtime.c`.
 
-===============================================================================
+### Creating the binary
 
-* If you are going to use this network function together with the un-orchestrator, 
-you can skip this part *
+In addition to the DPDK library, the DPI requires the pcre library to implements the packet inspections.
+The pcre library can be installed with the command:
 
-Usage:  
- sudo ./dpi -c core_mask -n memory_channels --proc-type=secondary -- 
-                --p port_name --p port_name --s semaphore_name --l file_name                                          
-                                                                                         
-Parameters:  
-  -c core_mask  
-        Number of lcores used by the NFs. Note that currently only one lcore is
-        actually used.                                                                              
-  -n memory_channels  
-        Number of channels used by the NFs to access to the memory.                      
-  --proc-type=secondary  
-        The NF must be executed as a DPDK secondary process.                             
-  --p port_name  
-	    Name of a port of the NF. This parameter must be repeated two times, 
-	    since this NF requires two ports.  
-  --l file_name  
-        Name of the file used to log information.                                        
-                                                                                         
-Options:   
-  --s semaphore_name [mandatory if the NF is compiled with the flag ENABLE_SEMAPHORE]  
-        Name of the semaphore to be used by the NF.                                                                                    
-  --h   Print the help.
-                                                                                         
-Example:  
-  sudo ./url_filter -c 0x1 -n 2 --proc-type=secondary -- --p port1 --p port2 --s sem
+	$ sudo apt-get install libpcre3 libpcre3-dev
 
+To compile the DPI to be used with xDPd, run the following commands:
+
+	$ export RTE_SDK=absolute_path_dpdk
+	; e.g., export RTE_SDK=~/Desktop/dpdk-dev
+	$ RTE_TARGET=x86_64-native-linuxapp-gcc
+	$ make
+	
+To compile the DPI to be used with OvS-DPDK, run the following commands:
+
+	$ export RTE_SDK=absolute_path_dpdk
+	; e.g., export RTE_SDK=~/Desktop/dpdk-dev
+	$ RTE_TARGET=x86_64-ivshmem-linuxapp-gcc
+	$ make
+
+**Note:** the network function has been written to work with xDPd. If you want to use it with
+OvS-DPDK, please change the name of the rte_rings before compiling, as detailed in `../README.md`.

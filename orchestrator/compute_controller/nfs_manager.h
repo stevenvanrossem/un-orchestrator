@@ -30,20 +30,24 @@ public:
 	virtual ~NFsManager() {}
 
 	/**
-	*	@brief: check wheter the execution environment is supported or not
+	*	@brief: check whether the execution environment is supported or not
 	*/
 	virtual bool isSupported() = 0;
 
 	/**
 	*	@brief:	Retrieve and start the network function
+	*
+	*	@param: cli	Description of the network function to be started
 	*/
 	virtual bool startNF(StartNFIn sni) = 0;
 	
 	/**
 	*	@brief: stop the network function
+	*
+	*	@param: cli	Description of the network function to be stopped
 	*/
 	virtual bool stopNF(StopNFIn sni) = 0;
-	
+		
 	/**
 	*	@brief: set the description of the network function to be handled by the manager
 	*/

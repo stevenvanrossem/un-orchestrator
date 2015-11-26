@@ -7,31 +7,20 @@
 
 #command line: sudo ./checkDockerRun.sh
 
-if (( $EUID != 0 )) 
+if (( $EUID != 0 ))
 then
-    echo "[checkDockerRun] This script must be executed with ROOT privileges"
+    echo "[$0] This script must be executed with ROOT privileges"
     exit 0
 fi
 
-#IVANO: probably the check on the version can be removed. To me it seems that both Ubuntu and
-#Debian use the same syntax.
-
-version=`cat /etc/*-release | grep "ID=ubuntu" | wc -l`
-if [ $version -ge 1 ]
-then
-	#The distribution is Ubuntu
-	num=`ps aux | grep "docker" | grep "lxc" | grep -v "grep" | wc -l`
-else
-	#I'm assuming that the distribution is Debian
-	num=`ps aux | grep "/usr/bin/docker -d" | grep "lxc" | grep -v "grep" | wc -l`
-fi
+num=`ps aux | grep "docker" | grep -v "grep" | wc -l`
 
 if [ $num -ge 1 ]
 then
 	exit 1
 fi
 
-echo "[checkDockerRun] Docker is not running (at least with the LXC engine)"
+echo "[$0] Docker is not running"
 
 exit 0
 

@@ -41,28 +41,12 @@ private:
 	map<string, list<unsigned int> > networkFunctions;
 
 	/**
-	*	@brief: for each NF attached to the graph, specifies the Ethernet configuration requirements
-	*		for its ports. For instance, if the port NF:1 of the network function NF requires
-	*		the mac address aa:aa:aa:aa:aa:aa, an element of the following
-	*		structure is <NF,<1,aa:aa:aa:aa:aa:aa>>
-	*/
-	map<string, map<unsigned int,string> > networkFunctionsEthernetPortRequirements;
-
-	/**
-	*	@brief: for each NF attached to the graph, specifies the IPv4 configuration requirements
-	*		for its ports. For instance, if the port NF:1 of the network function NF requires
-	*		the ip address 1.1.1.1 and the netmask 255.255.255.0, an element of the following
-	*		structure is <NF,<1,<1.1.1.1,255.255.255.0>>>
-	*/
-	map<string, map<unsigned int,pair<string,string> > > networkFunctionsIPv4PortRequirements;
-
-	/**
 	*	@brief: physical ports to be attached to the graph
 	*/
 	set<string> ports;
 	
 	/**
-	*	@brief: for each end point of the graph, the following structure specifies if that end 
+	*	@brief: for each end point of the graph, the following structure specifies if that end
 	*		point is defined in this graph or not
 	*/
 	map<string,bool> endpoints;
@@ -115,42 +99,9 @@ public:
 	bool updateNetworkFunction(string nf, unsigned port);
 
 	/**
-	*	@brief: Update a NF by adding Ethernet configuration parameters for one of its ports
-	*
-	*	@param:	nf		Name of the network function to be updated
-	*	@param:	port	Identifier of the port of the network function
-	*	@param: address	MAC address to be associated with the port
-	*/
-	bool updateNetworkFunctionEthernetPortsRequirements(string nf, unsigned int port, string address);
-
-	/**
-	*	@brief: Update a NF by adding IPv4 configuration parameters for one of its ports
-	*
-	*	@param:	nf		Name of the network function to be updated
-	*	@param:	port	Identifier of the port of the network function
-	*	@param: address	IP address to be associated with the port
-	*	@param	netmask	Netmask to be associated with the port
-	*/
-	bool updateNetworkFunctionIPv4PortsRequirements(string nf, unsigned int port, string address, string netmask);
-	
-	/**
 	*	@brief: Return the NFs of the graph and the ports they require
 	*/
 	map<string, list<unsigned int> > getNetworkFunctions();
-
-	/**
-	*	@brief: Return the Ethernet requirements of the ports of a network function
-	*
-	*	@param: nf	Network function for which the port requirements must be retrieved
-	*/
-	map<unsigned int,string> getNetworkFunctionEthernetPortsRequirements(string nf);
-
-	/**
-	*	@brief: Return the IPv4 requirements of the ports of a network function
-	*
-	*	@param: nf	Network function for which the port requirements must be retrieved
-	*/
-	map<unsigned int,pair<string,string> > getNetworkFunctionIPv4PortsRequirements(string nf);	
 	
 	/**
 	*	@brief: Add an end point to the graph, to be used to connect the graph itself with
@@ -170,7 +121,7 @@ public:
 	set<string> getEndPoints();
 	
 	/**
-	*	@brief: given a graph endpoint (in the form graphID:epID), return true if it is defined 
+	*	@brief: given a graph endpoint (in the form graphID:epID), return true if it is defined
 	*		in this graph
 	*/
 	bool isDefinedHere(string endpoint);
@@ -226,7 +177,7 @@ public:
 	
 	/**
 	*	@brief: Checks if a physical port still exist in the graph. If it is no
-	*		longer used in any rule, but it is part of the "ports" set, it 
+	*		longer used in any rule, but it is part of the "ports" set, it
 	*		is removed from this set as well.
 	*
 	*	@param:	port	Name of a physical port
@@ -235,7 +186,7 @@ public:
 	
 	/**
 	*	@brief: Checks if an endpoint port still exist in the graph. If it is no
-	*		longer used in any rule, but it is part of the "endpoints" set, it 
+	*		longer used in any rule, but it is part of the "endpoints" set, it
 	*		is removed from this set as well.
 	*
 	*	@param: endpoint	Name of an endpoint

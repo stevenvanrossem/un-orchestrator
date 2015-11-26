@@ -1,54 +1,71 @@
 #include "libvirt.h"
 #include "libvirt_constants.h"
 
+#ifndef ENABLE_KVM_IVSHMEM
+	virConnectPtr Libvirt::connection = NULL;
+#else
+	pthread_mutex_t Libvirt::Libvirt_mutex = PTHREAD_MUTEX_INITIALIZER;
+	unsigned int Libvirt::next_tcp_port = FIRST_PORT_FOR_MONITOR;
+	map<string,string> Libvirt::monitor;
+#endif
+
+#ifndef ENABLE_KVM_IVSHMEM
 void Libvirt::customErrorFunc(void *userdata, virErrorPtr err)
 {
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Failure of libvirt library call:\n");
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, " Code: %d\n", err->code);
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, " Domain: %d\n", err->domain);
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, " Message: %s\n", err->message);
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, " Level: %d\n", err->level);
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, " str1: %s\n", err->str1);
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, " str2: %s\n", err->str2);
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, " str3: %s\n", err->str3);
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, " int1: %d\n", err->int1);
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, " int2: %d\n", err->int2);
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Failure of libvirt library call:");
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "\tCode: %d", err->code);
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "\tDomain: %d", err->domain);
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "\tMessage: %s", err->message);
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "\tLevel: %d", err->level);
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "\tstr1: %s", err->str1);
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "\tstr2: %s", err->str2);
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "\tstr3: %s", err->str3);
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "\tint1: %d", err->int1);
+	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "\tint2: %d", err->int2);
 }
-
-virConnectPtr Libvirt::connection = NULL;
+#endif
 
 Libvirt::Libvirt()
 {
+#ifndef ENABLE_KVM_IVSHMEM
 	virSetErrorFunc(NULL, customErrorFunc);
+#endif
 }
 
 Libvirt::~Libvirt()
 {
+#ifndef ENABLE_KVM_IVSHMEM
 	if(connection != NULL)
 		disconnect();
+#endif
 }
 
 bool Libvirt::isSupported()
 {
+#ifndef ENABLE_KVM_IVSHMEM
 	connect();
-	
+
 	if(connection == NULL)
 		return false;
+#endif
+
+	//TODO check if it supported in case of plain QEMU
 	return true;
 }
 
+#ifndef ENABLE_KVM_IVSHMEM
 void Libvirt::connect()
 {
 	if(connection != NULL)
 		//The connection is already open
 		return;
 
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Connecting to Libvirt ...\n");
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Connecting to Libvirt ...");
 	connection = virConnectOpen("qemu:///system");
-	if (connection == NULL) 
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Failed to open connection to qemu:///system\n");
+	if (connection == NULL)
+		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Failed to open connection to qemu:///system");
 	else
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Open connection to qemu:///system successfull\n");
+		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Open connection to qemu:///system successfull");
 }
 
 void Libvirt::disconnect()
@@ -56,27 +73,24 @@ void Libvirt::disconnect()
 	virConnectClose(connection);
 	connection = NULL;
 }
+#endif
 
+#if not defined(ENABLE_KVM_IVSHMEM)
 bool Libvirt::startNF(StartNFIn sni)
 {
 	virDomainPtr dom = NULL;
-	char domain_name[64], port_name[64];
+	char domain_name[64];
 	const char *xmlconfig = NULL;
-	
+
 	string nf_name = sni.getNfName();
-	unsigned int n_ports = sni.getNumberOfPorts();
-	map<unsigned int,string> ethPortsRequirements = sni.getEthPortsRequirements();
 	string uri_image = description->getURI();
 
+	list<string> namesOfPortsOnTheSwitch = sni.getNamesOfPortsOnTheSwitch();
+
 	/* Domain name */
-	sprintf(domain_name, "%" PRIu64 "_%s", sni.getLsiID(), sni.getNfName().c_str());
-	
-	bool ovsdpdk = false;
-	if (uri_image.compare(0, ovs.size(), ovs.c_str(), ovs.size()) != 0) {
-		ovsdpdk = true;
-	}
-	
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Using Libvirt XML template %s\n", uri_image.c_str());
+	sprintf(domain_name, "%" PRIu64 "_%s", sni.getLsiID(), nf_name.c_str());
+
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Using Libvirt XML template %s", uri_image.c_str());
 	xmlInitParser();
 
 	xmlDocPtr doc;
@@ -86,21 +100,21 @@ bool Libvirt::startNF(StartNFIn sni)
 	/* Load XML document */
 	doc = xmlParseFile(uri_image.c_str());
 	if (doc == NULL) {
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Unable to parse file \"%s\"\n", uri_image.c_str());
+		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Unable to parse file \"%s\"", uri_image.c_str());
 		return 0;
 	}
 
 	/* xpath evaluation for Libvirt various elements we may want to update */
 	xpathCtx = xmlXPathNewContext(doc);
 	if(xpathCtx == NULL) {
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Unable to create new XPath context\n");
+		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Unable to create new XPath context");
 		xmlFreeDoc(doc);
 		return 0;
 	}
 	const xmlChar* xpathExpr = BAD_CAST "/domain/devices/interface|/domain/name|/domain/devices/emulator";
 	xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx);
 	if(xpathObj == NULL) {
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error: unable to evaluate xpath expression \"%s\"\n", xpathExpr);
+		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error: unable to evaluate xpath expression \"%s\"", xpathExpr);
 		xmlXPathFreeContext(xpathCtx);
 		xmlFreeDoc(doc);
 		return 0;
@@ -114,7 +128,7 @@ bool Libvirt::startNF(StartNFIn sni)
 
 	xmlNodeSetPtr nodes = xpathObj->nodesetval;
 	int size = (nodes) ? nodes->nodeNr : 0;
-    logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "xpath return size: %d\n", size);
+    logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "xpath return size: %d", size);
 	int i;
 	for(i = size - 1; i >= 0; i--) {
 	  	xmlNodePtr node = nodes->nodeTab[i];
@@ -145,10 +159,10 @@ bool Libvirt::startNF(StartNFIn sni)
 		   			}
 		   			break;
 		   		case XML_ATTRIBUTE_NODE:
-		   			fprintf(stdout, "Error, ATTRIBUTE found here\n");
+		   			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "ATTRIBUTE found here");
 		   			break;
 		   		default:
-		   			fprintf(stdout, "Other type\n");
+		   			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Other type");
 		   			break;
 		   	}
 		}
@@ -188,14 +202,14 @@ bool Libvirt::startNF(StartNFIn sni)
 	const xmlChar* xpathExpr_devs = BAD_CAST "/domain/devices";
 	xpathObj = xmlXPathEvalExpression(xpathExpr_devs, xpathCtx);
 	if(xpathObj == NULL) {
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error: unable to evaluate xpath expression \"%s\"\n", xpathExpr);
+		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error: unable to evaluate xpath expression \"%s\"", xpathExpr);
 		xmlXPathFreeContext(xpathCtx);
 		xmlFreeDoc(doc);
 		return 0;
 	}
 	nodes = xpathObj->nodesetval;
 	if (!nodes || (nodes->nodeNr != 1)) {
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "xpath(devices) failed accessing <devices> node\n");
+		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "xpath(devices) failed accessing <devices> node");
 		xmlXPathFreeContext(xpathCtx);
 		xmlFreeDoc(doc);
 		return 0;
@@ -207,67 +221,65 @@ bool Libvirt::startNF(StartNFIn sni)
     if ((0 == (update_flags & EMULATOR_UPDATED)) && (QEMU_BIN_PATH != NULL)) {
     	xmlNewTextChild(devices, NULL, BAD_CAST "emulator", BAD_CAST QEMU_BIN_PATH);
     }
-	
+
 	/* Create XML for VM */
-	if (ovsdpdk) {
-		/* Create NICs */
-		for(unsigned int i=1;i<=n_ports;i++) {
-			// TODO: This is OVS vhostuser specific - Should be coordinated with network plugin part...
-			char sock_path[255];
-			sprintf(sock_path, "%s/%s_%u", OVS_BASE_SOCK_PATH, domain_name, i);
-			xmlNodePtr ifn = xmlNewChild(devices, NULL, BAD_CAST "interface", NULL);
-    	    xmlNewProp(ifn, BAD_CAST "type", BAD_CAST "vhostuser");
+#ifdef VSWITCH_IMPLEMENTATION_OVSDPDK
 
-    	    xmlNodePtr srcn = xmlNewChild(ifn, NULL, BAD_CAST "source", NULL);
-    	    xmlNewProp(srcn, BAD_CAST "type", BAD_CAST "unix");
-    	    xmlNewProp(srcn, BAD_CAST "path", BAD_CAST sock_path);
-    	    xmlNewProp(srcn, BAD_CAST "mode", BAD_CAST "client");
+	//XXX: userspace vhost is only used in case of ovs-dpdk
 
-    	    xmlNodePtr modeln = xmlNewChild(ifn, NULL, BAD_CAST "model", NULL);
-    	    xmlNewProp(modeln, BAD_CAST "type", BAD_CAST "virtio");
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "This function is KVM-USVHOST");
 
-			if(ethPortsRequirements.count(i) > 0) {
-	    	    xmlNodePtr macn = xmlNewChild(ifn, NULL, BAD_CAST "mac", NULL);
-	    	    xmlNewProp(macn, BAD_CAST "address", BAD_CAST (ethPortsRequirements.find(i)->second.c_str()));
-			}
+	/* Create NICs */
 
-    	    xmlNodePtr drvn = xmlNewChild(ifn, NULL, BAD_CAST "driver", NULL);
-    	    xmlNodePtr drv_hostn = xmlNewChild(drvn, NULL, BAD_CAST "host", NULL);
-    	    xmlNewProp(drv_hostn, BAD_CAST "csum", BAD_CAST "off");
-    	    xmlNewProp(drv_hostn, BAD_CAST "gso", BAD_CAST "off");
-    	    xmlNodePtr drv_guestn = xmlNewChild(drvn, NULL, BAD_CAST "guest", NULL);
-    	    xmlNewProp(drv_guestn, BAD_CAST "tso4", BAD_CAST "off");
-    	    xmlNewProp(drv_guestn, BAD_CAST "tso6", BAD_CAST "off");
-    	    xmlNewProp(drv_guestn, BAD_CAST "ecn", BAD_CAST "off");
-		}
-	}else{
-		/* Create NICs */
-		for(unsigned int i=1;i<=n_ports;i++) {
-			// TODO: This is OVS vhostuser specific - Should be extracted to network plugin part...
-			/*add ports*/			
-			//Create name of port --> nf_name+b+lsiID+p+i
-			locale loc;	
-				
-			for (string::size_type j=0; j<nf_name.length(); ++j)
-    			nf_name[j] = tolower(nf_name[j], loc);
-    				
-			sprintf(port_name, "%sp%ub" "%" PRIu64, nf_name.c_str(), i, sni.getLsiID());
-			
-			
-			xmlNodePtr ifn = xmlNewChild(devices, NULL, BAD_CAST "interface", NULL);
-    	    xmlNewProp(ifn, BAD_CAST "type", BAD_CAST "direct");
+	for(list<string>::iterator pn = namesOfPortsOnTheSwitch.begin(); pn != namesOfPortsOnTheSwitch.end(); pn++)
+	{
 
-    	    xmlNodePtr srcn = xmlNewChild(ifn, NULL, BAD_CAST "source", NULL);
-    	    xmlNewProp(srcn, BAD_CAST "dev", BAD_CAST port_name);
-    	    xmlNewProp(srcn, BAD_CAST "mode", BAD_CAST "passthrough");
+		char sock_path[255];
+//		sprintf(sock_path, "%s/%s_%u", OVS_BASE_SOCK_PATH, domain_name, i);
+		sprintf(sock_path, "%s/%s", OVS_BASE_SOCK_PATH, pn->c_str());
 
-    	    xmlNodePtr modeln = xmlNewChild(ifn, NULL, BAD_CAST "model", NULL);
-    	    xmlNewProp(modeln, BAD_CAST "type", BAD_CAST "virtio");
-    	    
-    	    xmlNodePtr virt = xmlNewChild(ifn, NULL, BAD_CAST "virtualport", NULL);
-    	    xmlNewProp(virt, BAD_CAST "type", BAD_CAST "openvswitch");
-		}
+		xmlNodePtr ifn = xmlNewChild(devices, NULL, BAD_CAST "interface", NULL);
+	    xmlNewProp(ifn, BAD_CAST "type", BAD_CAST "vhostuser");
+
+	    xmlNodePtr srcn = xmlNewChild(ifn, NULL, BAD_CAST "source", NULL);
+	    xmlNewProp(srcn, BAD_CAST "type", BAD_CAST "unix");
+	    xmlNewProp(srcn, BAD_CAST "path", BAD_CAST sock_path);
+	    xmlNewProp(srcn, BAD_CAST "mode", BAD_CAST "client");
+
+	    xmlNodePtr modeln = xmlNewChild(ifn, NULL, BAD_CAST "model", NULL);
+	    xmlNewProp(modeln, BAD_CAST "type", BAD_CAST "virtio");
+
+	    xmlNodePtr drvn = xmlNewChild(ifn, NULL, BAD_CAST "driver", NULL);
+	    xmlNodePtr drv_hostn = xmlNewChild(drvn, NULL, BAD_CAST "host", NULL);
+	    xmlNewProp(drv_hostn, BAD_CAST "csum", BAD_CAST "off");
+	    xmlNewProp(drv_hostn, BAD_CAST "gso", BAD_CAST "off");
+	    xmlNodePtr drv_guestn = xmlNewChild(drvn, NULL, BAD_CAST "guest", NULL);
+	    xmlNewProp(drv_guestn, BAD_CAST "tso4", BAD_CAST "off");
+	    xmlNewProp(drv_guestn, BAD_CAST "tso6", BAD_CAST "off");
+	    xmlNewProp(drv_guestn, BAD_CAST "ecn", BAD_CAST "off");
 	}
+#else
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "This function is a 'standard process' in KVM");
+
+	/* Create NICs */
+	for(list<string>::iterator pn = namesOfPortsOnTheSwitch.begin(); pn != namesOfPortsOnTheSwitch.end(); pn++)
+	{
+		string port_name = *pn;
+
+		xmlNodePtr ifn = xmlNewChild(devices, NULL, BAD_CAST "interface", NULL);
+	    xmlNewProp(ifn, BAD_CAST "type", BAD_CAST "direct");
+
+	    xmlNodePtr srcn = xmlNewChild(ifn, NULL, BAD_CAST "source", NULL);
+	    xmlNewProp(srcn, BAD_CAST "dev", BAD_CAST port_name.c_str());
+	    xmlNewProp(srcn, BAD_CAST "mode", BAD_CAST "passthrough");
+
+	    xmlNodePtr modeln = xmlNewChild(ifn, NULL, BAD_CAST "model", NULL);
+	    xmlNewProp(modeln, BAD_CAST "type", BAD_CAST "virtio");
+
+	    xmlNodePtr virt = xmlNewChild(ifn, NULL, BAD_CAST "virtualport", NULL);
+	    xmlNewProp(virt, BAD_CAST "type", BAD_CAST "openvswitch");
+	}
+#endif
 
 	/* Cleanup of XPath data */
 	xmlXPathFreeContext(xpathCtx);
@@ -280,9 +292,9 @@ bool Libvirt::startNF(StartNFIn sni)
 	/* Final XML Cleanup */
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
-	
-#if 1  /* Debug */
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Dumping XML to %s\n", domain_name);
+
+#ifdef DEBUG_KVM
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Dumping XML to %s", domain_name);
 	FILE* fp = fopen(domain_name, "w");
 	if (fp) {
 		fwrite(xmlconfig, 1, strlen(xmlconfig), fp);
@@ -290,34 +302,215 @@ bool Libvirt::startNF(StartNFIn sni)
 	}
 #endif
 
+	assert(connection != NULL);
+
 	dom = virDomainCreateXML(connection, xmlconfig, 0);
 	if (!dom) {
 		virDomainFree(dom);
     		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Domain definition failed");
     		return false;
 	}
-	
+
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Boot guest");
-	
+
 	virDomainFree(dom);
-	
+
 	return true;
 }
+#else
+bool Libvirt::startNF(StartNFIn sni)
+{
+	//XXX: Libvirt do not define xml tags to define an ivhsmem device to be attached with the virtual machine.
+	//However, it define the <qemu:commandline> tag to provide to libvirt generic strings to be used in the
+	//qemu command line. Unfortunately, through this mechanism we got an error when libvirt tries to boot the VM.
+	//As a consequence, we decide to directly use the QEMU command line for ivshmem virtual machine. I know, this
+	//way the code is dirty, but it seems to be the better (fastest) solution to implement ivhsmem support in the
+	//universal node.
+
+	//XXX: we ignore all the information written in the xml file, except the path with the VM image
+
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "This function is KVM-IVSHMEM");
+
+
+	char domain_name[64];
+	string nf_name = sni.getNfName();
+	string uri_image = description->getURI();
+
+	/* Domain name */
+	sprintf(domain_name, "%" PRIu64 "_%s", sni.getLsiID(), nf_name.c_str());
+
+	//Parse the VM template
+
+	xmlInitParser();
+	xmlDocPtr doc;
+
+	/* Load XML document */
+	doc = xmlParseFile(uri_image.c_str());
+	if (doc == NULL) {
+		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Unable to parse file \"%s\"", uri_image.c_str());
+		return 0;
+	}
+
+	char *disk_path = NULL;
+
+	xmlNodePtr root = xmlDocGetRootElement(doc);
+	for(xmlNodePtr cur_root_child=root->xmlChildrenNode; cur_root_child!=NULL; cur_root_child=cur_root_child->next)
+	{
+		if ((cur_root_child->type == XML_ELEMENT_NODE)&&(!xmlStrcmp(cur_root_child->name, (const xmlChar*)"devices")))
+		{
+			//We are in the <devices> element
+			xmlNodePtr devices = cur_root_child;
+			for(xmlNodePtr device = devices->xmlChildrenNode; device != NULL; device = device->next)
+			{
+				if ((device->type == XML_ELEMENT_NODE)&&(!xmlStrcmp(device->name, (const xmlChar*)"disk")))
+				{
+					//We are in the <disk> element
+					xmlChar* attr_type = xmlGetProp(device, (const xmlChar*)"type");
+					xmlChar* attr_device = xmlGetProp(device, (const xmlChar*)"device");
+
+					if(strcmp((const char*)attr_type,"file")==0 && strcmp((const char*)attr_device,"disk")==0)
+					{
+						xmlNodePtr disk = device;
+
+						//we are in the proper disk
+						for(xmlNodePtr indisk = disk->xmlChildrenNode; indisk != NULL; indisk = indisk->next)
+						{
+
+							if ((indisk->type == XML_ELEMENT_NODE)&&(!xmlStrcmp(indisk->name, (const xmlChar*)"source")))
+							{
+								//We are in the <source> element
+								//Retrieve the path of the disk
+								xmlChar* attr_file = xmlGetProp(indisk, (const xmlChar*)"file");
+
+								disk_path  = (char*)malloc(sizeof(char) * (strlen((const char*)attr_file) + 1));
+								memcpy(disk_path, attr_file, strlen((const char*)attr_file));
+								disk_path[strlen((const char*)attr_file)] = '\0';
+								goto after_parsing;
+							}
+						}
+
+					}
+				}
+			}
+		}
+
+	}//end iteration over the document
+
+after_parsing:
+
+	if(disk_path == NULL)
+	{
+		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Wrong XML file describing the VM to run: no path for VM disk found.");
+		return false;
+	}
+
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Virtual machine disk available at path: '%s'",disk_path);
+
+
+	//Get the command line generator and prepare the command line
+	IvshmemCmdLineGenerator cmdgenerator;
+
+
+	stringstream ivshmemcmdline;
+	//for(unsigned int i=1; i <= n_ports; i++)
+
+	char cmdline[512];
+	if(!cmdgenerator.get_mempool_cmdline(cmdline, sizeof(cmdline)))
+		return false;
+
+	ivshmemcmdline << " " << cmdline;
+
+	list<string> namesOfPortsOnTheSwitch = sni.getNamesOfPortsOnTheSwitch();
+
+	for(list<string>::iterator name = namesOfPortsOnTheSwitch.begin(); name != namesOfPortsOnTheSwitch.end(); name++)
+	{
+		//Retrieve the command line
+
+		if(!cmdgenerator.get_port_cmdline((*name).c_str(), cmdline, sizeof(cmdline)))
+			return false;
+
+		ivshmemcmdline << " " << cmdline;
+	}
+
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Command line part for ivshmem '%s'",ivshmemcmdline.str().c_str());
+
+	pthread_mutex_lock(&Libvirt_mutex);
+
+	stringstream command;
+	command << QEMU << " " << domain_name << " " << next_tcp_port << " " << disk_path << "'" << ivshmemcmdline.str().c_str() << "'";
+
+	stringstream portstream;
+	portstream << next_tcp_port;
+	monitor[domain_name] = portstream.str();
+	next_tcp_port++;
+	pthread_mutex_unlock(&Libvirt_mutex);
+
+	int retVal = system(command.str().c_str());
+	retVal = retVal >> 8;
+
+	if(retVal == 0)
+		return false;
+
+	return true;
+}
+#endif
 
 bool Libvirt::stopNF(StopNFIn sni)
 {
-	char *vm_name = new char[64];
-	
 	/*image_name*/
+	char *vm_name = new char[64];
 	sprintf(vm_name, "%" PRIu64 "_%s", sni.getLsiID(), sni.getNfName().c_str());
+
+#ifndef ENABLE_KVM_IVSHMEM
 
 	assert(connection != NULL);
 
 	/*destroy the VM*/
 	if(virDomainDestroy(virDomainLookupByName(connection, vm_name)) != 0){
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "failed to stop (destroy) VM. %s\n", vm_name);
+		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "failed to stop (destroy) VM. %s", vm_name);
 		return false;
 	}
-	
+#else
+	//To stop the VNF, use its own network monitor
+	assert(monitor.count(vm_name) == 1);
+
+	string tcpport = monitor.find(vm_name)->second;
+
+	struct addrinfo *AddrInfo;
+	struct addrinfo Hints;
+	char ErrBuf[BUFFER_SIZE];
+	int socket;						// keeps the socket ID for this connection
+	int WrittenBytes;				// Number of bytes written on the socket
+
+	char *command= QUIT_COMMAND;
+
+	memset(&Hints, 0, sizeof(struct addrinfo));
+
+	Hints.ai_family= AF_INET;
+	Hints.ai_socktype= SOCK_STREAM;
+
+	if (sock_initaddress ("127.0.0.1", tcpport.c_str(), &Hints, &AddrInfo, ErrBuf, sizeof(ErrBuf)) == sockFAILURE)
+	{
+		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error resolving given address/port (%s/%s): %s",  "127.0.0.1",  tcpport.c_str(), ErrBuf);
+		return false;
+	}
+
+	if ( (socket= sock_open(AddrInfo, 0, 0,  ErrBuf, sizeof(ErrBuf))) == sockFAILURE)
+	{
+		// AddrInfo is no longer required
+		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot contact the VM: %s", ErrBuf);
+		return false;
+	}
+
+	WrittenBytes= sock_send(socket, command, strlen(command), ErrBuf, sizeof(ErrBuf));
+	if (WrittenBytes == sockFAILURE)
+	{
+		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error sending data: %s", ErrBuf);
+		return false;
+
+	}
+
+#endif
 	return true;
 }
+

@@ -11,8 +11,7 @@ d_port_name=`echo VLink_$2-to-$1_$5`
 s_port_id=$3
 d_port_id=$4
 enable_flooding=$6
-
-. ./network_controller/switch_manager/plugins/ovs-dpdk/scripts/ovs.conf
+ofpversion=$7
 
 if (( $EUID != 0 ))
 then
@@ -20,16 +19,13 @@ then
     exit 0
 fi
 
-VSCTL="$OVS_DIR/utilities/ovs-vsctl"
-OFCTL="$OVS_DIR/utilities/ovs-ofctl"
-
-$VSCTL add-port $s_br $s_port_name -- set Interface $s_port_name type=patch ofport_request=$s_port_id options:peer=$d_port_name
-$VSCTL add-port $d_br $d_port_name -- set Interface $d_port_name type=patch ofport_request=$d_port_id options:peer=$s_port_name
+ovs-vsctl add-port $s_br $s_port_name -- set Interface $s_port_name type=patch ofport_request=$s_port_id options:peer=$d_port_name
+ovs-vsctl add-port $d_br $d_port_name -- set Interface $d_port_name type=patch ofport_request=$d_port_id options:peer=$s_port_name
 
 if [ $enable_flooding -eq 0 ]
 then
-    $OFCTL mod-port $s_br $s_port_id noflood
-    $OFCTL mod-port $d_br $d_port_id noflood
+    ovs-ofctl mod-port $s_br $s_port_id noflood --protocol=$ofpversion
+    ovs-ofctl mod-port $d_br $d_port_id noflood --protocol=$ofpversion
 fi
 
 exit 1

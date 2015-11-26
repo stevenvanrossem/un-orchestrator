@@ -6,7 +6,11 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include "Jzon.h"
+#include <json_spirit/json_spirit.h>
+#include <json_spirit/value.h>
+#include <json_spirit/writer.h>
+
+#include "../../../../utils/sockutils.h"
 
 #include <iostream>
 #include <fstream>
@@ -32,6 +36,7 @@
 #define INTERRUPTED_BY_SIGNAL (errno == EINTR || errno == ECHILD)
 
 using namespace std;
+using namespace json_spirit;
 
 class commands
 {
@@ -46,20 +51,434 @@ public:
 	
 	int cmd_disconnect(int s);
 	
+	/**
+	*	Example of command to create a new LSI
+	*
+		{
+			"id" : 0,
+			"method" : "transact",
+			"params" : [
+				"Open_vSwitch",
+				{
+				    "op" : "insert",
+				    "row" : {
+				        "connection_mode" : "out-of-band",
+				        "is_connected" : true,
+				        "local_ip" : "127.0.0.1",
+				        "target" : "tcp:127.0.0.1:6653"
+				    },
+				    "table" : "Controller",
+				    "uuid-name" : "ctrl1"
+				},
+				{
+				    "op" : "insert",
+				    "row" : {
+				        "controller" : [
+				            "set",
+				            [
+				                [
+				                    "named-uuid",
+				                    "ctrl1"
+				                ]
+				            ]
+				        ],
+				        "name" : "Bridge1",
+				        "other_config" : [
+				            "map",
+				            [
+				                [
+				                    "disable-in-band",
+				                    "true"
+				                ]
+				            ]
+				        ],
+				        "ports" : [
+				            "set",
+				            [
+				            ]
+				        ],
+				        "protocols" : "OpenFlow12"
+				    },
+				    "table" : "Bridge",
+				    "uuid-name" : "Bridge1"
+				},
+				{
+				    "mutations" : [
+				        [
+				            "bridges",
+				            "insert",
+				            [
+				                "set",
+				                [
+				                    [
+				                        "named-uuid",
+				                        "Bridge1"
+				                    ]
+				                ]
+				            ]
+				        ]
+				    ],
+				    "op" : "mutate",
+				    "table" : "Open_vSwitch",
+				    "where" : [
+				    ]
+				}
+			]
+		}
+	*/
 	CreateLsiOut* cmd_editconfig_lsi (CreateLsiIn cli, int s);
 	
-	void add_ports(int rnumber, string p, uint64_t dnumber, int nf, int s);
+	/**
+	*	Example of command to create a new SYSTEM PORT
+	*
+		{
+			"id" : 1,
+			"method" : "transact",
+			"params" : [
+				"Open_vSwitch",
+				{
+				    "op" : "insert",
+				    "row" : {
+				        "admin_state" : "up",
+				        "link_state" : "up",
+				        "name" : "eth3",
+				        "ofport" : 1,
+				        "ofport_request" : 1
+				    },
+				    "table" : "Interface",
+				    "uuid-name" : "iface1"
+				},
+				{
+				    "op" : "insert",
+				    "row" : {
+				        "interfaces" : [
+				            "set",
+				            [
+				                [
+				                    "named-uuid",
+				                    "iface1"
+				                ]
+				            ]
+				        ],
+				        "name" : "eth3"
+				    },
+				    "table" : "Port",
+				    "uuid-name" : "eth3"
+				},
+				{
+				    "op" : "update",
+				    "row" : {
+				        "ports" : [
+				            "set",
+				            [
+				                [
+				                    "named-uuid",
+				                    "eth3"
+				                ]
+				            ]
+				        ]
+				    },
+				    "table" : "Bridge",
+				    "where" : [
+				        [
+				            "_uuid",
+				            "==",
+				            [
+				                "uuid",
+				                "e5079fd5-adb5-4eea-8348-12c39a9e0352"
+				            ]
+				        ]
+				    ]
+				},
+				{
+				    "mutations" : [
+				        [
+				            "next_cfg",
+				            "+=",
+				            1
+				        ]
+				    ],
+				    "op" : "mutate",
+				    "table" : "Open_vSwitch",
+				    "where" : [
+				    ]
+				}
+			]
+		}
+	*/
+	void add_ports(string p, uint64_t dnumber, int nf, int s);
 	
+	/**
+	*	Example of command to create a new INTERNAL PORT
+	*
+		{
+			"id" : 4,
+			"method" : "transact",
+			"params" : [
+				"Open_vSwitch",
+				{
+				    "op" : "insert",
+				    "row" : {
+				    	"type" : "internal"
+				        "admin_state" : "up",
+				        "link_state" : "up",
+				        "name" : "eth3",
+				        "ofport" : 1,
+				        "ofport_request" : 1
+				    },
+				    "table" : "Interface",
+				    "uuid-name" : "iface1"
+				},
+				{
+				    "op" : "insert",
+				    "row" : {
+				        "interfaces" : [
+				            "set",
+				            [
+				                [
+				                    "named-uuid",
+				                    "iface1"
+				                ]
+				            ]
+				        ],
+				        "name" : "eth3"
+				    },
+				    "table" : "Port",
+				    "uuid-name" : "eth3"
+				},
+				{
+				    "op" : "update",
+				    "row" : {
+				        "ports" : [
+				            "set",
+				            [
+				                [
+				                    "named-uuid",
+				                    "eth3"
+				                ]
+				            ]
+				        ]
+				    },
+				    "table" : "Bridge",
+				    "where" : [
+				        [
+				            "_uuid",
+				            "==",
+				            [
+				                "uuid",
+				                "e5079fd5-adb5-4eea-8348-12c39a9e0352"
+				            ]
+				        ]
+				    ]
+				},
+				{
+				    "mutations" : [
+				        [
+				            "next_cfg",
+				            "+=",
+				            1
+				        ]
+				    ],
+				    "op" : "mutate",
+				    "table" : "Open_vSwitch",
+				    "where" : [
+				    ]
+				}
+			]
+		}
+	*/
 	AddNFportsOut *cmd_editconfig_NFPorts(AddNFportsIn anpi, int s);
 	
 	AddVirtualLinkOut *cmd_addVirtualLink(AddVirtualLinkIn avli, int s);
 	
+	/*
+	*	Example of command to create a new PATCH PORT
+	*
+		{
+			"id" : 9,
+			"method" : "transact",
+			"params" : [
+				"Open_vSwitch",
+				{
+				    "op" : "insert",
+				    "row" : {
+				        "admin_state" : "up",
+				        "link_state" : "up",
+				        "name" : "vport2",
+				        "ofport" : 8,
+				        "ofport_request" : 8,
+				        "options" : [
+				            "map",
+				            [
+				                [
+				                    "peer",
+				                    "vport3"
+				                ]
+				            ]
+				        ],
+				        "type" : "patch"
+				    },
+				    "table" : "Interface",
+				    "uuid-name" : "iface8"
+				},
+				{
+				    "op" : "insert",
+				    "row" : {
+				        "interfaces" : [
+				            "set",
+				            [
+				                [
+				                    "named-uuid",
+				                    "iface8"
+				                ]
+				            ]
+				        ],
+				        "name" : "vport2"
+				    },
+				    "table" : "Port",
+				    "uuid-name" : "vport2"
+				},
+				{
+				    "op" : "update",
+				    "row" : {
+				        "ports" : [
+				            "set",
+				            [
+				                [
+				                    "uuid",
+				                    "9ab63040-1a10-4dc3-9606-d78386773fff"
+				                ],
+				                [
+				                    "uuid",
+				                    "eacd9aa2-eb2a-47e6-888b-364c4fe2d4c3"
+				                ],
+				                [
+				                    "uuid",
+				                    "9b4efcb3-28ee-4e61-bea5-f7255a7e9171"
+				                ],
+				                [
+				                    "named-uuid",
+				                    "vport2"
+				                ]
+				            ]
+				        ]
+				    },
+				    "table" : "Bridge",
+				    "where" : [
+				        [
+				            "_uuid",
+				            "==",
+				            [
+				                "uuid",
+				                "3cb09eac-7f03-4099-98c5-168f83790eac"
+				            ]
+				        ]
+				    ]
+				},
+				{
+				    "mutations" : [
+				        [
+				            "next_cfg",
+				            "+=",
+				            1
+				        ]
+				    ],
+				    "op" : "mutate",
+				    "table" : "Open_vSwitch",
+				    "where" : [
+				    ]
+				}
+			]
+		}
+	*/
 	void cmd_add_virtual_link(string vrt, string trv, char ifac[64], uint64_t dpi, int s);
 	
 	void cmd_destroyVirtualLink(DestroyVirtualLinkIn dvli, int s);
 	
+	/*
+	*	Example of command to destroy a BRIDGE
+	*
+		{
+			"id" : 16,
+			"method" : "transact",
+			"params" : [
+				"Open_vSwitch",
+				{
+				    "op" : "update",
+				    "row" : {
+				        "bridges" : [
+				            "set",
+				            [
+				                [
+				                    "uuid",
+				                    "e5079fd5-adb5-4eea-8348-12c39a9e0352"
+				                ]
+				            ]
+				        ]
+				    },
+				    "table" : "Open_vSwitch",
+				    "where" : [
+				    ]
+				},
+				{
+				    "mutations" : [
+				        [
+				            "next_cfg",
+				            "+=",
+				            1
+				        ]
+				    ],
+				    "op" : "mutate",
+				    "table" : "Open_vSwitch",
+				    "where" : [
+				    ]
+				}
+			]
+		}
+	*/
 	void cmd_editconfig_lsi_delete(uint64_t dpid, int s);
 	
+	/*
+	*	Example of command to destroy a PORT
+	*
+		{
+			"id" : 16,
+			"method" : "transact",
+			"params" : [
+				"Open_vSwitch",
+				{
+				    "op" : "update",
+				    "row" : {
+				        "ports" : [
+				            "set",
+				            [
+				                [
+				                    "uuid",
+				                    "e5079fd5-adb5-4eea-8348-12c39a9e0352"
+				                ]
+				            ]
+				        ]
+				    },
+				    "table" : "Bridge",
+				    "where" : [
+				    ]
+				},
+				{
+				    "mutations" : [
+				        [
+				            "next_cfg",
+				            "+=",
+				            1
+				        ]
+				    ],
+				    "op" : "mutate",
+				    "table" : "Open_vSwitch",
+				    "where" : [
+				    ]
+				}
+			]
+		}
+	*/
 	void cmd_editconfig_NFPorts_delete(DestroyNFportsIn dnpi, int s);
 	
 	void cmd_delete_virtual_link(uint64_t dpid, uint64_t id, int s);

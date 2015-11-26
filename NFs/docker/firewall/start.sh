@@ -1,6 +1,7 @@
 #! /bin/bash
 
-ifconfig -a
+#This gives time to the UN to configure the network namespace of the container
+sleep 3
 
 #To change the rules of the firewall, edit the next rows and/or add new rows
 brctl addbr br0

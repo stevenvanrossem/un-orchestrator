@@ -31,7 +31,7 @@ private:
 	string nf_name;
 
 protected:
-	StopNFIn(uint64_t lsiID, string nf_name) 
+	StopNFIn(uint64_t lsiID, string nf_name)
 		: lsiID(lsiID), nf_name(nf_name)
 	{
 	}

@@ -71,11 +71,11 @@
 				</xsd:complexType>
 			</xsd:element> <!-- End <resources> -->
 
-			<xsd:element name="ports" minOccurs="1" maxOccurs="1">
+			<xsd:element name="ports" minOccurs="0" maxOccurs="1">
 				<xsd:complexType>
 					<xsd:sequence>				
 					
-						<xsd:element name="port" minOccurs="1" maxOccurs="unbounded">
+						<xsd:element name="port" minOccurs="0" maxOccurs="unbounded">
 							<xsd:complexType>
 								<xsd:sequence>
 						

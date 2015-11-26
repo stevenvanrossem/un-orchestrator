@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <string>
+#include <sstream>
 #include <list>
 #include <map>
 #include <string.h>
@@ -19,6 +20,11 @@
 
 #include "../../nfs_manager.h"
 #include "../../startNF_in.h"
+
+#ifdef ENABLE_KVM_IVSHMEM
+	#include "ivshmem_cmdline_generator.h"
+	#include "../../../utils/sockutils.h"
+#endif
 
 #include <libxml/encoding.h>
 #include <libxml/xmlwriter.h>
@@ -34,8 +40,35 @@ using namespace std;
 class Libvirt : public NFsManager
 {
 private:
-	static virConnectPtr connection;
+
+#ifndef ENABLE_KVM_IVSHMEM
 	
+	/**
+	*	@bfief: Connection towards Libvirt
+	*/
+	static virConnectPtr connection;
+#else
+
+	/**
+	*	@brief: mutex to protect the selection of the TCP port for the monitor
+	*/
+	static pthread_mutex_t Libvirt_mutex;
+
+	/**
+	*	@brief: TCP port to be assigned to the VM monitor to
+	*		the next VM to be executed
+	*/
+	static unsigned int next_tcp_port;
+	
+	/**
+	*	@brief: The map associates each VNF with the TCP port to
+	*		be used to connect to it
+	*/
+	static map<string,string> monitor;
+#endif
+
+
+#ifndef ENABLE_KVM_IVSHMEM	
 	/**
 	*	@brief:	Open a connection with QEMU/KVM
 	*/
@@ -50,6 +83,7 @@ private:
 	*	@brief: Custom error handler
 	*/
 	static void customErrorFunc(void *userdata, virErrorPtr err);
+#endif
 
 public:
 

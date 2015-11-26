@@ -6,13 +6,23 @@
 
 #include "rest_server.h"
 #include <getopt.h>
+#include <signal.h>
 
+/**
+*	Private variables
+*/
+struct MHD_Daemon *http_daemon = NULL;
+
+/**
+*	Private prototypes
+*/
 bool parse_command_line(int argc, char *argv[], char **file_name);
 bool usage(void);
+void singint_handler(int sig);
 
 int main(int argc, char *argv[])
 {
-	//Check for root privileges 
+	//Check for root privileges
 	if(geteuid() != 0)
 	{	
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Root permissions are required to run %s\n",argv[0]);
@@ -31,19 +41,24 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);	
 	}
 	
-	struct MHD_Daemon *daemon = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, REST_PORT, NULL, NULL,
+	http_daemon = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, REST_PORT, NULL, NULL,
 		&RestServer::answer_to_connection, NULL, MHD_OPTION_NOTIFY_COMPLETED, &RestServer::request_completed, NULL,
 		MHD_OPTION_END);
 	
-	if (NULL == daemon) 
+	if (NULL == http_daemon)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error when starting the HTTP deamon");
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot start the database");
 		return EXIT_FAILURE;
 	}
 
-	getchar ();
-	MHD_stop_daemon (daemon);
+	signal(SIGINT,singint_handler);
+
+	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The REST server is properly started!");
+	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Waiting for commands on TCP port \"%d\"",REST_PORT);
+	
+	pause();
+	
 	return 0;
 }
 
@@ -124,3 +139,14 @@ bool usage(void)
 	
 	return false;
 }
+
+void singint_handler(int sig)
+{
+    logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The '%s' is terminating...",MODULE_NAME);
+
+	MHD_stop_daemon(http_daemon);
+	
+	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Bye :D");
+	exit(EXIT_SUCCESS);
+}
+

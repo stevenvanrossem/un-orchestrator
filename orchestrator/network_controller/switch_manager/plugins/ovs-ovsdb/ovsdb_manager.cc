@@ -9,14 +9,11 @@ commands *c = NULL;
 OVSDBManager::OVSDBManager()
 {
 	c = new commands();/*create a new object commands*/
-
-	//s = c->cmd_connect();
 }
 
 //Destroyer
 OVSDBManager::~OVSDBManager()
 {	
-	//c->cmd_disconnect(s);
 }
 
 //implementation of createLsi
@@ -53,4 +50,4 @@ AddVirtualLinkOut *OVSDBManager::addVirtualLink(AddVirtualLinkIn avli){
 void OVSDBManager::checkPhysicalInterfaces(set<CheckPhysicalPortsIn> cppi){
 	/*TODO*/
 }
- 
+

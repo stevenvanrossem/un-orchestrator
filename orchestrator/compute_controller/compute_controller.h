@@ -27,7 +27,9 @@
 
 #include "nfs_manager.h"
 
-#include "plugins/dpdk/dpdk.h"
+#ifdef ENABLE_DPDK_PROCESSES
+	#include "plugins/dpdk/dpdk.h"
+#endif
 #ifdef ENABLE_DOCKER
 	#include "plugins/docker/docker.h"
 #endif
@@ -39,10 +41,10 @@
 using namespace std;
 using namespace json_spirit;
 
-#define DATABASE_ADDRESS	"localhost"
-#define DATABASE_PORT		"2828"
-#define DATABASE_BASE_URL	"/nfs/"
-#define DATABASE_DIGEST_URL	"digest/"
+#define NAME_RESOLVER_ADDRESS		"localhost"
+#define NAME_RESOLVER_PORT			"2626"
+#define NAME_RESOLVER_BASE_URL		"/nfs/"
+#define NAME_RESOLVER_DIGEST_URL	"digest/"
 
 #define CODE_POSITION				9
 #define CODE_METHOD_NOT_ALLLOWED	"405"
@@ -98,9 +100,9 @@ private:
 	uint64_t calculateCoreMask(string coresRequired);
 	
 	/**
-	*	@brief: For all the NF without an alredy selected implementation, select 
+	*	@brief: For all the NF without an already selected implementation, select
 	*	an implementation of the desired type, if at least one implementation
-	*	of such a type is availabled
+	*	of such a type is available
 	*
 	*	@param:	desiredType	Type of the implementation to be selected
 	*/
@@ -124,12 +126,12 @@ public:
 	nf_manager_ret_t retrieveDescription(string nf);
 	
 	/**
-	*	@brief: For each NF, select an implementation. Currently, if a Docker implementation 
+	*	@brief: For each NF, select an implementation. Currently, if a Docker implementation
 	*	is available and Docker is running with the LXC engine, Docker is selected.
 	*	Otherwise, a DPDK implementation is selected. Only in case Docker and DPDK
 	*	implementations are not available, it selects a KVM implementation (if KVM is
 	*	running and a KVM implementation is available).
-	*	Summarizing, the priority of the implementations is the following 
+	*	Summarizing, the priority of the implementations is the following
 	*		- Docker
 	*		- DPDK
 	*		- KVM
@@ -153,7 +155,7 @@ public:
 	nf_t getNFType(string name);
 	
 	/**
-	*	@brief: Set the identifier of the identifier of the LSI attached to the NFs 
+	*	@brief: Set the identifier of the identifier of the LSI attached to the NFs
 	*
 	*	@param:	lsiID	Identifier of an LSI
 	*/
@@ -165,12 +167,9 @@ public:
 	*
 	*
 	*	@param:	nf_name					Name of the network function to be started
-	*	@param: number_of_ports			Number of ports of the network function
-	*	@param: ipv4PortsRequirements	IPv4 requirements (address and netmask) of the ports of the network function
-	*	@param: ethPortsRequirements	Ethernet requirements (address) of the ports of the network function
-	*	FIXME: the requirements are ignored in case of DPDK and KVM network function. Check this earlier in the code
+	*	@param: namesOfPortsOnTheSwitch	List of names of ports on the vSwitch that are related to the network function to be started
 	*/
-	bool startNF(string nf_name, unsigned int number_of_ports, map<unsigned int,pair<string,string> > ipv4PortsRequirements,map<unsigned int,string> ethPortsRequirements);
+	bool startNF(string nf_name, list<string> namesOfPortsOnTheSwitch);
 	
 	/**
 	*	@brief: Stop all the running NFs

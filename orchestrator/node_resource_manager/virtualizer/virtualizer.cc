@@ -5,13 +5,15 @@ unsigned int Virtualizer::currentID = 1;
 
 bool Virtualizer::init()
 {
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Initializing the virtualizer...");
+
 	PyObject *pythonFileName = PyString_FromString(PYTHON_MAIN_FILE);
 	PyObject *pythonFile = PyImport_Import(pythonFileName);
 	Py_DECREF(pythonFileName);
-	if (pythonFile != NULL) 
-    {  
+	if (pythonFile != NULL)
+    {
 		PyObject *pythonFunction = PyObject_GetAttrString(pythonFile, PYTHON_INIT);
-		if (pythonFunction && PyCallable_Check(pythonFunction)) 
+		if (pythonFunction && PyCallable_Check(pythonFunction))
         {
 	    	PyObject *pythonRetVal;
 	    	
@@ -19,19 +21,25 @@ bool Virtualizer::init()
 	    	//Call the python function
 	    	pythonRetVal = PyObject_CallObject(pythonFunction, NULL);
             long int retVal = PyInt_AsLong(pythonRetVal);
-                
+
             logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Result of call: %d\n", retVal);
-            
+
 			Py_DECREF(pythonRetVal);
             Py_XDECREF(pythonFunction);
 	    	Py_DECREF(pythonFile);
 	    	
 	    	if(retVal)
+	    	{
+	    		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The virtualizer has been properly inizialized");
 	    		return true;
+	    	}
 	    	else
+	    	{
+	    		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An error occurred during the inizialization of the virtualizer!");
 	    		return false;
+	    	}
 	    }
-	    else 
+	    else
         {
             if (PyErr_Occurred())
                 PyErr_Print();
@@ -47,19 +55,19 @@ bool Virtualizer::init()
        	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot load python file \"%s\"",PYTHON_MAIN_FILE);
 		return false;
     }
-
-	return true;
 }
 
 void Virtualizer::terminate()
 {	
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Terminating the virtualizer...");
+
 	PyObject *pythonFileName = PyString_FromString(PYTHON_MAIN_FILE);
 	PyObject *pythonFile = PyImport_Import(pythonFileName);
 	Py_DECREF(pythonFileName);
-	if (pythonFile != NULL) 
-    {  
+	if (pythonFile != NULL)
+    {
 		PyObject *pythonFunction = PyObject_GetAttrString(pythonFile, PYTHON_TERMINATE);
-		if (pythonFunction && PyCallable_Check(pythonFunction)) 
+		if (pythonFunction && PyCallable_Check(pythonFunction))
         {
 	    	//Call the python function
 	    	PyObject_CallObject(pythonFunction, NULL);
@@ -67,7 +75,7 @@ void Virtualizer::terminate()
             Py_XDECREF(pythonFunction);
 	    	Py_DECREF(pythonFile);
 	    }
-	    else 
+	    else
         {
             if (PyErr_Occurred())
                 PyErr_Print();
@@ -81,17 +89,24 @@ void Virtualizer::terminate()
        	PyErr_Print();
        	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot load python file \"%s\"",PYTHON_MAIN_FILE);
     }
+    
+    logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The virtualizer has been properly terminated");
 }
 
 bool Virtualizer::addResources(int cpu, int memory, char *memory_unit, int storage, char *storage_unit)
 {
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Adding resources to the virtualizer:");
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "\t* CPU: %d",cpu);
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "\t* memory: %d %s",memory,memory_unit);
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "\t* memory: %d %s",storage,storage_unit);
+
 	PyObject *pythonFileName = PyString_FromString(PYTHON_MAIN_FILE);
 	PyObject *pythonFile = PyImport_Import(pythonFileName);
 	Py_DECREF(pythonFileName);
-	if (pythonFile != NULL) 
-    {  
+	if (pythonFile != NULL)
+    {
 		PyObject *pythonFunction = PyObject_GetAttrString(pythonFile, PYTHON_ADDRESOURCES);
-		if (pythonFunction && PyCallable_Check(pythonFunction)) 
+		if (pythonFunction && PyCallable_Check(pythonFunction))
         {
 	    	PyObject *pythonArgs = NULL, *pythonRetVal, *pythonValue;
 	    		    	
@@ -112,8 +127,8 @@ bool Virtualizer::addResources(int cpu, int memory, char *memory_unit, int stora
 	    	//Call the python function
 	    	pythonRetVal = PyObject_CallObject(pythonFunction, pythonArgs);
             Py_DECREF(pythonArgs);
-            
-			long int retVal = PyInt_AsLong(pythonRetVal);    
+
+			long int retVal = PyInt_AsLong(pythonRetVal);
             logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Result of call: %d\n", retVal);
                 			
 			Py_DECREF(pythonRetVal);
@@ -121,15 +136,21 @@ bool Virtualizer::addResources(int cpu, int memory, char *memory_unit, int stora
 	    	Py_DECREF(pythonFile);
 	    	
 	    	if(retVal)
+	    	{
+	    		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Resources added to the virtualizer");
 	    		return true;
+	    	}
 	    	else
+	    	{
+	    		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "An error occurred while adding resources to the virtualizer");
 	    		return false;
+	    	}
 	    }
-	    else 
+	    else
         {
             if (PyErr_Occurred())
                 PyErr_Print();
-            
+
 		   	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot load python method \"%s\"",PYTHON_HANDLE_REQ);
 		   	Py_XDECREF(pythonFunction);
 	        Py_DECREF(pythonFile);
@@ -146,13 +167,15 @@ bool Virtualizer::addResources(int cpu, int memory, char *memory_unit, int stora
 
 bool Virtualizer::addPort(char *physicalName, char *name, char *type)
 {
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Adding port to the virtualizer...");
+
 	PyObject *pythonFileName = PyString_FromString(PYTHON_MAIN_FILE);
 	PyObject *pythonFile = PyImport_Import(pythonFileName);
 	Py_DECREF(pythonFileName);
-	if (pythonFile != NULL) 
-    {  
+	if (pythonFile != NULL)
+    {
 		PyObject *pythonFunction = PyObject_GetAttrString(pythonFile, PYTHON_ADDNODEPORT);
-		if (pythonFunction && PyCallable_Check(pythonFunction)) 
+		if (pythonFunction && PyCallable_Check(pythonFunction))
         {
 	    	PyObject *pythonArgs = NULL, *pythonRetVal, *pythonValue;
 	    		    	
@@ -167,8 +190,8 @@ bool Virtualizer::addPort(char *physicalName, char *name, char *type)
 	    	//Call the python function
 	    	pythonRetVal = PyObject_CallObject(pythonFunction, pythonArgs);
             Py_DECREF(pythonArgs);
-            
-			long int retVal = PyInt_AsLong(pythonRetVal);    
+
+			long int retVal = PyInt_AsLong(pythonRetVal);
             logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Result of call: %d\n", retVal);
                 			
 			Py_DECREF(pythonRetVal);
@@ -180,16 +203,20 @@ bool Virtualizer::addPort(char *physicalName, char *name, char *type)
 	    		string pn(physicalName);
 	    		string n(name);
 	    		nameVirtualization[pn] = n;
+	    		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Port added to the virtualizer");
 	    		return true;
 	    	}
 	    	else
+	    	{
+	    		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An error occured while adding a port to the virtualizer");
 	    		return false;
+	    	}
 	    }
-	    else 
+	    else
         {
             if (PyErr_Occurred())
                 PyErr_Print();
-            
+
 		   	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot load python method \"%s\"",PYTHON_HANDLE_REQ);
 		   	Py_XDECREF(pythonFunction);
 	        Py_DECREF(pythonFile);
@@ -206,6 +233,8 @@ bool Virtualizer::addPort(char *physicalName, char *name, char *type)
 
 bool Virtualizer::EditPortID(string physicalPortName, unsigned int ID)
 {
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Setting ID %d to port %s...",ID,physicalPortName.c_str());
+
 	if(nameVirtualization.count(physicalPortName) == 0)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Virtualization unknown for physical port '%s'",physicalPortName.c_str());
@@ -216,10 +245,10 @@ bool Virtualizer::EditPortID(string physicalPortName, unsigned int ID)
 	PyObject *pythonFileName = PyString_FromString(PYTHON_MAIN_FILE);
 	PyObject *pythonFile = PyImport_Import(pythonFileName);
 	Py_DECREF(pythonFileName);
-	if (pythonFile != NULL) 
-	{ 
+	if (pythonFile != NULL)
+	{
     	PyObject *pythonFunction = PyObject_GetAttrString(pythonFile, PYTHON_EDIT_PORT_ID);
-    	if (pythonFunction && PyCallable_Check(pythonFunction)) 
+    	if (pythonFunction && PyCallable_Check(pythonFunction))
     	{
     		//Set the arguments to the python function
 	    	//TODO: check that pythonValue is not NULL
@@ -232,8 +261,8 @@ bool Virtualizer::EditPortID(string physicalPortName, unsigned int ID)
 	    	//Call the python function
 	    	PyObject *pythonRetVal = PyObject_CallObject(pythonFunction, pythonArgs);
             Py_DECREF(pythonArgs);
-            
-            long int retVal = PyInt_AsLong(pythonRetVal);    
+
+            long int retVal = PyInt_AsLong(pythonRetVal);
             logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Result of call: %d\n", retVal);
 
             Py_DECREF(pythonRetVal);
@@ -241,11 +270,17 @@ bool Virtualizer::EditPortID(string physicalPortName, unsigned int ID)
 	    	Py_DECREF(pythonFile);
 	    	
 	    	if(retVal)
+	    	{
+	    		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The port has been edited correctly");
 	    		return true;
+	    	}
 	    	else
+	    	{
+	    		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Something went wrong while eding the port!");
 	    		return false;
+	    	}
     	}
-    	else 
+    	else
         {
             if (PyErr_Occurred())
                 PyErr_Print();
@@ -265,13 +300,15 @@ bool Virtualizer::EditPortID(string physicalPortName, unsigned int ID)
 
 bool Virtualizer::addSupportedVNFs(set<NF*> nfs)
 {
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Adding supported VNFs to the virtualizer...");
+
 	PyObject *pythonFileName = PyString_FromString(PYTHON_MAIN_FILE);
 	PyObject *pythonFile = PyImport_Import(pythonFileName);
 	Py_DECREF(pythonFileName);
-	if (pythonFile != NULL) 
-	{ 
+	if (pythonFile != NULL)
+	{
 		PyObject *pythonFunction = PyObject_GetAttrString(pythonFile, PYTHON_ADD_SUPPORTED_VNFs);
-		if (pythonFunction && PyCallable_Check(pythonFunction)) 
+		if (pythonFunction && PyCallable_Check(pythonFunction))
 		{
 			//Iterate on all the NFs
 			for(set<NF*>::iterator nfIt = nfs.begin(); nfIt != nfs.end(); nfIt++)
@@ -308,14 +345,15 @@ bool Virtualizer::addSupportedVNFs(set<NF*> nfs)
 				//Call the python function
 				PyObject *pythonRetVal = PyObject_CallObject(pythonFunction, pythonArgs);
 			    Py_DECREF(pythonArgs);
-			    
-			    long int retVal = PyInt_AsLong(pythonRetVal);    
+			
+			    long int retVal = PyInt_AsLong(pythonRetVal);
 			    logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Result of call: %d\n", retVal);
 
 			    Py_DECREF(pythonRetVal);
 			
 				if(!retVal)
 				{
+					logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Something went wrong while adding VNF %s",(nf->getName()).c_str());
 					Py_XDECREF(pythonFunction);
 					Py_DECREF(pythonFile);
 					return false;
@@ -325,7 +363,7 @@ bool Virtualizer::addSupportedVNFs(set<NF*> nfs)
 			Py_XDECREF(pythonFunction);
 			Py_DECREF(pythonFile);
 		}
-    	else 
+    	else
         {
             if (PyErr_Occurred())
                 PyErr_Print();
@@ -343,19 +381,23 @@ bool Virtualizer::addSupportedVNFs(set<NF*> nfs)
 	   	return false;
 	}
 
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "VNFs properly added to the virtualizer!");
+
 	return true;
 }
 
 handleRequest_status_t Virtualizer::handleRestRequest(char *message, char **answer, const char *url, const char *method)
 {
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Handling a REST request in the virtualizer...");
+
 	//In this case, the request in handled by the Python code
 	PyObject *pythonFileName = PyString_FromString(PYTHON_MAIN_FILE);
 	PyObject *pythonFile = PyImport_Import(pythonFileName);
 	Py_DECREF(pythonFileName);
-	if (pythonFile != NULL) 
-    {  
+	if (pythonFile != NULL)
+    {
 		PyObject *pythonFunction = PyObject_GetAttrString(pythonFile, PYTHON_HANDLE_REQ);
-		if (pythonFunction && PyCallable_Check(pythonFunction)) 
+		if (pythonFunction && PyCallable_Check(pythonFunction))
         {
 	    	PyObject *pythonArgs = NULL, *pythonValue;
 	    	
@@ -371,14 +413,14 @@ handleRequest_status_t Virtualizer::handleRestRequest(char *message, char **answ
 			{
 				pythonValue = PyString_FromString(message);
 				PyTuple_SetItem(pythonArgs, 2, pythonValue);
-			}        
+			}
 	    	
 	    	//Call the python function
 	    	PyObject *pythonRetVal = PyObject_CallObject(pythonFunction, pythonArgs);
 	    	Py_DECREF(pythonArgs);
 
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Result of call: %s\n", PyString_AsString(pythonRetVal));
-            
+
             string retVal = PyString_AsString(pythonRetVal);
 	    	
 	    	Py_DECREF(pythonRetVal);
@@ -393,7 +435,7 @@ handleRequest_status_t Virtualizer::handleRestRequest(char *message, char **answ
 		 		*answer = (char*)malloc(sizeof(char) * (retVal.size()+1));
 		 		memcpy((*answer), retVal.c_str(),retVal.size()+1);
 		 		(*answer)[retVal.size()] = '\0';
-			    
+			
 			    if(retVal == "config updated")
 			    	return HR_EDIT_CONFIG;
 			    else
@@ -402,15 +444,15 @@ handleRequest_status_t Virtualizer::handleRestRequest(char *message, char **answ
 			else
 				return HR_INTERNAL_ERROR;
 	    }
-	    else 
+	    else
         {
             if (PyErr_Occurred())
                 PyErr_Print();
-            
+
 		   	logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot load python method \"%s\"",PYTHON_HANDLE_REQ);
 			Py_XDECREF(pythonFunction);
 	        Py_DECREF(pythonFile);
-	        
+	
 	        return HR_INTERNAL_ERROR;			
 		}
     }

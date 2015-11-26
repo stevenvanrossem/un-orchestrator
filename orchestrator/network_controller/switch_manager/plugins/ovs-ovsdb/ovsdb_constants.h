@@ -2,17 +2,12 @@
 #define OVS_CONSTANTS_H_ 1
 
 /**
-*	Scripts exploited by OVS plugin
-*	(The script path is followed by some %s, exploited by the code to create the proper command line
+*	@brief: paths of the bash scripts exploited by the plugin
 */
-
-#define PATH_SCRIPT_VIRTUAL_LINK 	"./network_controller/switch_manager/plugins/ovs/scripts/VirtualLink.sh %s %s %s %s"
-#define PATH_SCRIPT_ID_PORT			"./network_controller/switch_manager/plugins/ovs/scripts/IdPort.sh %s %s"
-#define PATH_SCRIPT_OF_VERSION		"./network_controller/switch_manager/plugins/ovs/scripts/OFVersion.sh %s %s"
-
-#define TMP_XML_FILE				"file.xml"
+#define ACTIVATE_INTERFACE			"./network_controller/switch_manager/plugins/ovs-ovsdb/scripts/activate_interface.sh"
 
 #define SOCKET_IP					"127.0.0.1"
 #define SOCKET_PORT					"6632"
+#define NUM_UUID					3
 
 #endif //OVS_CONSTANTS_H_

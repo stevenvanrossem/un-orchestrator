@@ -1,94 +1,57 @@
+# Name-resolver
+
 The name-resolver is a module that provides information for all the possible
-implementations for a netowrk function. 
+implementations for a network function.
 
-===============================================================================
+## Required libraries
 
-Libraries required to compile the name-resolver:
+Several libraries are required to compile the name-resolver.
+In the following we list the steps required on an **Ubuntu 14.04**.
 
-* Boost  
-      apt-get install libboost-all-dev 
+	; Install required libraries
+	; - build-essential: it includes GCC, basic libraries, etc
+	; - cmake: to create cross-platform makefiles
+	; - cmake-curses-gui: nice 'gui' to edit cmake files
+	; - libboost-all-dev: nice c++ library with tons of useful functions
+	; - libmicrohttpd-dev: embedded micro http server
+	; - libxml2-dev: nice library to parse and create xml
+	$ sudo apt-get install build-essential cmake cmake-curses-gui libboost-all-dev libmicrohttpd-dev libxml2-dev
+	
+	; Install JSON Spirit (nice library to parse JSON files)
+	$ git clone https://github.com/sirikata/json-spirit
+	; alternatively, a copy of JSON Spirit is provided in [un-orchestrator]/contrib/json-spirit.zip
+	$ cd json-spirit/
 
-* JSON spirit  
-      git clone https://github.com/sirikata/json-spirit
+## Compile the name-resolver
 
-* Libmicrohttpd  
-      apt-get install libmicrohttpd-dev
+We are now ready to compile the name-resolver.
 
-* libxml2  
-     apt-get install libxml2-dev
-     
-===============================================================================
-     
-Compile the name-resolver
+	$ cd name-resolver
 
-  cd name-resolver  
-  ccmake .  
-     Here you can select some configuration parameters such as the logging level.  
-  make
+	; Choose among possible compilation options
+	$ ccmake .
 
-===============================================================================
+The previous command allows you to select some configuration parameters for the
+name-resolver, such as the logging lever. When you're finished, exit from the
+`ccmake` interface by *generating the configuration files* (press 'c' and 'g')
+and type the following commands:
 
-Command lines parameters for the un-orchestrator can be retrieved thorugh the
-command:
+	; Create makefile scripts based on the previously selected options
+	$ cmake .
 
-sudo ./node-orchestrator --h
-  
-  [name-resolver] Usage:   
-  sudo ./name-resolver --f file_name  
-                                                                                         
-Parameters:  
-  --f file_name  
-        Name of the xml file describing the possible implementations for the network     
-        functions.                                                                       
-                                                                                         
-Options:  
-  --h   
-        Print this help.                                                                 
-                                                                                         
-Example:  
-  sudo ./name-resolver --f ./config/example.xml
-  
-Please check config/example.xml to understand the configuration file required by
-the name-resolver. This file contains information on all the possible implementaions
-for each available network function.
-  
-===============================================================================
+	; Compile and create the executable
+	$ make
 
-* If you are going to use the name-resolver together with the un-orchestrator, 
-you can skip this part *
+# How to run the name-resolver
 
-It is possible to interact with the name-resolver through it own REST server; 
-particularly, it listens for HTTP requests on the TCP port 2828. If the required
-network function exists, the name-resolver provides the information on such a 
-network function in JSON format. 
+The full list of command line parameters for the name-resolver can be
+retrieved by the following command:
 
-The following example requires the information for the network function "bridge":
+    $ sudo ./name-resolver --h
 
-GET /nfs/bridge HTTP/1.1  
-A possible answer sent by the name-resolver is the following
+Please refer to the help provided by the name-resolver itself in order to
+understand how to use the different options.
 
-{  
-    "implementations" : [  
-        {  
-            "type" : "docker",  
-            "uri" : "localhost:5000/example"  
-        },  
-        {  
-            "cores" : "1",  
-            "location" : "remote",  
-            "type" : "dpdk",  
-            "uri" : "https://nf_repository.con/example"  
-        },  
-        {  
-            "cores" : "1",  
-            "location" : "local",  
-            "type" : "dpdk",  
-            "uri" : "/home/nf_repository/dpdk/example"  
-        },  
-        {  
-            "type" : "kvm",  
-            "uri" : "/home/nf_repository/kvm/example.qcow2"  
-        }  
-    ],  
-    "name" : "bridge"  
-}   
+Please check `config/example.xml` to understand the configuration file required by
+the name-resolver. This file represents a database containing information on all
+the possible implementations for each available network function.

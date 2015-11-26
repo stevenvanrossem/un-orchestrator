@@ -41,13 +41,6 @@
 	#define VNFS 			"VNFs"
 		//#define _ID			"id"
 		#define	TEMPLATE		"template"
-		#define PORTS_WITH_REQ	"ports_with_requirements"
-			#define PORT_NAME	"name"
-			#define ETHERNET	"ethernet"
-				#define ADDRESS		"address"
-			#define IP4			"ipv4"
-				//#define ADDRESS		"address"
-				#define MASK		"netmask"		
 	#define FLOW_RULES		"flow-rules"
 		#define _ID				"id"
 		#define PRIORITY		"priority"
@@ -152,13 +145,14 @@
 
 /*
  * Supported Openflow versions.
- */ 
-enum
+ */
+typedef enum
 {
 	OFP_10 = 1,
 	OFP_12,
 	OFP_13
-};
+}ofp_version_t;
+extern ofp_version_t OFP_VERSION;
 
 /*
  * Constants used by Libvirt
@@ -199,5 +193,12 @@ enum
 	*/
 	#define REMOVE_GRAPH_FILE			"./node_resource_manager/virtualizer/.remove_graph.json"
 #endif	
+
+/*
+*	Name of the file used to print log information
+*/
+#ifdef LOG_ON_FILE
+	#define LOG_FILE			"node-orchestrator.log"
+#endif
 
 #endif //CONSTANTS_H_

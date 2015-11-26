@@ -7,5 +7,6 @@
 #define CMD_CREATE_LSI		"./network_controller/switch_manager/plugins/ovs-dpdk/scripts/createLsi.sh"
 #define CMD_ADD_PORT		"./network_controller/switch_manager/plugins/ovs-dpdk/scripts/addPort.sh"
 #define CMD_VIRTUAL_LINK	"./network_controller/switch_manager/plugins/ovs-dpdk/scripts/VirtualLink.sh"
+#define CMD_DESTROY_LSI		"./network_controller/switch_manager/plugins/ovs-dpdk/scripts/destroyLsi.sh"
 
 #endif //OVSDKDK_CONSTANTS_H

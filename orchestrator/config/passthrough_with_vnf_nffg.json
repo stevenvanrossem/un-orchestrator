@@ -9,7 +9,7 @@
          {  
             "id":"00000001",
             "match":{  
-              "port":"ge0"
+              "port":"eth2"
             },
             "action":{  
                "VNF_id":"example:1"
@@ -21,7 +21,25 @@
                "VNF_id":"example:2"
             },
             "action":{  
-              "port":"ge1"
+              "port":"eth1"
+            }
+         },
+         {  
+            "id":"00000003",
+            "match":{  
+              "port":"eth1"
+            },
+            "action":{  
+               "VNF_id":"example:2"
+            }
+         },
+         {  
+            "id":"00000004",
+            "match":{  
+               "VNF_id":"example:1"
+            },
+            "action":{  
+              "port":"eth2"
             }
          }
       ]

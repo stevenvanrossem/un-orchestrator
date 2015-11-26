@@ -11,7 +11,6 @@
 #include <json_spirit/writer.h>
 
 #include "constants.h"
-#include "nf.h"
 
 using namespace std;
 using namespace json_spirit;

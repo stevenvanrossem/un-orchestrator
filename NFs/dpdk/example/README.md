@@ -1,50 +1,31 @@
-This is a simple network function implemented as a DPDK secondary process.
+## DPDK-based example VNF
 
-When a packet is received on the interface 'i', it destination MAC address is
-modified and the packet is sent back on the interface 'i+1'.
+This file contains the instructions to build a simple network function that exchanges packets with the virtual switch
+through the DPDK rte_rings.
 
-===============================================================================
+When the VNF receives a packet on the interface 'i', it destination MAC address is modified and the packet is sent sent
+on the interface 'i+1'.
 
-Reqiured libraries:
+### Creating the binary
 
-* DPDK  
-     git clone https://github.com/bisdn/dpdk-dev
+In addition to the DPDK library, the DPI requires the pcre library to implements the packet inspections.
+The pcre library can be installed with the command:
 
-===============================================================================
+	$ sudo apt-get install libpcre3 libpcre3-dev
 
-Compile the network function:  
-* export RTE_SDK=absolute_path_dpdk  
-  (e.g., export RTE_SDK=~/Desktop/dpdk-dev)
-* make
+To compile the DPI to be used with xDPd, run the following commands:
 
-===============================================================================
+	$ export RTE_SDK=absolute_path_dpdk
+	; e.g., export RTE_SDK=~/Desktop/dpdk-dev
+	$ RTE_TARGET=x86_64-native-linuxapp-gcc
+	$ make
+	
+To compile the DPI to be used with OvS-DPDK, run the following commands:
 
-* If you are going to use this network function together with the un-orchestrator, 
-you can skip this part *
+	$ export RTE_SDK=absolute_path_dpdk
+	; e.g., export RTE_SDK=~/Desktop/dpdk-dev
+	$ RTE_TARGET=x86_64-ivshmem-linuxapp-gcc
+	$ make
 
-Usage:  
-  sudo ./nf -c core_mask -n memory_channels --proc-type=secondary -- 
-                --p port_name --s semaphore_name --l file_name                                           
-                                                                                         
-Parameters:  
-  -c core_mask  
-        Number of lcores used by the NFs. Note that currently only one lcore is
-        actually used.                                                                              
-  -n memory_channels  
-        Number of channels used by the NFs to access to the memory.                        
-  --proc-type=secondary  
-        The NF must be executed as a DPDK secondary process.                               
-  --p port_name  
-        Name of a port of the NF. This parameter can be repeated many times, 
-        once for each port to be used by the NF.                                                    
-  --s semaphore_name  
-        Name of the semaphore to be used by the NF.                                        
-  --l file_name  
-        Name of the file used to log information.                                        
-                                                                                         
-Options:  
-  --h   Print the help.
-                                                                                         
-Example:  
-  sudo ./nf -c 0x1 -n 2 --proc-type=secondary -- --p port1 --p port2 --s sem
-
+**Note:** the network function has been written to work with xDPd. If you want to use it with
+OvS-DPDK, please change the name of the rte_rings before compiling, as detailed in `../README.md`.

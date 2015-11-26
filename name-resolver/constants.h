@@ -9,7 +9,7 @@
 *	Connections
 */
 
-#define REST_PORT 				2828
+#define REST_PORT 				2626
 #define BASE_URL 				"nfs"
 #define REST_URL 				"http://localhost"
 #define DIGEST_URL 				"digest"
@@ -44,9 +44,15 @@
 #define LOCATION_ATTRIBUTE			"location"
 
 /*
+*	Name of the file used to print log information
+*/
+#ifdef LOG_ON_FILE
+	#define LOG_FILE			"name-resolver.log"
+#endif
+
+/*
 *	Misc
 */
 #define BUFFER_SIZE				1024
-
 
 #endif //CONSTANTS_H_

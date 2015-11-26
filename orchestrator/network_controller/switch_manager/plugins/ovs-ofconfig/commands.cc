@@ -1,5 +1,5 @@
-#include "ovs_manager.h"
-#include "ovs_constants.h"
+#include "ofconfig_manager.h"
+#include "ofconfig_constants.h"
 
 struct nc_session* session = NULL;
 
@@ -34,9 +34,11 @@ char *password(const char *username, const char *hostname){
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Insert ssh password for OFConfig server on OvS:");
 
 	i = scanf("%s", psw);
-	if(i<0)
+	if(i<0){
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error scanf.");
-		
+		throw commandsException();
+	}
+	
 	return psw;
 }
 
@@ -65,7 +67,7 @@ char *num_to_string(uint64_t num) {
 	sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", pmac[7], pmac[6], pmac[5], pmac[4], pmac[3], pmac[2], pmac[1], pmac[0]);
 
 	return mac;
-  
+
 }
 
 /* rpc parameter is freed after the function call */
@@ -218,7 +220,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 
 	char sw[64] = "Bridge", ctr[64] = "Controller", vrt[64] = "VirtualPort", trv[64] = "VPort";
 
-	char temp[64] = "", tmp[64] = "", switch_name[64] = "", of_version[64] = "";
+	char temp[64] = "", switch_name[64] = "", of_version[64] = "";
 
 	char cmdLine[4096];
 
@@ -398,23 +400,8 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 					throw commandsException();
 				}
 
-				string str = (*nfp);
-
-				//Create port name to lower case
-				for (string::size_type i=0; i<str.length(); ++i)
-					str[i] = tolower(str[i], loc);
-						
-				//Create the current port name
-				strcpy(tmp, (char *)(str).c_str());
-				sprintf(temp, "%" PRIu64, dnumber);
-				strcat(tmp, "b");
-				strcat(tmp, temp);
-				strcpy(temp, tmp);
-				
-				for(unsigned int j=0;j<strlen(temp);j++){
-					if(temp[j] == '_')
-						temp[j] = 'p';
-				}
+				/*create name of port --> lsiId_portName*/
+				sprintf(temp, "%" PRIu64 "_%s", dnumber, (*nfp).c_str());
 
 				/*add element "name"*/
 				rc = xmlTextWriterWriteElement(writer, BAD_CAST "name",
@@ -627,23 +614,8 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 					throw commandsException();
 				}
 
-				string str = (*nfp);
-
-				//Create port name to lower case
-				for (string::size_type i=0; i<str.length(); ++i)
-					str[i] = tolower(str[i], loc);
-						
-				//Create the current port name
-				strcpy(tmp, (char *)(str).c_str());
-				sprintf(temp, "%" PRIu64, dnumber);
-				strcat(tmp, "b");
-				strcat(tmp, temp);
-				strcpy(temp, tmp);
-				
-				for(unsigned int j=0;j<strlen(temp);j++){
-					if(temp[j] == '_')
-						temp[j] = 'p';
-				}
+				/*create name of port --> lsiId_portName*/
+				sprintf(temp, "%" PRIu64 "_%s", dnumber, (*nfp).c_str());
 
 				/*add content "port"*/
 				rc = xmlTextWriterWriteRaw(writer, BAD_CAST temp);
@@ -715,7 +687,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 	dnumber++;
 
 	/*add element "id"*/
-	rc = xmlTextWriterWriteElement(writer, BAD_CAST "id", 
+	rc = xmlTextWriterWriteElement(writer, BAD_CAST "id",
 		BAD_CAST ctr);
 	if (rc < 0) {
        		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "testXmlwriterMemory: Error at xmlTextWriterWriteElement\n");
@@ -723,7 +695,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 	}
 
 	/*add element "ip-address"*/
-	rc = xmlTextWriterWriteElement(writer, BAD_CAST "ip-address", 
+	rc = xmlTextWriterWriteElement(writer, BAD_CAST "ip-address",
 		BAD_CAST cli.getControllerAddress().c_str());
 	if (rc < 0) {
        		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "testXmlwriterMemory: Error at xmlTextWriterWriteElement\n");
@@ -731,7 +703,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 	}
 
 	/*add element "port"*/
-	rc = xmlTextWriterWriteElement(writer, BAD_CAST "port", 
+	rc = xmlTextWriterWriteElement(writer, BAD_CAST "port",
 		BAD_CAST cli.getControllerPort().c_str());
 	if (rc < 0) {
        		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "testXmlwriterMemory: Error at xmlTextWriterWriteElement\n");
@@ -739,7 +711,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 	}
 
 	/*add element local-ip-address*/
-	rc = xmlTextWriterWriteElement(writer, BAD_CAST "local-ip-address", 
+	rc = xmlTextWriterWriteElement(writer, BAD_CAST "local-ip-address",
 		BAD_CAST "127.0.0.1");
 	if (rc < 0) {
        		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "testXmlwriterMemory: Error at xmlTextWriterWriteElement\n");
@@ -747,7 +719,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 	}
 
 	/*add element "protocol"*/
-	rc = xmlTextWriterWriteElement(writer, BAD_CAST "protocol", 
+	rc = xmlTextWriterWriteElement(writer, BAD_CAST "protocol",
 		BAD_CAST "tcp");
 	if (rc < 0) {
        		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "testXmlwriterMemory: Error at xmlTextWriterWriteElement\n");
@@ -869,9 +841,11 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 
 			/*execute VirtualLink.sh*/
 			pip = system(cmdLine);
-			if(pip < 0)
+			if(pip < 0){
 				logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error system.");
-
+				throw commandsException();
+			}
+			
 			sprintf(cmdLine, PATH_SCRIPT_ID_PORT, bridge_name, vrt);
 
 			/*execute IdPort.sh*/
@@ -914,9 +888,11 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli){
 
 	/*execute OFVersion.sh*/
 	pip = system(cmdLine);
-	if(pip < 0)
+	if(pip < 0){
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error system.");
-
+		throw commandsException();
+	}
+	
 	clo = new CreateLsiOut(dnumber_new, physical_ports, network_functions_ports, virtual_links);
 
 	return clo;
@@ -1337,7 +1313,7 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi){
 	char *config = TMP_XML_FILE;
 	FILE *output = NULL;
 
-	char temp[64] = "", tmp[64] = "";
+	char temp[64] = "";
 
 	int nfnumber_old = 0;
 
@@ -1396,23 +1372,8 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi){
 		/*for each port in the list of the getNetworkFunctionsPorts*/
 		for(list<string>::iterator p = nfp.begin(); p != nfp.end(); p++){
 
-			string str = (*p);
-
-			//Create port name to lower case
-			for (string::size_type i=0; i<str.length(); ++i)
-				str[i] = tolower(str[i], loc);
-						
-			//Create the current port name
-			strcpy(tmp, (char *)(str).c_str());
-			sprintf(temp, "%" PRIu64, anpi.getDpid());
-			strcat(tmp, "b");
-			strcat(tmp, temp);
-			strcpy(temp, tmp);
-				
-			for(unsigned int j=0;j<strlen(temp);j++){
-				if(temp[j] == '_')
-					temp[j] = 'p';
-			}
+			/*create name of port --> lsiId_portName*/
+			sprintf(temp, "%" PRIu64 "_%s", anpi.getDpid(), (*p).c_str());
 
 			/*create an element name "port as child of "resources""*/			
 			rc = xmlTextWriterStartElement(writer, BAD_CAST "port");
@@ -1543,23 +1504,8 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi){
 		/*for each port in the list of the ports*/
 		for(list<string>::iterator p = nfp.begin(); p != nfp.end(); p++){
 
-			string str = (*p);
-
-			//Create port name to lower case
-			for (string::size_type i=0; i<str.length(); ++i)
-				str[i] = tolower(str[i], loc);
-						
-			//Create the current port name
-			strcpy(tmp, (char *)(str).c_str());
-			sprintf(temp, "%" PRIu64, anpi.getDpid());
-			strcat(tmp, "b");
-			strcat(tmp, temp);
-			strcpy(temp, tmp);
-				
-			for(unsigned int j=0;j<strlen(temp);j++){
-				if(temp[j] == '_')
-					temp[j] = 'p';
-			}
+			/*create name of port --> lsiId_portName*/
+			sprintf(temp, "%" PRIu64 "_%s", anpi.getDpid(), (*p).c_str());
 
 			/*add element "port"*/
 			rc = xmlTextWriterStartElement(writer, BAD_CAST "port");
@@ -1931,7 +1877,7 @@ AddVirtualLinkOut *commands::cmd_addVirtualLink(AddVirtualLinkIn avli){
 	AddVirtualLinkOut *avlo = NULL;
 
 	const char *bridge_name = switch_id[avli.getDpidA()].c_str();
-	char vrt[64] = "VPort", trv[64] = "VPort", temp[64] = ""; 
+	char vrt[64] = "VPort", trv[64] = "VPort", temp[64] = "";
 	const char *peer_name = switch_id[avli.getDpidB()].c_str();
 
 	list<uint64_t> po;
@@ -1960,8 +1906,10 @@ AddVirtualLinkOut *commands::cmd_addVirtualLink(AddVirtualLinkIn avli){
 
 	/*execute VirtualLink.sh*/
 	pip = system(cmdLine);
-	if(pip < 0)
+	if(pip < 0){
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error system.");
+		throw commandsException();
+	}
 	
 	sprintf(cmdLine, PATH_SCRIPT_ID_PORT, bridge_name, vrt);
 

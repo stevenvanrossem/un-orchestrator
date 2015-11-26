@@ -23,7 +23,6 @@
 	</memoryBacking>
 
 	<devices>
-		<!-- emulator>/home/dverbeir/qemu/qemu_git/x86_64-softmmu/qemu-system-x86_64</emulator -->
 		<disk type="file" device="disk">
 			<source file="/home/nf_repository/kvm/usvhost_vnf.raw"/>
 			<driver name="qemu" type="raw"/>

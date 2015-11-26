@@ -2,6 +2,8 @@
 
 bool Dpdk::isSupported()
 {
+	//TODO: we are assuming that, if dpdk is enabled by compilation,
+	//it is supported
 	return true;
 }
 
@@ -9,8 +11,10 @@ bool Dpdk::startNF(StartNFIn sni)
 {
 	uint64_t lsiID = sni.getLsiID();
 	string nf_name = sni.getNfName();
-	unsigned int n_ports = sni.getNumberOfPorts();
 	uint64_t coreMask = sni.getCoreMask();
+	
+	list<string> namesOfPortsOnTheSwitch = sni.getNamesOfPortsOnTheSwitch();
+	unsigned int n_ports = namesOfPortsOnTheSwitch.size();
 		
 	string uri_image = description->getURI();	
 		
@@ -21,9 +25,9 @@ bool Dpdk::startNF(StartNFIn sni)
 
 	stringstream command;
 	command << PULL_AND_RUN_DPDK_NF << " " << lsiID << " " << nf_name << " " << uri.str() << " " << coreMask <<  " " << NUM_MEMORY_CHANNELS << " " << n_ports;
-
-	for(unsigned int i = 1; i <= n_ports; i++)
-		command << " " << lsiID << "_" << nf_name << "_" << i;
+		
+	for(list<string>::iterator pn = namesOfPortsOnTheSwitch.begin(); pn != namesOfPortsOnTheSwitch.end(); pn++)
+		command << " "  << *pn;
 
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Executing command \"%s\"",command.str().c_str());
 
@@ -56,3 +60,4 @@ bool Dpdk::stopNF(StopNFIn sni)
 	return true;
 
 }
+
