@@ -46,9 +46,9 @@ You have to install the one that you want to use, choosing from the
 possibilities listed in this section.
 
 
-### xDPd
+### xDPd with DPDK support
 
-In order to install xDPd, you have to follow the steps below.
+In order to install xDPd with DPDK support, you have to follow the steps below.
 
 	$ git clone https://github.com/bisdn/xdpd
 	$ cd xdpd/
@@ -204,8 +204,8 @@ sources using the following commands:
 	$ sudo apt-get install libxml-xpath-perl libyajl-dev libdevmapper-dev libpciaccess-dev libnl-dev
 	$ git clone git://libvirt.org/libvirt.git
 	; select the commit that is known to work and have the necessary support
-	$ git checkout f57842ecfda1ece8c59718e62464e17f75a27062
 	$ cd libvirt
+	$ git checkout f57842ecfda1ece8c59718e62464e17f75a27062
 	$ ./autogen.sh
 	$ make
 	$ sudo make install
@@ -241,7 +241,7 @@ since the DPDK library has already been installed together with the vSwitch.
 ## NF-FG library
 
 These steps are mandatory only if you plan to use the Network Functions -
-Forwarding Graph (NF-FG) defined in WP3.
+Forwarding Graph (NF-FG) defined in WP3, which is based on the concept of *virtualizer*.
 
 	; Retrieve the NF-FG library.
 	$ cd [un-orchestrator]

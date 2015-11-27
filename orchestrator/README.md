@@ -45,7 +45,7 @@ It consists of two parts:
     and more. In practice, it allows the un-orchestrator to
     interact with the vSwitch in order to perform management operations. Each
     virtual switch implementation (e.g., xDPd, OvS) may require a different
-    implementation for the switch manager, according to the API supported by 
+    implementation for the switch manager, according to the API exported by 
     the vSwitch itself.
 
 Currently, the un-orchestrator supports OpenvSwitch (OvS) and the extensible DataPath daemon
@@ -66,11 +66,11 @@ handles the packets already processed in a graph.
 
 ### The compute controller
 
-The compute controller is the sub-module that interacts with the hypervisor
-and handles the lifecycle of a virtual network function (i.e., creating,
-updating, destroying a VNF), including the operations needed to attach
-VNF ports (already created on the the vSwitch) to the VNF itself. Each 
-execution environment may require a different implementation for the compute 
+The compute controller is the sub-module that interacts with the virtual execution
+environment(s) (i.e., the hypervisor) and handles the lifecycle of a Virtual Network 
+Function (i.e., creating, updating, destroying a VNF), including the operations 
+needed to attach VNF ports already created on the vSwitch, to the VNF itself. 
+Each execution environment may require a different implementation for the compute 
 controller, according to the commands supported by the hypervisor itself.
 
 Currently the prototype supports virtual network functions as (KVM) VMs, Docker and DPDK
@@ -85,7 +85,7 @@ are supported with the different vSwitches.
 
 |                            |   Docker      |    KVM   |   KVM-DPDK (ivshmem)   |     DPDK processes     |
 |----------------------------|---------------|----------|------------------------|------------------------|
-| **xDPd**                   |    **Yes***   | **Yes*** |          No            |         **Yes**        |
+| **xDPd-DPDK**              |    **Yes***   | **Yes*** |          No            |         **Yes**        |
 | **OvS (OVSDB / OFconfig)** |    **Yes**    | **Yes**  | No (requires OvS-DPDK) | No (requires OvS-DPDK) |
 | **OvS-DPDK**               |    **Yes***   | **Yes**  |        **Yes**         |         **Yes**        |
 

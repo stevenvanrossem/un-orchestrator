@@ -150,13 +150,13 @@ ENDIF(DEBUG_OPENFLOW)
 
 
 OPTION(
-	UNIFY_NFFG
-	"Turn on to support the NF-FG defined in the Unify project"
+	VIRTUALIZER_NFFG
+	"Turn on to support the virtualizer NF-FG model defined in WP3"
 	OFF
 )
-IF(UNIFY_NFFG)
+IF(VIRTUALIZER_NFFG)
 	ADD_DEFINITIONS(-DUNIFY_NFFG)
-ENDIF(UNIFY_NFFG)
+ENDIF(VIRTUALIZER_NFFG)
 
 OPTION(
 	LOG_ON_FILE
@@ -326,7 +326,7 @@ ELSE()
 ENDIF(ENABLE_DOCKER)
 
 
-IF(UNIFY_NFFG)
+IF(VIRTUALIZER_NFFG)
 	SET(SOURCES5
     ${SOURCES4}
     node_resource_manager/virtualizer/virtualizer.cc
@@ -336,7 +336,7 @@ ELSE()
 	SET(SOURCES5
     	${SOURCES4}
 	)
-ENDIF(UNIFY_NFFG)
+ENDIF(VIRTUALIZER_NFFG)
 
 IF(${ENABLE_KVM_INDEX} EQUAL 2)
 	SET(SOURCES6
@@ -380,13 +380,13 @@ IF(${ENABLE_KVM_INDEX} EQUAL 2)
 )
 ENDIF(${ENABLE_KVM_INDEX} EQUAL 2)
 
-#Include specific for the NF-FG library defined in the Unify project
-IF(UNIFY_NFFG)
+#Include specific for the virtualizer NF-FG model defined in WP3
+IF(VIRTUALIZER_NFFG)
 	find_package(PythonLibs REQUIRED)
 	INCLUDE_DIRECTORIES (
 		${PYTHON_INCLUDE_DIRS}
 	)
-ENDIF(UNIFY_NFFG)
+ENDIF(VIRTUALIZER_NFFG)
 
 # Create the executable
 ADD_EXECUTABLE(
@@ -451,13 +451,13 @@ IF(${ENABLE_KVM_INDEX} EQUAL 2)
 	set_source_files_properties (SOURCE compute_controller/plugins/kvm-libvirt/ivshmem_cmdline_generator.cc APPEND_STRING PROPERTY COMPILE_FLAGS " -std=c++11")
 ENDIF(${ENABLE_KVM_INDEX} EQUAL 2)
 
-#Links specific for the NF-FG library defined in WP3
-IF(UNIFY_NFFG)
+#Links specific for the virtualizer NF-FG model defined in WP3
+IF(VIRTUALIZER_NFFG)
     TARGET_LINK_LIBRARIES( node-orchestrator
 		libpython2.7.so
 		${PYTHON_LIBRARIES}
 	)
-ENDIF(UNIFY_NFFG)
+ENDIF(VIRTUALIZER_NFFG)
 
 ###############################################################################
 

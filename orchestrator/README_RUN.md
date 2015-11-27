@@ -21,21 +21,27 @@ below.
 Folder `config` contains some configuration file examples that can be used
 to configure/test the un-orchestrator.
 
-  * `config/universal-node-example.xml`: configuration file describing
-    the physical ports to be handled by the un-orchestrator, as well as
-    the amount of CPU, memory and storage provided to the Universal Node.
-  * `config/simple_passthrough_nffg.json`: simple graph that implements
-    a simple passthrough function, i.e., traffic is received from a first
-    physical port and sent out from a second physical port, after having
-    been handled to the vswitch. This graph is written according to the
-    original NF-FG definition (WP5-based).
-  * `config/passthrough_with_vnf_nffg.json`: graph that includes a VNF.
-    Traffic is received from a first physical port, provided
-    to a network function, and then sent out from a second physical port.
-    This graph is written according to the original NF-FG definition (WP5-based).
+  * [config/universal-node-example.xml](config/universal-node-example.xml): 
+    configuration file describing the physical ports to be handled by the 
+    un-orchestrator, as well as the amount of CPU, memory and storage provided 
+    to the Universal Node.
+  * [config/simple_passthrough_nffg.json](config/simple_passthrough_nffg.json): 
+    simple graph that implements a simple passthrough function, i.e., traffic is 
+    received from a first physical port and sent out from a second physical port, 
+    after having been handled to the vswitch. This graph is written according to 
+    the original NF-FG definition (WP5-based).
+  * [config/passthrough_with_vnf_nffg.json](config/passthrough_with_vnf_nffg.json): 
+    graph that includes a VNF. Traffic is received from a first physical port, provided
+    to a network function, and then sent out from a second physical port. This graph 
+    is written according to the original NF-FG definition (WP5-based).
 
+Note that [config/simple_passthrough_nffg.json](config/simple_passthrough_nffg.json) 
+and [config/passthrough_with_vnf_nffg.json](config/passthrough_with_vnf_nffg.json) contain
+NF-FGs described through the WP5 formalism. The same graphs are described with the 
+WP3 formalisms in files [config/virtualizer/passthrough_with_vnf_nffg.xml](config/virtualizer/passthrough_with_vnf_nffg.xml) 
+[https://github.com/netgroup-polito/un-orchestrator/blob/master/orchestrator/config/virtualizer/simple_passthrough_nffg.xml](https://github.com/netgroup-polito/un-orchestrator/blob/master/orchestrator/config/virtualizer/simple_passthrough_nffg.xml).
 
-## How to start xDPd to work with the un-orchestrator
+## How to start xDPd with DPDK support to work with the un-orchestrator
 
 Set up DPDK (after each reboot of the physical machine), in order to:
 
