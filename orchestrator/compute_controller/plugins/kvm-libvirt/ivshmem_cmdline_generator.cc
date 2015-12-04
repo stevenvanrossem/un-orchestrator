@@ -33,6 +33,7 @@ bool IvshmemCmdLineGenerator::dpdk_init(void)
 {
 	cpu_set_t *c;
 	int nCores = 0;
+	int i;
 
 	pthread_mutex_lock(&IvshmemCmdLineGenerator_mutex);
 

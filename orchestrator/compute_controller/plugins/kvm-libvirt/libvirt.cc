@@ -230,10 +230,6 @@ bool Libvirt::startNF(StartNFIn sni)
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "This function is KVM-USVHOST");
 
 	/* Create NICs */
-<<<<<<< HEAD
-=======
-
->>>>>>> master
 	for(list<string>::iterator pn = namesOfPortsOnTheSwitch.begin(); pn != namesOfPortsOnTheSwitch.end(); pn++)
 	{
 
@@ -278,10 +274,6 @@ bool Libvirt::startNF(StartNFIn sni)
 
 	    xmlNodePtr modeln = xmlNewChild(ifn, NULL, BAD_CAST "model", NULL);
 	    xmlNewProp(modeln, BAD_CAST "type", BAD_CAST "virtio");
-<<<<<<< HEAD
-=======
-
->>>>>>> master
 	    xmlNodePtr virt = xmlNewChild(ifn, NULL, BAD_CAST "virtualport", NULL);
 	    xmlNewProp(virt, BAD_CAST "type", BAD_CAST "openvswitch");
 	}
@@ -377,10 +369,6 @@ bool Libvirt::startNF(StartNFIn sni)
 					if(strcmp((const char*)attr_type,"file")==0 && strcmp((const char*)attr_device,"disk")==0)
 					{
 						xmlNodePtr disk = device;
-<<<<<<< HEAD
-=======
-
->>>>>>> master
 						//we are in the proper disk
 						for(xmlNodePtr indisk = disk->xmlChildrenNode; indisk != NULL; indisk = indisk->next)
 						{
@@ -423,14 +411,12 @@ after_parsing:
 	stringstream ivshmemcmdline;
 	//for(unsigned int i=1; i <= n_ports; i++)
 
-<<<<<<< HEAD
-=======
 	char cmdline[512];
 	if(!cmdgenerator.get_mempool_cmdline(cmdline, sizeof(cmdline)))
 		return false;
 
 	ivshmemcmdline << " " << cmdline;
->>>>>>> master
+
 
 	list<string> namesOfPortsOnTheSwitch = sni.getNamesOfPortsOnTheSwitch();
 
@@ -438,12 +424,7 @@ after_parsing:
 	{
 		//Retrieve the command line
 
-<<<<<<< HEAD
-		char cmdline[512];
-		if(!cmdgenerator.get_cmdline((*name).c_str(), cmdline, 512))
-=======
 		if(!cmdgenerator.get_port_cmdline((*name).c_str(), cmdline, sizeof(cmdline)))
->>>>>>> master
 			return false;
 
 		ivshmemcmdline << " " << cmdline;
@@ -492,7 +473,6 @@ bool Libvirt::stopNF(StopNFIn sni)
 	assert(monitor.count(vm_name) == 1);
 
 	string tcpport = monitor.find(vm_name)->second;
-<<<<<<< HEAD
 	char *command= QUIT_COMMAND;
 
 	//remove the tcp port from the monitor
@@ -512,27 +492,14 @@ bool Libvirt::sendCommand(string tcpport, char *command)
 	int socket;							// keeps the socket ID for this connection
 	int WrittenBytes;					// Number of bytes written on the socket
 	char DataBuffer[DATA_BUFFER_SIZE];	// Buffer containing data received from the socket
-=======
-
-	struct addrinfo *AddrInfo;
-	struct addrinfo Hints;
-	char ErrBuf[BUFFER_SIZE];
-	int socket;						// keeps the socket ID for this connection
-	int WrittenBytes;				// Number of bytes written on the socket
-
-	char *command= QUIT_COMMAND;
->>>>>>> master
 
 	memset(&Hints, 0, sizeof(struct addrinfo));
 
 	Hints.ai_family= AF_INET;
 	Hints.ai_socktype= SOCK_STREAM;
 
-<<<<<<< HEAD
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The command to the VM is going to be sent on the TCP port \"%s\"", tcpport.c_str());
 
-=======
->>>>>>> master
 	if (sock_initaddress ("127.0.0.1", tcpport.c_str(), &Hints, &AddrInfo, ErrBuf, sizeof(ErrBuf)) == sockFAILURE)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error resolving given address/port (%s/%s): %s",  "127.0.0.1",  tcpport.c_str(), ErrBuf);
@@ -554,7 +521,6 @@ bool Libvirt::sendCommand(string tcpport, char *command)
 
 	}
 
-<<<<<<< HEAD
 	//Read received data (that will be ignored, since it is useless)
 	(void) sock_recv(socket, DataBuffer, sizeof(DataBuffer), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 
@@ -562,9 +528,6 @@ bool Libvirt::sendCommand(string tcpport, char *command)
 	shutdown(socket,SHUT_WR);
 	sock_close(socket,ErrBuf,sizeof(ErrBuf));
 
-=======
-#endif
->>>>>>> master
 	return true;
 }
 #endif
