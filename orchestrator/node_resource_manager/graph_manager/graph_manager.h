@@ -18,7 +18,7 @@
 
 #ifdef ENABLE_DIRECT_VM2VM
 	#include "switchPortsAssociation.h"
-#endif	
+#endif
 
 #ifdef VSWITCH_IMPLEMENTATION_XDPD
 	#include "../../network_controller/switch_manager/plugins/xdpd/xdpd_manager.h"
@@ -53,8 +53,9 @@ typedef struct
 		string nf_name;
 		unsigned int number_of_ports;
 		ComputeController *computeController;
-		
+
 		list<string> namesOfPortsOnTheSwitch;
+		int cpu_core;	/* tells the core mask to the virtual machine */
 	}to_thread_t;
 
 class GraphManager
@@ -68,7 +69,7 @@ private:
 	*	Port of the openflow controller of the next graph created
 	*/
 	static uint32_t nextControllerPort;
-	
+
 	/**
 	*	This structure contains all the graph end points which are not
 	*	ports, but that must be used to connect many graphs together
@@ -79,19 +80,19 @@ private:
 	*	used by other graphs
 	*/
 	map<string, unsigned int > availableEndPoints;
-	
+
 	/**
 	*	This structure contains the port ID, in the LSI-0, to be used to connect
 	*	a graph to an end point defined in the action of another graph (hence, the
 	*	"current" graph uses this end point in the match).
-	*	
+	*
 	*	Example: the graph defining the endpoint "ep" has the rule
 	*		match: nf:1 - action: ep
 	*	ep originates a vlink with an ID into the LSI0 (e.g., 1) and an ID into
 	*	the current LSI (e.g., 2). This structure contains the entry: <ep, 1>
 	*/
 	map<string, unsigned int> endPointsDefinedInActions;
-	
+
 	/**
 	*	This structure contains the port ID, in the LSI-0, to be used to connect
 	*	a graph to an end point defined in the match of another graph (hence, the
@@ -105,7 +106,7 @@ private:
 	*	the current LSI (e.g.. 2). This structure contains the entry: <ep, 1>
 	*/
 	map<string, unsigned int> endPointsDefinedInMatches;
-	
+
 	/**
 	*	The LSI in common with all the tenants, which
 	*	access to the physical interfaces
@@ -113,17 +114,17 @@ private:
 	GraphInfo graphInfoLSI0;
 	uint64_t dpid0;
 	lowlevel::Graph graphLSI0lowLevel; //FIXME: this is a trick for the log
-	
+
 	/**
 	*	Map containing the graph identifier of each tenant-LSI, and its desciption
 	*/
 	map<string,GraphInfo> tenantLSIs;
-	
+
 	/**
 	*	The module that interacts with the virtual switch
 	*/
 	SWITCH_MANAGER_IMPLEMENTATION switchManager;
-	
+
 	/**
 	*	@brief: identify the virtual links required to implement the graph: each action
 	*		expressed on a NF port, associated with a match on a physical port, requires a
@@ -140,10 +141,10 @@ private:
 	*			- vector[0]: NFs requiring a virtual link
 	*			- vector[1]: physical ports requiring a virtual link
 	*			- vector[2]: endpoints requiring a virtual link
-	*			- vector[3]: NFs reached from an endpoint that is defined in the current graph	
+	*			- vector[3]: NFs reached from an endpoint that is defined in the current graph
 	*/
 	vector<set<string> > identifyVirtualLinksRequired(highlevel::Graph *graph);
-	
+
 	/**
 	*	@brief: apply the same rules of the previous functions, but the virtual link is required
 	*		only if the NF or the port that would need it are not alredy present in the graph.
@@ -154,7 +155,7 @@ private:
 	*	@param: lsi		Data structure describing the graph to be updated
 	*/
 	vector<set<string> > identifyVirtualLinksRequired(highlevel::Graph *newPiece, LSI *lsi);
-	
+
 	/**
 	*	@brief: given a graph description, check if the ports and the NFs required by the
 	*		graph exist
@@ -163,7 +164,7 @@ private:
 	*	@param: computeController	Compute controller used to validate the graph
 	*/
 	bool checkGraphValidity(highlevel::Graph *graph, ComputeController *computeController);
-	
+
 	/**
 	*	@brief: check if
 	*		- a NF no longer requires a vlink in a specific graph
@@ -176,7 +177,7 @@ private:
 	*	and then remove the useles things from the LSI
 	*/
 	void removeUselessPorts_NFs_Endpoints_VirtualLinks(RuleRemovedInfo tbr, ComputeController *computeController,highlevel::Graph *graph, LSI * lsi);
-	
+
 	/**
 	*	@brief: given a NF of the graph (in the form NF_port), return the endpoint expressed in the match of a rule
 	*		whose action is expressed on the function.
@@ -186,7 +187,7 @@ private:
 	*/
 	string findEndPointTowardsNF(highlevel::Graph *graph, string nf);
 
-#ifndef UNIFY_NFFG	
+#ifndef UNIFY_NFFG
 	/**
 	*	@brief: check if a specific flow can be removed from a graph. The flow cannot be removed if it defines
 	*		an endpoint currently used by other graphs.
@@ -199,24 +200,24 @@ private:
 	*/
 	bool canDeleteFlow(highlevel::Graph *graph, string flowID);
 #endif
-	
+
 public:
 	//XXX: Currently I only support rules with a match expressed on a port or on a NF
 	//(plus other fields)
 
 	GraphManager(int core_mask,string portsFileName);
 	~GraphManager();
-		
+
 	/**
 	*	@brief: check if a certain graph exists
 	*/
 	bool graphExists(string graphID);
-	
+
 	/**
 	*	@brief: check if a flow exists in a graph
 	*/
 	bool flowExists(string graphID, string flowID);
-	
+
 	/**
 	*	@brief: given a graph description, implement the graph
 	*/
@@ -231,7 +232,7 @@ public:
 	*	counter for the endpoints it uses are decreased.
 	*/
 	bool deleteGraph(string graphID, bool shutdown = false);
-	
+
 	/**
 	*	@brief: add a new piece to an existing graph with
 	*		a specific ID.
@@ -268,7 +269,7 @@ public:
 	*	TODO: describe what happens in case of endpoint
 	*/
 	bool deleteFlow(string graphID, string flowID);
-	
+
 #ifdef ENABLE_DIRECT_VM2VM
 	/**
 	*	@brief: Execute, through the compute controller, a command related to a port
@@ -279,7 +280,7 @@ public:
 	*/
 	bool executeCommandReleatedToPort(string port, string command);
 #endif
-	
+
 #ifdef UNIFY_NFFG
 	/**
 	*	@brief: deletes a NF from the graph
@@ -288,8 +289,8 @@ public:
 	*	@param: nf_name	Name of the NF to be removed from the graph
 	*/
 	bool stopNetworkFunction(string graphID, string nf_name);
-#endif		
-	
+#endif
+
 	/**
 	*	@brief: checks if a specific NF is part of a specific graph
 	*/
@@ -299,20 +300,20 @@ public:
 	*	@brief: create the JSON representation of the graph with the given ID
 	*/
 	Object toJSON(string graphID);
-	
+
 	/**
 	*	@brief: create the JSON representation of the physical interfaces that can be connected
 	*		to the graphs (both ethernet and wifi)
 	*/
 	Object toJSONPhysicalInterfaces();
-		
+
 	/**
 	*	@brief: prints information on the graphs deployed
 	*/
 	void printInfo(bool complete = true);
-	
+
 	void printInfo(lowlevel::Graph graphLSI0, LSI *lsi0);
-	
+
 	static void mutexInit();
 };
 

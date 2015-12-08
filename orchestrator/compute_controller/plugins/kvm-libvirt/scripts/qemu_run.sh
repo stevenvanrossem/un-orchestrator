@@ -14,10 +14,11 @@ then
 fi
 
 #FIXE: smp and memory should be provided externally
+SSH_PORT=$((1000+$2))
 
 echo "[$0] Executing command 'sudo qemu-system-x86_64 -name $1 -cpu host -smp 1 -machine accel=kvm,usb=off -m 1024 -drive file=$3 -snapshot -daemonize -monitor tcp:127.0.0.1:$2,server,nowait'"
 
-sudo `echo qemu-system-x86_64 -name $1 -cpu host -smp 1 -machine accel=kvm,usb=off -m 1024 -drive file=$3 -snapshot -daemonize -monitor tcp:127.0.0.1:$2,server,nowait`
+sudo `echo qemu-system-x86_64 -name $1 -cpu host -smp 1 -machine accel=kvm,usb=off -m 1024 -drive file=$3 -snapshot -daemonize -monitor tcp:127.0.0.1:$2,server,nowait -netdev user,id=hostnet0,hostfwd=tcp::$SSH_PORT-:22 -device rtl8139,netdev=hostnet0,id=net0`
 ret=`echo $?`
 
 if [ $ret -eq 0 ]

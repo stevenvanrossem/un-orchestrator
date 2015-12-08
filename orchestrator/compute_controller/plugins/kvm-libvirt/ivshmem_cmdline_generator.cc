@@ -31,9 +31,9 @@ IvshmemCmdLineGenerator::IvshmemCmdLineGenerator()
 
 bool IvshmemCmdLineGenerator::dpdk_init(void)
 {
-	cpu_set_t *c;
-	int nCores = 0;
-	int i;
+	//cpu_set_t *c;
+	//int nCores = 0;
+	//int i;
 
 	pthread_mutex_lock(&IvshmemCmdLineGenerator_mutex);
 
@@ -44,7 +44,7 @@ bool IvshmemCmdLineGenerator::dpdk_init(void)
 		"./something",
 		"--proc-type=secondary",
 		"-c",
-		"0x01",
+		"0x02",
 		"--",
 		NULL
 	};
@@ -74,13 +74,14 @@ bool IvshmemCmdLineGenerator::dpdk_init(void)
 	 * rte_eal_init changes the core mask of the thread.
 	 * Change it back to all cores
 	 */
-	nCores = sysconf(_SC_NPROCESSORS_ONLN);
 
-	c = CPU_ALLOC(nCores);
-	for(i = 0;  i < nCores; i++)
-		CPU_SET(i, c);
-
-	sched_setaffinity(0, nCores, c);
+	/* Uncomment the following for release */
+	//nCores = sysconf(_SC_NPROCESSORS_ONLN);
+	//c = CPU_ALLOC(nCores);
+	//for(i = 0;  i < nCores; i++)
+	//	CPU_SET(i, c);
+    //
+	//sched_setaffinity(0, nCores, c);
 
 generated:
 	pthread_mutex_unlock(&IvshmemCmdLineGenerator_mutex);
