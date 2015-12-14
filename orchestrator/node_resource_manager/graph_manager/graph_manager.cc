@@ -571,9 +571,10 @@ void *startNF(void *arguments)
 
 	cpu_set_t *c;
 	c = CPU_ALLOC(1);
+	CPU_ZERO_S(1, c);
 	CPU_SET(args->cpu_core, c);
-
 	sched_setaffinity(0, 1, c);
+	CPU_FREE(c);
 
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "*******Setting core mask******");
 
