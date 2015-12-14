@@ -103,8 +103,8 @@ IF(ENABLE_DPDK_PROCESSES)
 ENDIF(ENABLE_DPDK_PROCESSES)
 
 
-OPTION(DEBUG_KVM 
-	"Turn on the debug of the KVM-libvirt compute plugin" 
+OPTION(DEBUG_KVM
+	"Turn on the debug of the KVM-libvirt compute plugin"
 	OFF
 )
 
@@ -113,7 +113,7 @@ IF(DEBUG_KVM)
 ENDIF(DEBUG_KVM)
 
 OPTION(ENABLE_DIRECT_VM2VM
-	"Turn on the support to direct VM2VM channels" 
+	"Turn on the support to direct VM2VM channels"
 	OFF
 )
 
@@ -175,7 +175,7 @@ MARK_AS_ADVANCED(
 # Set source files
 SET(SOURCES
 	node_orchestrator.cc
-	
+
 	node_resource_manager/graph_manager/graph_manager.h
 	node_resource_manager/graph_manager/graph_manager.cc
 	node_resource_manager/graph_manager/graph_info.h
@@ -191,14 +191,13 @@ SET(SOURCES
 	node_resource_manager/graph_manager/fileParser.cc
 	node_resource_manager/graph_manager/switchPortsAssociation.h
 	node_resource_manager/graph_manager/switchPortsAssociation.cc
-	
 	node_resource_manager/graph/match.h
 	node_resource_manager/graph/match.cc
 	node_resource_manager/graph/generic_action.h
 	node_resource_manager/graph/generic_action.cc
 	node_resource_manager/graph/vlan_action.h
 	node_resource_manager/graph/vlan_action.cc
-	
+
 	node_resource_manager/graph/low_level_graph/output_action.h
 	node_resource_manager/graph/low_level_graph/output_action.cc
 	node_resource_manager/graph/low_level_graph/graph.h
@@ -207,7 +206,7 @@ SET(SOURCES
 	node_resource_manager/graph/low_level_graph/low_level_match.cc
 	node_resource_manager/graph/low_level_graph/rule.h
 	node_resource_manager/graph/low_level_graph/rule.cc
-	
+
 	node_resource_manager/graph/high_level_graph/high_level_output_action.h
 	node_resource_manager/graph/high_level_graph/high_level_output_action.cc
 	node_resource_manager/graph/high_level_graph/high_level_output_action_nf.h
@@ -222,20 +221,20 @@ SET(SOURCES
 	node_resource_manager/graph/high_level_graph/high_level_graph.cc
 	node_resource_manager/graph/high_level_graph/high_level_match.h
 	node_resource_manager/graph/high_level_graph/high_level_match.cc
-	
-	network_controller/switch_manager/switch_manager.h		
+
+	network_controller/switch_manager/switch_manager.h
 	network_controller/switch_manager/addNFports_in.h
 	network_controller/switch_manager/addNFports_out.h
 	network_controller/switch_manager/addVirtualLink_in.h
 	network_controller/switch_manager/addVirtualLink_out.h
 	network_controller/switch_manager/createLSIout.h
 	network_controller/switch_manager/destroyNFports_in.h
-	network_controller/switch_manager/destroyVirtualLink_in.h 
-	network_controller/switch_manager/checkPhysicalPorts_in.h 
-	
+	network_controller/switch_manager/destroyVirtualLink_in.h
+	network_controller/switch_manager/checkPhysicalPorts_in.h
+
 	network_controller/openflow_controller/controller.h
 	network_controller/openflow_controller/controller.cc
-	
+
 	compute_controller/nfs_manager.h
 	compute_controller/nfs_manager.cc
 	compute_controller/compute_controller.h
@@ -247,7 +246,7 @@ SET(SOURCES
 	compute_controller/description.cc
 	compute_controller/startNF_in.h
 	compute_controller/stopNF_in.h
-	
+
 	node_resource_manager/rest_server/rest_server.h
 	node_resource_manager/rest_server/rest_server.cc
 	node_resource_manager/rest_server/match_parser.h
@@ -344,10 +343,6 @@ IF(${ENABLE_KVM_INDEX} EQUAL 2)
 	compute_controller/plugins/kvm-libvirt/ivshmem_cmdline_generator.cc
 	compute_controller/plugins/kvm-libvirt/ivshmem_cmdline_generator.h
 	)
-	
-	IF(NOT DEFINED ENV{DPDK_PATH})
-		message(FATAL_ERROR "Could not find DPDK_PATH environment variable. Please set it to [dpdk-folder]/x86_64-ivshmem-linuxapp-gcc/")
-	ENDIF(NOT DEFINED ENV{DPDK_PATH}) 
 ELSE()
 	SET(SOURCES6
 	${SOURCES5}
@@ -399,7 +394,7 @@ LINK_DIRECTORIES(
 	/usr/local/lib/
 	/usr/x86_64-linux-gnu/
 	/usr/lib/x86_64-linux-gnu/
-	/usr/lib/python2.7/config-x86_64-linux-gnu/	
+	/usr/lib/python2.7/config-x86_64-linux-gnu/
 )
 
 IF(${ENABLE_KVM_INDEX} EQUAL 2)
@@ -434,23 +429,6 @@ IF((${ENABLE_KVM_INDEX} EQUAL 1) OR (${ENABLE_KVM_INDEX} EQUAL 2))
 	)
 ENDIF((${ENABLE_KVM_INDEX} EQUAL 1) OR (${ENABLE_KVM_INDEX} EQUAL 2))
 
-#Links specific for KVM when used with ivshmem
-IF(${ENABLE_KVM_INDEX} EQUAL 2)
-    TARGET_LINK_LIBRARIES( node-orchestrator
-			$ENV{DPDK_PATH}/lib/libdpdk.a 
-			-ldl 
-			-latomic
-			-lpthread
-			-lm
-			-ludev
-	)
-ENDIF(${ENABLE_KVM_INDEX} EQUAL 2)
-
-#Enable c++11 in order to compile with new dpdk releases
-IF(${ENABLE_KVM_INDEX} EQUAL 2)
-	set_source_files_properties (SOURCE compute_controller/plugins/kvm-libvirt/ivshmem_cmdline_generator.cc APPEND_STRING PROPERTY COMPILE_FLAGS " -std=c++11")
-ENDIF(${ENABLE_KVM_INDEX} EQUAL 2)
-
 #Links specific for the virtualizer NF-FG model defined in WP3
 IF(VIRTUALIZER_NFFG)
     TARGET_LINK_LIBRARIES( node-orchestrator
@@ -459,22 +437,33 @@ IF(VIRTUALIZER_NFFG)
 	)
 ENDIF(VIRTUALIZER_NFFG)
 
+# Add configuration rules to compile command line generator
+IF(${ENABLE_KVM_INDEX} EQUAL 2)
+	ADD_DEPENDENCIES(node-orchestrator cmd_line_generator)
+
+	ADD_CUSTOM_TARGET(
+		cmd_line_generator
+		COMMAND make
+		WORKING_DIRECTORY compute_controller/plugins/kvm-libvirt/cmdline_generator/
+		)
+ENDIF(${ENABLE_KVM_INDEX} EQUAL 2)
+
 ###############################################################################
 
 #Check unsupported configurations
 
 IF(ENABLE_DPDK_PROCESSES AND ( (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 1) OR (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 3) ) )
-	#This configuration (ovs (ofconfig/ovsdb) + dpdk processes) is not supported 
+	#This configuration (ovs (ofconfig/ovsdb) + dpdk processes) is not supported
 	message(FATAL_ERROR "OvS not supported with Dpdk processes")
 ENDIF(ENABLE_DPDK_PROCESSES AND ( (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 1) OR (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 3) ) )
 
 IF((${ENABLE_KVM_INDEX} EQUAL 2) AND ( (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 1) OR (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 3) ) )
-	#This configuration (ovs (ofconfig/ovsdb) + kvm-ivshmem) is not supported 
+	#This configuration (ovs (ofconfig/ovsdb) + kvm-ivshmem) is not supported
 	message(FATAL_ERROR "OvS not supported with KVM-IVSHMEM")
 ENDIF((${ENABLE_KVM_INDEX} EQUAL 2) AND ( (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 1) OR (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 3) ) )
 
 IF((${ENABLE_KVM_INDEX} EQUAL 2) AND  (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 0) )
-	#This configuration (xdpd + kvm-ivshmem) is not supported 
+	#This configuration (xdpd + kvm-ivshmem) is not supported
 	message(FATAL_ERROR "xDPd not supported with KVM-IVSHMEM")
 ENDIF((${ENABLE_KVM_INDEX} EQUAL 2) AND  (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 0) )
 

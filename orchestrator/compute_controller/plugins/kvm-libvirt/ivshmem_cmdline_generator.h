@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdio.h>
-#include <string.h>
 #include <pthread.h>
 
 #include "../../../utils/logger.h"
@@ -13,16 +11,9 @@
 class IvshmemCmdLineGenerator
 {
 private:
-	/**
-	*	@brief: mutex to protect the initialization of DPDK
-	*/
-	static pthread_mutex_t IvshmemCmdLineGenerator_mutex;
-
-	static bool init;
 	static bool memorypool_generated;
 	static pthread_mutex_t memory_pool_mutex;
-
-	static bool dpdk_init(void);
+	static char mempool_cmd[512];
 
 public:
 	IvshmemCmdLineGenerator();
@@ -43,6 +34,10 @@ public:
 	* @param:	size		Size of the buffer for the command line
 	*/
 	bool get_mempool_cmdline(char * cmdline, int size);
+
+private:
+	bool read_from_pipe(const char *name, char *buf, size_t len);
+	bool read_from_file(const char *name, char *buf, size_t len);
 };
 
 #endif //IVSHMEM_CMDLINE_GENERATOR_H
