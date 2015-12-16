@@ -140,6 +140,8 @@ public:
 	
 	/**
 	*	@brief: For each NF, select an implementation.
+	*
+	*	@return map<string, NF*>* - network functions to be deployed as internal
 	*/
 	map<string, NF*>* selectImplementation();
 	
