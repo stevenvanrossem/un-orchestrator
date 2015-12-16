@@ -33,7 +33,7 @@ public:
 			return string("kvm");
 #endif
 #ifdef ENABLE_NATIVE
-		else if(type == NATIVE)
+		if(type == NATIVE)
 			return string("native");
 #endif		
 		else if(type == INTERNAL)

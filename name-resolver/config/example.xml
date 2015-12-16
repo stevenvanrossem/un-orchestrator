@@ -64,4 +64,9 @@
 		<native uri="../NFs/native/openflow-bridge/openflow_bridge.tar.gz" dependencies="openvswitch" location="local"/>
 	</network-function>
 	
+	<network-function name="vpn_sec" summary="Creates a tunnel IPsec">
+		<!-- Only a native implementation is available for this network function -->
+		<native uri="../NFs/native/vpn_security/vpn_sec.tar.gz" dependencies="ipsec-tools iptables" location="local"/>
+	</network-function>
+	
 </network-functions>

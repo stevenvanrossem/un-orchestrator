@@ -436,13 +436,18 @@ handleRequest_status_t Virtualizer::handleRestRequest(char *message, char **answ
 		 		memcpy((*answer), retVal.c_str(),retVal.size()+1);
 		 		(*answer)[retVal.size()] = '\0';
 			
+				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "REST request properly handled in the virtualizer...");
+			
 			    if(retVal == "config updated")
 			    	return HR_EDIT_CONFIG;
 			    else
 			    	return HR_OK;
 			}
 			else
+			{
+				logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An error occurred while handling a REST request in the virtualizer!");
 				return HR_INTERNAL_ERROR;
+			}
 	    }
 	    else
         {

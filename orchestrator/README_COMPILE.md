@@ -46,9 +46,9 @@ You have to install the one that you want to use, choosing from the
 possibilities listed in this section.
 
 
-### xDPd
+### xDPd with DPDK support
 
-In order to install xDPd, you have to follow the steps below.
+In order to install xDPd with DPDK support, you have to follow the steps below.
 
 	$ git clone https://github.com/bisdn/xdpd
 	$ cd xdpd/
@@ -134,7 +134,7 @@ Then execute the following commands:
 
     $ tar -xf dpdk-2.1.0.tar.gz
     $ cd dpdk-2.1.0
-    $ export DPDK_DIR=\`pwd\`
+    $ export DPDK_DIR=`pwd`
     ; modify the file `$DPDK_DIR/config/common_linuxapp` so that
     ; `CONFIG_RTE_BUILD_COMBINE_LIBS=y`
     ; `CONFIG_RTE_LIBRTE_VHOST=y`
@@ -163,7 +163,7 @@ Now create the ovsdb database:
 	
 	$ mkdir -p /usr/local/etc/openvswitch
 	$ mkdir -p /usr/local/var/run/openvswitch
-	$ rm /usr/local/etc/openvswitch/conf.db
+	$ sudo rm /usr/local/etc/openvswitch/conf.db
 	$ sudo ovsdb-tool create /usr/local/etc/openvswitch/conf.db  \
 		/usr/local/share/openvswitch/vswitch.ovsschema
 
@@ -204,8 +204,8 @@ sources using the following commands:
 	$ sudo apt-get install libxml-xpath-perl libyajl-dev libdevmapper-dev libpciaccess-dev libnl-dev
 	$ git clone git://libvirt.org/libvirt.git
 	; select the commit that is known to work and have the necessary support
-	$ git checkout f57842ecfda1ece8c59718e62464e17f75a27062
 	$ cd libvirt
+	$ git checkout f57842ecfda1ece8c59718e62464e17f75a27062
 	$ ./autogen.sh
 	$ make
 	$ sudo make install
@@ -241,7 +241,7 @@ since the DPDK library has already been installed together with the vSwitch.
 ## NF-FG library
 
 These steps are mandatory only if you plan to use the Network Functions -
-Forwarding Graph (NF-FG) defined in WP3.
+Forwarding Graph (NF-FG) defined in WP3, which is based on the concept of *virtualizer*.
 
 	; Retrieve the NF-FG library.
 	$ cd [un-orchestrator]

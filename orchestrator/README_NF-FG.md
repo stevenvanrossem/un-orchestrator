@@ -316,24 +316,51 @@ following fields **MUST** be specified:
 The previous fields indicates an output port through which packets can be sent.	
 Other actions can be specified together with the previous ones:
 
-* vlan push
+*  *vlan push*, which adds a specific vlan label to the packet;
+*  *vlan pop*, which removes the more external vlan label to the packet.
+
+The syntax to be used for these operations is the following:
+ 
+	"action":
+	{
+        	"vlan":
+		{
+			"operation":"push",
+			"vlan_id":"25"
+		}
+    	}
+
 
 	"action":
-    {
-        "vlan":
-        {
-            "operation":"push",
-            "vlan_id":"25"
-        }
-    }
+	{
+		"vlan":
+		{
+			"operation":"pop"
+		}
+	}
 
-* vlan pop:
+As an example, the following NF-FG tags all the packets coming from interface `eth0` and forwards them on interface `eth1`.
 
-    "action":
     {
-        "vlan":
+        "flow-graph":
         {
-            "operation":"pop"
-        }
-    }  	
-	
+			"flow-rules": [
+			{
+				"id": "00000001",
+				"match":
+				{
+					"port" : "eth0"
+				},
+                "action":
+				{
+					"port": "eth1",
+					"vlan":
+					{
+						"operation":"push",
+						"vlan_id":"25"
+					}
+				}
+			}
+			]
+		}
+	}

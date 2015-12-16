@@ -54,16 +54,12 @@ if [ $ret -eq 0 ]
 then
 	echo "[$0] Image '"$3"' retrieved"
 else
-<<<<<<< HEAD
-	echo "[pullAndRunNF] Impossible to retrieve image '"$3"'"
+	echo "[$0] Impossible to retrieve image '"$3"'"
 	rm $tmp_file
 	if [ $remote == true ]
 	then
 		rm $exec_name
 	fi
-=======
-	echo "[$0] Impossible to retrieve image '"$3"'"
->>>>>>> master
 	exit 0
 fi
 

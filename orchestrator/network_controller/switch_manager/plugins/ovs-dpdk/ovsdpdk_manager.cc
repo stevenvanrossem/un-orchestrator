@@ -184,6 +184,8 @@ AddNFportsOut *OVSDPDKManager::addNFPorts(AddNFportsIn anpi)
 
   	//TODO: not implemented yet
 
+	assert(0 && "Method not implemented yet!");
+
 	AddNFportsOut *anpo = NULL;
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "addNFPorts(dpid: %" PRIu64 " NF:%s NFType:%d)", anpi.getDpid(), anpi.getNFname().c_str(), anpi.getNFtype());
 	list<string> nfs_ports = anpi.getNetworkFunctionsPorts();
@@ -197,6 +199,8 @@ AddVirtualLinkOut *OVSDPDKManager::addVirtualLink(AddVirtualLinkIn avli)
 { // SwitchManager implementation
 
 	//TODO: not implemented yet
+	
+	assert(0 && "Method not implemented yet!");
 
 	AddVirtualLinkOut *avlo = NULL;
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "addVirtualLink(dpid: %" PRIu64 " -> %" PRIu64 ")", avli.getDpidA(), avli.getDpidB());
@@ -221,6 +225,8 @@ void OVSDPDKManager::destroyVirtualLink(DestroyVirtualLinkIn dvli)
 { // SwitchManager implementation
 
 	//TODO: not implemented yet
+	
+	assert(0 && "Method not implemented yet!");
 
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "destroyVirtualLink(%" PRIu64 ".%" PRIu64 " -> %" PRIu64 ".%" PRIu64 ")",
 			dvli.getDpidA(), dvli.getIdA(), dvli.getDpidB(), dvli.getIdB());
@@ -230,4 +236,6 @@ void OVSDPDKManager::destroyVirtualLink(DestroyVirtualLinkIn dvli)
 void OVSDPDKManager::destroyNFPorts(DestroyNFportsIn dnpi)
 { // SwitchManager implementation
 	//TODO: not implemented yet
+	
+	assert(0 && "Method not implemented yet!");
 }

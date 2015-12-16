@@ -51,9 +51,9 @@ ret=`echo $?`
 
 if [ $ret -eq 0 ]
 then
-	echo "[pullAndRunNativeNF] Function '"$3"' retrieved"
+	echo "[$0] Function '"$3"' retrieved"
 else
-	echo "[pullAndRunNativeNF] Unable to retrieve function '"$3"'"
+	echo "[$0] Unable to retrieve function '"$3"'"
 	rm $tmp_file
 	if [ $remote == true ]
 	then
@@ -75,11 +75,11 @@ ret=`echo $?`
 if [ $ret -eq 0 ]
 then
 
-	echo "[pullAndRunNativeNF] Successful extracted from archive"
+	echo "[$0] Successful extracted from archive"
 
 else
 
-	echo "[pullAndRunNativeNF] Unable to extract native function '"$2"' from the archive"
+	echo "[$0] Unable to extract native function '"$2"' from the archive"
 	
 	rm $tmp_file
 	rm $archive_file
@@ -94,7 +94,7 @@ start="$temp_dir/start"
 
 if [ ! -f $start ]
 then
-	echo "[pullAndRunNativeNF] Start script for native function '"$2"' not found!"
+	echo "[$0] Start script for native function '"$2"' not found!"
 	exit 0
 fi	
 
@@ -133,7 +133,7 @@ done
 
 #command:= <script_name> <LSI_ID> <NF_NAME> <#PORTS> <PORT_NAMES ...>
 
-echo [`date`]"[pullAndRunNativeNF] Executing command: '"`cat $tmp_file`"'"
+echo [`date`]"[$0] Executing command: '"`cat $tmp_file`"'"
 
 bash $tmp_file
 

@@ -22,9 +22,8 @@ fi
 #debug
 #set -x
 
-#bridge name: <lsi_ID>_ovs_bridge
-br_name=$1_ovs_bridge
-#in this way we support just one bridge of this type for each graph!
+#bridge name: <lsi_ID>_<NFname>_ofb
+br_name=$1_$2_ofb
 
 #delete virtual links between this bridge and the LSI
 #restore original status of the ports connected to the LSI

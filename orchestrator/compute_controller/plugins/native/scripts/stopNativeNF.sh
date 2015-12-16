@@ -15,7 +15,7 @@
 
 if (( $EUID != 0 )) 
 then
-    echo "[stopNativeNF] This script must be executed with ROOT privileges"
+    echo "[$0] This script must be executed with ROOT privileges"
     exit 0
 fi
 
@@ -28,7 +28,7 @@ if [ -f $file ]
 then
 	sudo chmod +x $file
 	
-	echo [`date`]"[stopNativeNF] Executing command: '"`cat $file`"'"
+	echo [`date`]"[$0] Executing command: '"`cat $file`"'"
 	
 	#command:= <script_name> <LSI_ID> <NF_NAME> <#PORTS> <PORT_NAMES ...>
 	bash $file
@@ -54,6 +54,6 @@ fi
 #	current=`expr $current + 1`
 #done
 
-echo "[stopNativeNF] Native NF stopped"
+echo "[$0] Native NF stopped"
 
 exit 1;

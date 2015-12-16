@@ -28,9 +28,8 @@ sysctl -w net.ipv4.ip_forward=1
 #start openvswitch (if not started yet)
 /usr/share/openvswitch/scripts/ovs-ctl start
 
-#bridge name: <lsi_ID>_ovs_bridge
-br_name=$1_ovs_bridge
-#in this way we support just one bridge of this type for each graph!
+#bridge name: <lsi_ID>_<NFname>_ofb
+br_name=$1_$2_ofb
 
 
 #create the bridge
