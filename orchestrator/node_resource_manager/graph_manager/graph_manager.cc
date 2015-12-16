@@ -557,7 +557,6 @@ bool GraphManager::checkGraphValidity(highlevel::Graph *graph, ComputeController
 
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The command requires to retrieve %d new NFs",network_functions.size());
 
-	list<string> requiredNFs;
 	for(map<string,list<unsigned int> >::iterator nf = network_functions.begin(); nf != network_functions.end(); nf++)
 	{
 		nf_manager_ret_t retVal = computeController->retrieveDescription(nf->first);
