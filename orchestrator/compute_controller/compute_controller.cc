@@ -34,6 +34,29 @@ void ComputeController::setCoreMask(uint64_t core_mask)
 
 nf_manager_ret_t ComputeController::retrieveDescription(string nf)
 {
+
+	/*
+	 * Internal functions do not need to be retrieved from a repository
+	 */
+
+#ifdef VSWITCH_IMPLEMENTATION_OVSDB
+	/*
+	 * Internal function support is available only with OVS-OVSDB
+	 */
+
+	string prefix = "of_bridge";
+	if(!nf.compare(0, prefix.length(), prefix)){
+		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Function \"%s\" will be implemented with a native LSI",nf.c_str());
+		NF *new_nf = new NF(nf);
+		new_nf->addDescription(new Description(INTERNAL,""));
+
+		nfs[nf] = new_nf;
+
+		return NFManager_OK;
+	}
+
+#endif
+
 	try
  	{
  		string translation;
@@ -578,7 +601,6 @@ map<string, NF*>* ComputeController::selectImplementation()
 		NF *current = nf->second;
 
 		string prefix = "of_bridge";
-
 		if(!nf->first.compare(0, prefix.length(), prefix)){
 			if(current->getSelectedDescription() == NULL){
 				/*
