@@ -410,8 +410,11 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s){
 				//nf_type == INTERNAL => create virtual link to remote l3-lsi
 				if(nf_type[*nf] == INTERNAL){
 					uint64_t remote_id = cli.getOfBridgeID(*nf);
-					//name of the port on the tenant LSI = <portName>_<i>
+					//name of the port on the tenant LSI = <lsiID>_<portName>_<i>
 					string vrt(*nfp);
+					stringstream sstream;
+					sstream << "L" << remote_id << "_" << *nfp;
+					vrt = sstream.str();
 
 					//name of the port on the L3-LSI (peer) = <local_port_name>_p
 					string trv(vrt + "_p");
@@ -1101,8 +1104,11 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int s){
 				char ifac[64] = "iface";
 
 				uint64_t remote_id = anpi.getRemoteL3LsiId();
-				//name of the port on the tenant LSI = <portName>_<i>
+				//name of the port on the tenant LSI = L<lsiID>_<portName>_<i>
 				string vrt(*nf);
+				stringstream sstream;
+				sstream << "L" << remote_id << "_" << *nf;
+				vrt = sstream.str();
 
 				//name of the port on the L3-LSI (peer) = <local_port_name>_p
 				string trv(vrt + "_p");
