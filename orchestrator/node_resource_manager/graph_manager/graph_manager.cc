@@ -2005,6 +2005,10 @@ void GraphManager::printInfo(bool completed)
 #ifdef ENABLE_DIRECT_VM2VM
 bool GraphManager::executeCommandReleatedToPort(string port, string command)
 {
+	struct timeval t1;
+	gettimeofday(&t1, NULL);
+	printf("**** TIME(Request to QEMU): %ld.%06ld\n", t1.tv_sec, t1.tv_usec);
+
 	string graphID = SwitchPortsAssociation::getGraphID(port);
 	string nfName = SwitchPortsAssociation::getNfName(port);
 

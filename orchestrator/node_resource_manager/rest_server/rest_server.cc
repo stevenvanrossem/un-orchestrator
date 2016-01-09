@@ -6,7 +6,7 @@ GraphManager *RestServer::gm = NULL;
 #endif
 
 bool RestServer::init(char *nffg_filename,int core_mask, char *ports_file_name)
-{	
+{
 
 #ifdef UNIFY_NFFG
 	if(nffg_filename != NULL)
@@ -20,31 +20,31 @@ bool RestServer::init(char *nffg_filename,int core_mask, char *ports_file_name)
 	try
 	{
 		gm = new GraphManager(core_mask,string(ports_file_name));
-		
+
 	}catch (...)
 	{
-		return false;		
+		return false;
 	}
 
 	//Handle the file containing the first graph to be deployed
 	if(nffg_filename != NULL)
-	{	
+	{
 		sleep(2); //XXX This give time to the controller to be initialized
-		
+
 		if(!readGraphFromFile(nffg_filename))
 		{
 			delete gm;
 			return false;
 		}
 	}
-			
+
 	return true;
 }
 
 bool RestServer::readGraphFromFile(char *nffg_filename)
 {
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Considering the graph described in file '%s'",nffg_filename);
-	
+
 	std::ifstream file;
 	file.open(nffg_filename);
 	if(file.fail())
@@ -57,10 +57,10 @@ bool RestServer::readGraphFromFile(char *nffg_filename)
 	string str;
 	while (std::getline(file, str))
 	    stream << str << endl;
-	
+
 	if(createGraphFromFile(stream.str()) == 0)
 		return false;
-		
+
 	return true;
 }
 
@@ -68,7 +68,7 @@ bool RestServer::readGraphFromFile(char *nffg_filename)
 bool RestServer::toBeRemovedFromFile(char *filename)
 {
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Removing NFs and rules defined in file '%s'",filename);
-	
+
 	std::ifstream file;
 	file.open(filename);
 	if(file.fail())
@@ -81,32 +81,32 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 	string str;
 	while (std::getline(file, str))
 	    stream << str << endl;
-	
+
 	list<string> vnfsToBeRemoved;
 	list<string> rulesToBeRemoved;
-	
+
 	//Parse the content of the file
 	Value value;
 	read(stream.str(), value);
 	try
 	{
 		Object obj = value.getObject();
-		
+
 	  	bool foundFlowGraph = false;
-		
+
 		//Identify the flow rules
 		for( Object::const_iterator i = obj.begin(); i != obj.end(); ++i )
 		{
 	 	    const string& name  = i->first;
 		    const Value&  value = i->second;
-		
+
 		    if(name == FLOW_GRAPH)
 		    {
 		    	foundFlowGraph = true;
-		    	
+
 		    	bool foundVNFs = false;
 		    	bool foundFlowRules = false;
-		    	
+
 		  		Object flow_graph = value.getObject();
 		    	for(Object::const_iterator fg = flow_graph.begin(); fg != flow_graph.end(); fg++)
 		    	{
@@ -116,7 +116,7 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 				    {
 				    	foundVNFs = true;
 				    	const Array& vnfs_array = fg_value.getArray();
-				    					    	
+
 				    	//Iterate on the VNFs
 				    	for( unsigned int vnf = 0; vnf < vnfs_array.size(); ++vnf )
 						{
@@ -128,7 +128,7 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 							{
 								const string& nf_name  = nf->first;
 								const Value&  nf_value = nf->second;
-					
+
 								if(nf_name == _ID)
 								{
 									foundID = true;
@@ -152,26 +152,26 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 				    {
 				    	const Array& ids_array = fg_value.getArray();
 						foundFlowRules = true;
-					
+
 						//Iterate on the IDs
 						for( unsigned int id = 0; id < ids_array.size(); ++id )
 						{
 							Object id_object = ids_array[id].getObject();
-					
+
 							bool foundID = false;
-					
+
 							for( Object::const_iterator currentID = id_object.begin(); currentID != id_object.end(); ++currentID )
 							{
 								const string& idName  = currentID->first;
 								const Value&  idValue = currentID->second;
-						
+
 								if(idName == _ID)
 								{
 									foundID = true;
 									string theID = idValue.getString();
 									rulesToBeRemoved.push_back(theID);
 								}
-								else	
+								else
 								{
 									logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key \"%s\"",name.c_str());
 									return false;
@@ -214,19 +214,19 @@ bool RestServer::toBeRemovedFromFile(char *filename)
 		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The content does not respect the JSON syntax: ",e.what());
 		return false;
 	}
-	
+
 	for(list<string>::iterator tbr = rulesToBeRemoved.begin(); tbr != rulesToBeRemoved.end(); tbr++)
 	{
 		if(!gm->deleteFlow(GRAPH_ID,*tbr))
 			return false;
 	}
-	
+
 	for(list<string>::iterator tbr = vnfsToBeRemoved.begin(); tbr != vnfsToBeRemoved.end(); tbr++)
 	{
 		if(!gm->stopNetworkFunction(GRAPH_ID,*tbr))
 			return false;
 	}
-	
+
 	return true;
 }
 #endif
@@ -249,7 +249,7 @@ void RestServer::request_completed (void *cls, struct MHD_Connection *connection
 		free(con_info->message);
 		con_info->message = NULL;
 	}
-	
+
 	free (con_info);
 	*con_cls = NULL;
 }
@@ -259,20 +259,20 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 			const char *upload_data,
 			size_t *upload_data_size, void **con_cls)
 {
-	
+
 	if(NULL == *con_cls)
 	{
 		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "New %s request for %s using version %s", method, url, version);
 		if(LOGGING_LEVEL <= ORCH_DEBUG)
 			MHD_get_connection_values (connection, MHD_HEADER_KIND, &print_out_key, NULL);
-	
+
 		struct connection_info_struct *con_info;
 		con_info = (struct connection_info_struct*)malloc (sizeof (struct connection_info_struct));
-		
-		assert(con_info != NULL);		
+
+		assert(con_info != NULL);
 		if (NULL == con_info)
 			return MHD_NO;
-		
+
 		if ((0 == strcmp (method, PUT)) || (0 == strcmp (method, DELETE)) )
 		{
 			con_info->message = (char*)malloc(REQ_SIZE * sizeof(char));
@@ -285,18 +285,18 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 			con_info->message = (char*)malloc(REQ_SIZE * sizeof(char));
 			con_info->length = 0;
 		}
-	
+
 		*con_cls = (void*) con_info;
 		return MHD_YES;
 	}
 
 #ifdef UNIFY_NFFG
-	
+
 	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
 	assert(con_info != NULL);
 	if (0 != strcmp (method, GET))
 	{
-        //Extract the body of the HTTP request		
+        //Extract the body of the HTTP request
 		if (*upload_data_size != 0)
 		{
 			strcpy(&con_info->message[con_info->length],upload_data);
@@ -309,14 +309,14 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 			con_info->message[con_info->length] = '\0';
 		}
 	}
-	
+
 	/**
 	*	"answer" is handled as described here:
 	*	http://stackoverflow.com/questions/2838038/c-programming-malloc-inside-another-function
 	*/
 	char *answer;
 	handleRequest_status_t retVal = Virtualizer::handleRestRequest(con_info->message, &answer,url,method);
-	
+
 	if(retVal == HR_INTERNAL_ERROR)
 	{
 		struct MHD_Response *response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
@@ -335,14 +335,14 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 				//Something wrong happened during the manipulation of the graph
 				logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "An error occurred during the manipulation of the graph!");
 				logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "Please, reboot the orchestrator (and the vSwitch) in order to avoid inconsist state in the universal node");
-				
+
 				struct MHD_Response *response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
 				int ret = MHD_queue_response (connection, MHD_HTTP_INTERNAL_SERVER_ERROR, response);
 				MHD_destroy_response (response);
 				return ret;
 			}
 		}
-	
+
 		struct MHD_Response *response = MHD_create_response_from_buffer (strlen(answer),(void*)answer, MHD_RESPMEM_PERSISTENT);
 	    stringstream absolute_url;
 		absolute_url << REST_URL << ":" << REST_PORT << url;
@@ -356,7 +356,7 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 	if (0 == strcmp (method, GET))
 		return doGet(connection,url);
 	else if( (0 == strcmp (method, PUT)) || (0 == strcmp (method, DELETE)) )
-	{	
+	{
 		struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
 		assert(con_info != NULL);
 		if (*upload_data_size != 0)
@@ -394,8 +394,8 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 			return ret;
 		}
 	}
-#endif	
-	
+#endif
+
 	//Just to remove a warning in the compiler
 	return MHD_YES;
 }
@@ -420,7 +420,7 @@ int RestServer::doPut(struct MHD_Connection *connection, const char *url, void *
  	char * pnt;
 
 	char graphID[BUFFER_SIZE];
-	
+
 	char tmp[BUFFER_SIZE];
 	strcpy(tmp,url);
 	pnt=strtok(tmp, delimiter);
@@ -430,9 +430,9 @@ int RestServer::doPut(struct MHD_Connection *connection, const char *url, void *
 		switch(i)
 		{
 			case 0:
-				if((strcmp(pnt,BASE_URL_GRAPH) != 0) 
+				if((strcmp(pnt,BASE_URL_GRAPH) != 0)
 #ifdef ENABLE_DIRECT_VM2VM
-					&& (strcmp(pnt,BASE_URL_DIRECT_VM2VM) != 0) 
+					&& (strcmp(pnt,BASE_URL_DIRECT_VM2VM) != 0)
 #endif
 					)
 				{
@@ -443,22 +443,22 @@ put_malformed_url:
 					MHD_destroy_response (response);
 					return ret;
 				}
-				
-				
+
+
 #ifdef ENABLE_DIRECT_VM2VM
 				if(strcmp(pnt,BASE_URL_GRAPH) == 0)
 					putGraph = true;
 #endif
-				
+
 				break;
 			case 1:
 				strcpy(graphID,pnt);
 		}
-		
+
 		pnt = strtok( NULL, delimiter );
 		i++;
 	}
-	
+
 #ifdef ENABLE_DIRECT_VM2VM
 	if(! ((i == 2 && putGraph) || (i == 1 && !putGraph)))
 #else
@@ -468,8 +468,8 @@ put_malformed_url:
 		//the URL is malformed
 		goto put_malformed_url;
 	}
-	
-	
+
+
 	if(MHD_lookup_connection_value (connection,MHD_HEADER_KIND, "Host") == NULL)
 	{
 		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "\"Host\" header not present in the request");
@@ -478,7 +478,7 @@ put_malformed_url:
 		MHD_destroy_response (response);
 		return ret;
 	}
-	
+
 	/*	const char *c_type = MHD_lookup_connection_value (connection,MHD_HEADER_KIND, "Content-Type");
 	if(strcmp(c_type,JSON_C_TYPE) != 0)
 	{
@@ -488,8 +488,8 @@ put_malformed_url:
 		MHD_destroy_response (response);
 		return ret;
 	}*/
-	
-#ifdef ENABLE_DIRECT_VM2VM	
+
+#ifdef ENABLE_DIRECT_VM2VM
 	if(putGraph)
 #endif
 		return doPutGraph(connection,url,con_cls,graphID);
@@ -502,20 +502,24 @@ put_malformed_url:
 
 int RestServer::doPutGraph(struct MHD_Connection *connection, const char *url, void **con_cls, char *graphID)
 {
-	struct MHD_Response *response;	
+	struct timeval t1;
+        gettimeofday(&t1, NULL);
+        printf("**** TIME(Graph Received): %ld.%06ld\n", t1.tv_sec, t1.tv_usec);
+
+	struct MHD_Response *response;
 
 	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
 	assert(con_info != NULL);
-	
+
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Resource to be created/updated: %s",graphID);
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Content:");
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "%s",con_info->message);
-	
+
 	bool newGraph = !(gm->graphExists(graphID));
-	
+
 	string gID(graphID);
 	highlevel::Graph *graph = new highlevel::Graph(gID);
-	
+
 	if(!parsePutBody(*con_info,*graph,newGraph))
 	{
 		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Malformed content");
@@ -524,14 +528,14 @@ int RestServer::doPutGraph(struct MHD_Connection *connection, const char *url, v
 		MHD_destroy_response (response);
 		return ret;
 	}
-	
+
 	graph->print();
 	try
 	{
 
 		if(newGraph)
 		{
-			logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "A new graph must be created");		
+			logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "A new graph must be created");
 			if(!gm->newGraph(graph))
 			{
 				logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The graph description is not valid!");
@@ -551,8 +555,8 @@ int RestServer::doPutGraph(struct MHD_Connection *connection, const char *url, v
 				response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
 				int ret = MHD_queue_response (connection, MHD_HTTP_BAD_REQUEST, response);
 				MHD_destroy_response (response);
-				return ret;		
-			}	
+				return ret;
+			}
 		}
 	}catch (...)
 	{
@@ -562,10 +566,13 @@ int RestServer::doPutGraph(struct MHD_Connection *connection, const char *url, v
 		MHD_destroy_response (response);
 		return ret;
 	}
-	
+
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The graph has been properly %s!",(newGraph)? "created" : "updated");
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "");
-	
+
+        gettimeofday(&t1, NULL);
+        printf("**** TIME(Graph Updated): %ld.%06ld\n", t1.tv_sec, t1.tv_usec);
+
 	//TODO: put the proper content in the answer
 	response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
 	stringstream absolute_url;
@@ -574,27 +581,27 @@ int RestServer::doPutGraph(struct MHD_Connection *connection, const char *url, v
 	int ret = MHD_queue_response (connection, MHD_HTTP_CREATED, response);
 
 	MHD_destroy_response (response);
-	return ret;	
+	return ret;
 }
 
 int RestServer::createGraphFromFile(string toBeCreated)
 {
 	char graphID[BUFFER_SIZE];
 	strcpy(graphID,GRAPH_ID);
-	
+
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Graph ID: %s",graphID);
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Graph content:");
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "%s",toBeCreated.c_str());
-	
+
 	string gID(graphID);
 	highlevel::Graph *graph = new highlevel::Graph(gID);
-	
+
 	if(!parseGraphFromFile(toBeCreated,*graph,true))
 	{
 		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Malformed content");
 		return 0;
 	}
-	
+
 	graph->print();
 	try
 	{
@@ -644,22 +651,22 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 	try
 	{
 		Object obj = value.getObject();
-		
+
 	  	bool foundFlowGraph = false;
-		
+
 		//Identify the flow rules
 		for( Object::const_iterator i = obj.begin(); i != obj.end(); ++i )
 		{
 	 	    const string& name  = i->first;
 		    const Value&  value = i->second;
-		
+
 		    if(name == FLOW_GRAPH)
 		    {
 		    	foundFlowGraph = true;
-		    	
+
 		    	bool foundVNFs = false;
 		    	bool foundFlowRules = false;
-		    	
+
 		  		Object flow_graph = value.getObject();
 		    	for(Object::const_iterator fg = flow_graph.begin(); fg != flow_graph.end(); fg++)
 		    	{
@@ -675,17 +682,17 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 						//However, when there are no VNFs, we provide a warning
 				    	if(vnfs_array.size() != 0)
 					    	foundVNFs = true;
-				    	
+
 				    	//Itearate on the VNFs
 				    	for( unsigned int vnf = 0; vnf < vnfs_array.size(); ++vnf )
 						{
 							//This is a VNF, with an ID and a template
 							Object network_function = vnfs_array[vnf].getObject();
-#ifdef POLITO_MESSAGE							
+#ifdef POLITO_MESSAGE
 							bool foundTemplate = false;
-#endif					
+#endif
 							bool foundID = false;
-							
+
 							map<string,string> ipv4_addresses; 	//port name,ipv4 address
 							map<string,string> ipv4_masks;				//port name, ipv4 address
 
@@ -694,7 +701,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 							{
 								const string& nf_name  = nf->first;
 								const Value&  nf_value = nf->second;
-					
+
 								if(nf_name == _ID)
 								{
 									logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",VNFS,_ID,nf_value.getString().c_str());
@@ -720,20 +727,20 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 								}
 							}
 							if(
-#ifdef POLITO_MESSAGE							
+#ifdef POLITO_MESSAGE
 							!foundTemplate ||
-#endif							
+#endif
 							!foundID)
 							{
 								logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\", or key \"%s\", or both not found in an element of \"%s\"",_ID,TEMPLATE,VNFS);
 								return false;
 							}
-						}					
+						}
 
 				    }//end if(fg_name == VNFS)
 				    else if (fg_name == FLOW_RULES)
 				    {
-				    	
+
 				    	const Array& flow_rules_array = fg_value.getArray();
 
 
@@ -746,10 +753,10 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 							return false;
 				    	}
 #endif
-				    	
+
 				    	//Itearate on the flow rules
 				    	for( unsigned int fr = 0; fr < flow_rules_array.size(); ++fr )
-						{	
+						{
 							//This is a rule, with a match, an action, and an ID
 							Object flow_rule = flow_rules_array[fr].getObject();
 							highlevel::Action *action = NULL;
@@ -757,17 +764,16 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 							highlevel::Match match;
 							string ruleID;
 							uint64_t priority = 0;
-					
+
 							bool foundAction = false;
 							bool foundMatch = false;
 							bool foundID = false;
-						
 							//Parse the rule
 							for(Object::const_iterator afr = flow_rule.begin(); afr != flow_rule.end(); afr++)
 							{
 								const string& fr_name  = afr->first;
 								const Value&  fr_value = afr->second;
-					
+
 								if(fr_name == _ID)
 								{
 									foundID = true;
@@ -800,7 +806,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 									{
 										const string& a_name  = a->first;
 										const Value&  a_value = a->second;
-	
+
 										if(a_name == PORT)
 										{
 											if(foundOne)
@@ -809,12 +815,12 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 												return false;
 											}
 											foundOne = true;
-											
+
 #ifdef UNIFY_NFFG
 											//In this case, the virtualized port name must be translated into the real one.
 											try
 											{
-												string realName = Virtualizer::getRealName(a_value.getString());											
+												string realName = Virtualizer::getRealName(a_value.getString());
 #else
 												string realName = a_value.getString();
 #endif
@@ -826,7 +832,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 												logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Error while translating the virtualized port '%s': %s",value.getString().c_str(),e.what());
 												return false;
 											}
-#endif		
+#endif
 										}
 										else if(a_name == VNF_ID)
 										{
@@ -836,18 +842,18 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 												return false;
 											}
 											foundOne = true;
-										
+
 											logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",ACTION,VNF_ID,a_value.getString().c_str());
-										
+
 											string name = MatchParser::nfName(a_value.getString());
 											unsigned int port = MatchParser::nfPort(a_value.getString());
 											if(name == "" || port == 0)
 											{
 												logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Network function \"%s\" is not valid. It must be in the form \"name:port\"",a_value.getString().c_str());
-												return false;	
+												return false;
 											}
 											action = new highlevel::ActionNetworkFunction(name, port);
-										
+
 											set<unsigned int> ports_found;
 											if(nfs_ports_found.count(name) != 0)
 												ports_found = nfs_ports_found[name];
@@ -862,15 +868,15 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 												return false;
 											}
 											foundOne = true;
-										
+
 											logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",ACTION,ENDPOINT_ID,a_value.getString().c_str());
-										
+
 											string graph_id = MatchParser::graphID(a_value.getString());
 											unsigned int endPoint = MatchParser::graphEndPoint(a_value.getString());
 											if(graph_id == "" || endPoint == 0)
 											{
 												logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Graph end point \"%s\" is not valid. It must be in the form \"graphID:endpoint\"",value.getString().c_str());
-												return false;	
+												return false;
 											}
 											action = new highlevel::ActionEndPoint(graph_id, endPoint);
 											graph.addEndPoint(graph_id,action->toString());
@@ -878,19 +884,19 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 										else if(a_name == VLAN)
 										{
 											//A vlan push/pop action is required
-											
+
 											bool foundOperation = false;
 											bool foundVlanID = false;
-											
+
 											vlan_action_t actionType;
 											unsigned int vlanID = 0;
-																					
+
 											Object vlanAction = a_value.getObject();
 											for(Object::const_iterator vl = vlanAction.begin(); vl != vlanAction.end(); vl++)
 											{
 												const string& vl_name  = vl->first;
 												const Value&  vl_value = vl->second;
-												
+
 												if(vl_name == VLAN_OP)
 												{
 													foundOperation = true;
@@ -902,14 +908,14 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 													else
 													{
 														logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid value \"%s\" for key \"%s\"",theOperation.c_str(),VLAN_OP);
-														return false;		
+														return false;
 													}
 												}
 												else if(vl_name == VLAN_ID)
 												{
 													foundVlanID = true;
 													string strVlanID = vl_value.getString();
-													sscanf(strVlanID.c_str(),"%u",&vlanID);													
+													sscanf(strVlanID.c_str(),"%u",&vlanID);
 												}
 												else
 												{
@@ -917,7 +923,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 													return false;
 												}
 											}
-											
+
 											if(!foundOperation)
 											{
 												logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in \"%s\"",VLAN_OP,VLAN);
@@ -934,10 +940,10 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 												return false;
 											}
 											//Finally, we are sure that the command is correct!
-											
+
 											GenericAction *ga = new VlanAction(actionType,vlanID);
 											genericActions.push_back(ga);
-											
+
 										}//end if(a_name == VLAN)
 										else
 										{
@@ -945,18 +951,18 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 											return false;
 										}
 									}
-	
+
 									if(!foundOne)
 									{
 										logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Neither Key \"%s\", nor key \"%s\" found in \"%s\"",PORT,VNF_ID,ACTION);
 										return false;
 									}
-									
+
 									for(list<GenericAction*>::iterator ga = genericActions.begin(); ga != genericActions.end(); ga++)
 									{
 										action->addGenericAction(*ga);
 									}
-							
+
 								}//end if(fr_name == ACTION)
 								else
 								{
@@ -964,21 +970,21 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 									return false;
 								}
 							}
-						
+
 							if(!foundAction || !foundMatch || !foundID)
 							{
 								logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\", or key \"%s\", or key \"%s\", or all of them not found in an elmenet of \"%s\"",_ID,MATCH,ACTION,FLOW_RULES);
 								return false;
 							}
-						
+
 							highlevel::Rule rule(match,action,ruleID,priority);
-							
+
 							if(!graph.addRule(rule))
 							{
 								logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The graph has at least two rules with the same ID: %s",ruleID.c_str());
 								return false;
 							}
-					
+
 						}//for( unsigned int fr = 0; fr < flow_rules_array.size(); ++fr )
 				    }// end  if (fg_name == FLOW_RULES)
 				    else
@@ -1019,7 +1025,7 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 	{
 		set<unsigned int> ports = it->second;
 		assert(ports.size() != 0);
-		
+
 		for(set<unsigned int>::iterator p = ports.begin(); p != ports.end(); p++)
 		{
 			if(!graph.updateNetworkFunction(it->first,*p))
@@ -1041,13 +1047,13 @@ bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
 				}
 			}
 		}
-		
+
 		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "NF \"%s\" requires ports:",it->first.c_str());
 		for(set<unsigned int>::iterator p = ports.begin(); p != ports.end(); p++)
 			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "\t%d",*p);
 	}
-#endif	
-	
+#endif
+
 	return true;
 }
 
@@ -1055,9 +1061,9 @@ int RestServer::doGet(struct MHD_Connection *connection, const char *url)
 {
 	struct MHD_Response *response;
 	int ret;
-	
+
 	bool request = false; //false->graph - true->interfaces
-	
+
 	//Check the URL
 	char delimiter[] = "/";
  	char * pnt;
@@ -1089,7 +1095,7 @@ get_malformed_url:
 			case 1:
 				strcpy(graphID,pnt);
 		}
-		
+
 		pnt = strtok( NULL, delimiter );
 		i++;
 	}
@@ -1098,7 +1104,7 @@ get_malformed_url:
 		//the URL is malformed
 		goto get_malformed_url;
 	}
-	
+
 	if(MHD_lookup_connection_value (connection,MHD_HEADER_KIND, "Host") == NULL)
 	{
 		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "\"Host\" header not present in the request");
@@ -1107,7 +1113,7 @@ get_malformed_url:
 		MHD_destroy_response (response);
 		return ret;
 	}
-	
+
 	if(!request)
 		//request for a graph description
 		return doGetGraph(connection,graphID);
@@ -1120,11 +1126,11 @@ int RestServer::doGetGraph(struct MHD_Connection *connection,char *graphID)
 {
 	struct MHD_Response *response;
 	int ret;
-	
+
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Required resource: %s",graphID);
-	
+
 	if(!gm->graphExists(graphID))
-	{	
+	{
 		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Method GET is not supported for this resource");
 		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
 		MHD_add_response_header (response, "Allow", PUT);
@@ -1132,16 +1138,16 @@ int RestServer::doGetGraph(struct MHD_Connection *connection,char *graphID)
 		MHD_destroy_response (response);
 		return ret;
 	}
-	
+
 	try
 	{
 		Object json = gm->toJSON(graphID);
 		stringstream ssj;
  		write_formatted(json, ssj );
- 		string sssj = ssj.str();		
+ 		string sssj = ssj.str();
  		char *aux = (char*)malloc(sizeof(char) * (sssj.length()+1));
  		strcpy(aux,sssj.c_str());
-		response = MHD_create_response_from_buffer (strlen(aux),(void*) aux, MHD_RESPMEM_PERSISTENT);		
+		response = MHD_create_response_from_buffer (strlen(aux),(void*) aux, MHD_RESPMEM_PERSISTENT);
 		MHD_add_response_header (response, "Content-Type",JSON_C_TYPE);
 		MHD_add_response_header (response, "Cache-Control",NO_CACHE);
 		ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
@@ -1161,7 +1167,7 @@ int RestServer::doGetInterfaces(struct MHD_Connection *connection)
 {
 	struct MHD_Response *response;
 	int ret;
-	
+
 	try
 	{
 		Object json = gm->toJSONPhysicalInterfaces();
@@ -1170,7 +1176,7 @@ int RestServer::doGetInterfaces(struct MHD_Connection *connection)
  		string sssj = ssj.str();
  		char *aux = (char*)malloc(sizeof(char) * (sssj.length()+1));
  		strcpy(aux,sssj.c_str());
-		response = MHD_create_response_from_buffer (strlen(aux),(void*) aux, MHD_RESPMEM_PERSISTENT);		
+		response = MHD_create_response_from_buffer (strlen(aux),(void*) aux, MHD_RESPMEM_PERSISTENT);
 		MHD_add_response_header (response, "Content-Type",JSON_C_TYPE);
 		MHD_add_response_header (response, "Cache-Control",NO_CACHE);
 		ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
@@ -1190,7 +1196,7 @@ int RestServer::doDelete(struct MHD_Connection *connection, const char *url, voi
 {
 	struct MHD_Response *response;
 	int ret;
-	
+
 	//Check the URL
 	char delimiter[] = "/";
  	char * pnt;
@@ -1198,7 +1204,7 @@ int RestServer::doDelete(struct MHD_Connection *connection, const char *url, voi
 	char graphID[BUFFER_SIZE];
 	char flowID[BUFFER_SIZE];
 	bool specificFlow = false;
-	
+
 	char tmp[BUFFER_SIZE];
 	strcpy(tmp,url);
 	pnt=strtok(tmp, delimiter);
@@ -1225,7 +1231,7 @@ delete_malformed_url:
 				strcpy(flowID,pnt);
 				specificFlow = true;
 		}
-		
+
 		pnt = strtok( NULL, delimiter );
 		i++;
 	}
@@ -1234,7 +1240,7 @@ delete_malformed_url:
 		//the URL is malformed
 		goto delete_malformed_url;
 	}
-	
+
 	if(MHD_lookup_connection_value (connection,MHD_HEADER_KIND, "Host") == NULL)
 	{
 		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "\"Host\" header not present in the request");
@@ -1243,7 +1249,7 @@ delete_malformed_url:
 		MHD_destroy_response (response);
 		return ret;
 	}
-	
+
 	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
 	assert(con_info != NULL);
 	if(con_info->length != 0)
@@ -1254,7 +1260,7 @@ delete_malformed_url:
 		MHD_destroy_response (response);
 		return ret;
 	}
-	
+
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Deleting resource: %s/%s",graphID,(specificFlow)?flowID:"");
 
 	if(!gm->graphExists(graphID) || (specificFlow && !gm->flowExists(graphID,flowID)))
@@ -1266,9 +1272,9 @@ delete_malformed_url:
 		MHD_destroy_response (response);
 		return ret;
 	}
-	
+
 	try
-	{	
+	{
 		if(!specificFlow)
 		{
 			//The entire graph must be deleted
@@ -1296,8 +1302,8 @@ delete_malformed_url:
 			else
 				logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The flow has been properly deleted!");
 		}
-		
-		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);		
+
+		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
 		ret = MHD_queue_response (connection, MHD_HTTP_NO_CONTENT, response);
 		MHD_destroy_response (response);
 		return ret;
@@ -1308,42 +1314,46 @@ delete_malformed_url:
 		ret = MHD_queue_response (connection, MHD_HTTP_INTERNAL_SERVER_ERROR, response);
 		MHD_destroy_response (response);
 		return ret;
-	}	
+	}
 }
 
 
 #ifdef ENABLE_DIRECT_VM2VM
 int RestServer::doPutCommandReletedToPort(struct MHD_Connection *connection, void **con_cls)
 {
+	struct timeval t1;
+	gettimeofday(&t1, NULL);
+	printf("**** TIME(Rest Request Received): %ld.%06ld\n", t1.tv_sec, t1.tv_usec);
+
 	struct MHD_Response *response;
 	int ret;
-	
+
 	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
 	assert(con_info != NULL);
-	
+
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Content of the request:");
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "%s",con_info->message);
-	
+
 	Value value;
 	read(con_info->message, value);
 	//value contains the json in the body
-	
+
 	string port;
 	string command;
-	
+
 	try
 	{
 		Object obj = value.getObject();
-		
+
 	  	bool foundPort = false;
 	  	bool foundCommand = false;
-		
+
 		//Identify the flow rules
 		for( Object::const_iterator i = obj.begin(); i != obj.end(); ++i )
 		{
 	 	    const string& name  = i->first;
 		    const Value&  value = i->second;
-		    
+
 			if(name == DIRECT_VM2VM_PORT)
 			{
 				foundPort = true;
@@ -1365,22 +1375,22 @@ int RestServer::doPutCommandReletedToPort(struct MHD_Connection *connection, voi
 		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The content does not respect the JSON syntax: ",e.what());
 		goto malformed_content;
 	}
-    
+
     //The content of the received message is syntactically correct is correct
-    
+
     if(!gm->executeCommandReleatedToPort(port,command))
 	{
 		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The command '%s' is not valid!",command.c_str());
-		goto malformed_content;	
+		goto malformed_content;
 	}
-    
+
     logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The command '%s' related to the port '%s' has been executed!",command.c_str(),command.c_str());
 	response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
 //	MHD_add_response_header (response, "Location", absolute_url.str().c_str());
 	ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
 	MHD_destroy_response (response);
 	return ret;
-	
+
 malformed_content:
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Malformed content");
 	response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
