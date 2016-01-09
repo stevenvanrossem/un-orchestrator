@@ -891,7 +891,7 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 		thr[i].nf_name = nf->first;
 		thr[i].computeController = computeController;
 		thr[i].namesOfPortsOnTheSwitch = lsi->getNetworkFunctionsPortsNameOnSwitch(nf->first);
-		thr[i].cpu_core = i+1;
+		thr[i].cpu_core = i+11;
 
 		if (pthread_create(&some_thread[i], NULL, &startNF, (void *)&thr[i]) != 0)
 		{
