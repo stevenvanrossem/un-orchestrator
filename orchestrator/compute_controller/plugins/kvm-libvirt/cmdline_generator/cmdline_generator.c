@@ -57,7 +57,7 @@ int get_mempool_cmdline(char * cmdline, int size)
 	* XXX: improve the wasy the memory pool is looked, the name could not
 	* always be the same
 	*/
-	packets_pool = rte_mempool_lookup("ovs_mp_1500_1_262144");
+	packets_pool = rte_mempool_lookup("ovs_mp_1500_0_262144");
 	if(packets_pool == NULL)
 	{
 		goto error;
