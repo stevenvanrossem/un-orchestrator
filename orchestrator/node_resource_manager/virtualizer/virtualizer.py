@@ -2,10 +2,16 @@
 __author__ = 'Ivano Cerrato'
 
 #NF-FG library
-import sys
-sys.path.append('virtualizer')
-import os, imp
-imp.load_source("virtualizer", os.path.join(os.path.dirname(__file__), "../../virtualizer/virtualizer3.py"))
+#
+# IVANO: this code must be used to import the virtualizer, in case it is added to the orchestratr
+# as a submodule
+#
+#import sys
+#sys.path.append('virtualizer')
+#import os, imp
+#imp.load_source("virtualizer", os.path.join(os.path.dirname(__file__), "../../virtualizer/virtualizer3.py"))
+
+from virtualizer4 import *
 
 #Constants used by the parser
 import constants
