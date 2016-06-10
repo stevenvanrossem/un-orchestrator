@@ -344,6 +344,7 @@ bool GraphManager::deleteGraph(string graphID)
 	/**
 	*	Stop the monitoring controller
 	*/
+	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "0) Stopping the monitoring controller...");
 	MonitoringController *monitoringController = (tenantLSIs.find(graphID))->second.getMonitoringController();
 	monitoringController->stopMonitoring();
 #endif
@@ -1146,6 +1147,7 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 			vnfsPortsMapping.push_back(lsi->getNetworkFunctionsPortsNameOnSwitchMap(vnf->getName()));
 		}
 
+		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Starting the monitoring controller for the new graph");
 		monitoringController->startMonitoring(graph->getMeasureString(),portsMapping,vnfsMapping,vnfsPortsMapping);
 #endif
 	} catch (SwitchManagerException e)

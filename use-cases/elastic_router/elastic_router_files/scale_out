@@ -1,0 +1,2 @@
+#!/bin/bash
+curl -X GET localhost:10000/scale/out

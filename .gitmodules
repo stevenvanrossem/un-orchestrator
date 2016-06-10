@@ -27,3 +27,9 @@
 [submodule "use-cases/elastic_router/ramon/ramon_src"]
 	path = use-cases/elastic_router/ramon/ramon_src
 	url = https://github.com/nigsics/ramon
+[submodule "use-cases/elastic_router/DoubleDecker-py"]
+	path = use-cases/elastic_router/DoubleDecker-py
+	url = https://github.com/Acreo/DoubleDecker-py.git
+[submodule "use-cases/elastic_router/MEASURE"]
+	path = use-cases/elastic_router/MEASURE
+	url = https://github.com/Acreo/MEASURE.git
