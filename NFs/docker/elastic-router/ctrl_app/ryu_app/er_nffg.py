@@ -3,6 +3,7 @@ import logging
 import os
 logging.basicConfig(level=logging.DEBUG)
 
+#from xml_er import remove_measure_to_ovs_vnfs
 def get_nffg_xml(base_url):
     url = base_url + '/get-config'
     logging.info('url: {0}'.format(url))
@@ -10,6 +11,7 @@ def get_nffg_xml(base_url):
     # by default a GET request is created:
     req = urllib2.Request(url, '')
     nffg_xml = urllib2.urlopen(req).read()
+    nffg_xml = remove_measure_to_ovs_vnfs(nffg_xml)
     return nffg_xml
 
 
