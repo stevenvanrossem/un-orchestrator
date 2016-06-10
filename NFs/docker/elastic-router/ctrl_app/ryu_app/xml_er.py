@@ -14,6 +14,23 @@ nffg_log.setLevel(logging.DEBUG)
 # fixed universal node id, always pick this one
 NODE_ID = 'UUID11'
 
+
+MEASURE_STRING = (" measurements {{"
+    "m1 = cpu(vnf = {0});"
+    "m2 = mem(vnf = {0});"
+    "}}"
+    "zones {{"
+    """z1 = (AVG(val = m1, max_age = "5 minute") < 0.5);"""
+    """z2 = (AVG(val = m2, max_age = "5 minute") > 0.5);"""
+    "}}"
+    """actions {{z1->z2 = Publish(topic = "alarms", message = "z1 to z2"); Notify(target = "alarms", message = "z1 to z2");"""
+    """z2->z1 = Publish(topic = "alarms", message = "z2 to z");"""
+    """->z1 = Publish(topic = "alarms", message = "entered z1");"""
+    """z1-> = Publish(topic = "alarms", message = "left z1");"""
+    """z1 = Publish(topic = "alarms", message = "in z1");"""
+    """z2 = Publish(topic = "alarms", message = "in z2");"""
+    "}}")
+
 def get_virtualizer_nffg(nffg_xml):
     try:
         tree = ET.fromstring(nffg_xml)
@@ -330,8 +347,46 @@ def getFlowRulesSendingTrafficFromPort(un, vnfId, portId):
 
     return flow_rules
 
+# remove all measure strings of all ovs vnfs in the nffg
+def remove_measure_to_ovs_vnfs(nffg_xml):
 
-def add_ovs_vnf(nffg_xml, nffg_id, ovs_id, name, vnftype, numports):
+    nffg = get_virtualizer_nffg(nffg_xml)
+    un = get_UN_node(nffg)
+
+    nf_instances = un.NF_instances
+    for nf in nf_instances:
+        nf_name = nf.name.get_value()
+        nf_type = nf.type.get_value()
+        nf_id = nf.id.get_value()
+
+        logging.debug("found NF: {0}".format(nf.name.get_value()))
+        if 'ovs' in nf_type:
+            measurestring = ""
+            nf.metadata.add(MetadataMetadata(key='measure', value=measurestring))
+
+    return nffg.xml()
+
+# add the measure string to all ovs vnfs in the nffg
+def add_measure_to_ovs_vnfs(nffg_xml):
+
+    nffg = get_virtualizer_nffg(nffg_xml)
+    un = get_UN_node(nffg)
+
+    nf_instances = un.NF_instances
+    for nf in nf_instances:
+        nf_name = nf.name.get_value()
+        nf_type = nf.type.get_value()
+        nf_id = nf.id.get_value()
+
+        logging.debug("found NF: {0}".format(nf.name.get_value()))
+        if 'ovs' in nf_type:
+            measurestring = MEASURE_STRING.format(nf_id)
+            nf.metadata.add(MetadataMetadata(key='measure', value=measurestring))
+
+    return nffg.xml()
+
+
+def add_ovs_vnf(nffg_xml, nffg_id, ovs_id, name, vnftype, numports, add_measure=False):
 
     mac = str(hex(int(ovs_id))[2:]).zfill(2)
     ovs_mac = '00:00:00:00:00:{0}'.format(mac)
@@ -366,24 +421,11 @@ def add_ovs_vnf(nffg_xml, nffg_id, ovs_id, name, vnftype, numports):
     vnf.metadata.add(MetadataMetadata(key='variable:OVS_DPID', value='99{0}'.format(str(ovs_id).zfill(14))))
     vnf.metadata.add(MetadataMetadata(key='variable:CONTROLLER', value='tcp:10.0.10.100:6633'))
 
-    # create very long measure string without newlines included
-    measurestring = (" measurements {{"
-    "m1 = cpu(vnf = {0});"
-    "m2 = mem(vnf = {0});"
-    "}}"
-    "zones {{"
-    "z1 = (AVG(val = m1, max_age = \"5 minute\") &lt; 0.5);"
-    "z2 = (AVG(val = m2, max_age = \"5 minute\") &gt; 0.5);"
-    "}}"
-    "actions {{z1->z2 = Publish(topic = \"alarms\", message = \"z1 to z2\"); Notify(target = \"alarms\", message = \"z1 to z2\");"
-    "z2->z1 = Publish(topic = \"alarms\", message = \"z2 to z\");"
-    "->z1 = Publish(topic = \"alarms\", message = \"entered z1\");"
-    "z1-> = Publish(topic = \"alarms\", message = \"left z1\");"
-    "z1 = Publish(topic = \"alarms\", message = \"in z1\");"
-    "z2 = Publish(topic = \"alarms\", message = \"in z2\");"
-    "}}").format(nffg_id)
+    # create very long measure string without newlines included, without escaped chars, fit for printing into xml...
+    measurestring = MEASURE_STRING.format(nffg_id)
 
-    vnf.metadata.add(MetadataMetadata(key='measure', value=measurestring))
+    if add_measure:
+        vnf.metadata.add(MetadataMetadata(key='measure', value=measurestring))
 
     vnf.set_operation(operation="create",  recursive=False)
     un.NF_instances.add(vnf)

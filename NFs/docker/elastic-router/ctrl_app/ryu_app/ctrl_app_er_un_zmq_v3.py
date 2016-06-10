@@ -323,7 +323,6 @@ class ElasticRouter(app_manager.RyuApp):
 
         # send via cf-or
         #self.send_nffg(nffg_intermediate)
-        # first remove all vnfs and flowentries without create attribute
         er_nffg.send_nffg(self.REST_Cf_Or, (nffg_intermediate))
 
         # set parsed nffg
@@ -414,6 +413,10 @@ class ElasticRouter(app_manager.RyuApp):
 
         self.logger.info('restored priorities of flow entries to 10')
         # er_nffg.send_nffg(self.REST_Cf_Or ,er_nffg.remove_quotations_from_ports(new_nffg))
+
+        #add the final measure data
+        new_nffg = er_nffg.add_measure_to_ovs_vnfs(new_nffg)
+        # send the final nffg
         self.nffg = er_nffg.send_nffg(self.REST_Cf_Or, new_nffg)
 
         #self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
