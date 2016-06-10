@@ -140,23 +140,6 @@
 				<supported_NFs>
 					<node>
 						<id>NF1</id>
-						<name>iptables based firewall</name>
-						<type>fw</type>
-						<ports>
-							<port>
-								<id>1</id>
-								<name>VNF port 1</name>
-								<port_type>port-abstract</port_type>
-							</port>
-							<port>
-								<id>2</id>
-								<name>VNF port 2</name>
-								<port_type>port-abstract</port_type>
-							</port>
-						</ports>
-					</node>
-					<node>
-						<id>NF2</id>
 						<name>openvswitch in userspace with 1 control port, 4 switch ports, and external ssh login enabled</name>
 						<type>ovs1</type>
 						<ports>
@@ -188,9 +171,41 @@
 						</ports>
 					</node>
 					<node>
-						<id>NF3</id>
+						<id>NF2</id>
 						<name>openvswitch in userspace with 1 control port, 4 switch ports, and external ssh login enabled</name>
 						<type>ovs2</type>
+						<ports>
+							<port>
+								<id>1</id>
+								<name>VNF port 1</name>
+								<port_type>port-abstract</port_type>
+							</port>
+							<port>
+								<id>2</id>
+								<name>VNF port 2</name>
+								<port_type>port-abstract</port_type>
+							</port>
+							<port>
+								<id>3</id>
+								<name>VNF port 3</name>
+								<port_type>port-abstract</port_type>
+							</port>
+							<port>
+								<id>4</id>
+								<name>VNF port 4</name>
+								<port_type>port-abstract</port_type>
+							</port>
+							<port>
+								<id>5</id>
+								<name>VNF port 5</name>
+								<port_type>port-abstract</port_type>
+							</port>
+						</ports>
+					</node>
+					<node>
+						<id>NF3</id>
+						<name>openvswitch in userspace with 1 control port, 4 switch ports, and external ssh login enabled</name>
+						<type>ovs3</type>
 						<ports>
 							<port>
 								<id>1</id>
@@ -238,8 +253,8 @@
 					</node>
 					<node>
 						<id>NF5</id>
-						<name>openvswitch in userspace with 1 control port, 4 switch ports, and external ssh login enabled</name>
-						<type>ovs3</type>
+						<name>iptables based firewall</name>
+						<type>fw</type>
 						<ports>
 							<port>
 								<id>1</id>
@@ -249,21 +264,6 @@
 							<port>
 								<id>2</id>
 								<name>VNF port 2</name>
-								<port_type>port-abstract</port_type>
-							</port>
-							<port>
-								<id>3</id>
-								<name>VNF port 3</name>
-								<port_type>port-abstract</port_type>
-							</port>
-							<port>
-								<id>4</id>
-								<name>VNF port 4</name>
-								<port_type>port-abstract</port_type>
-							</port>
-							<port>
-								<id>5</id>
-								<name>VNF port 5</name>
 								<port_type>port-abstract</port_type>
 							</port>
 						</ports>
