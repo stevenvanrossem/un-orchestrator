@@ -1014,7 +1014,7 @@ When monitoring is required, the un-orchestrator automatically sends a message l
 				"VNFs" : [
 				{
 					"id" : "00000001",
-					"name" : "2_sink",
+					"name" : "2_00000001",
 					"ports" : [
 					{
 						"id" : 1,
