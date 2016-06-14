@@ -1142,9 +1142,9 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 		for(list<highlevel::VNFs>::iterator vnf = vnfs.begin(); vnf != vnfs.end(); vnf++)
 		{
 			stringstream name;
-			name << dpid << "_" << vnf->getName();
+			name << dpid << "_" << vnf->getId();
 			vnfsMapping.push_back(make_pair(vnf->getId(),name.str()));
-			vnfsPortsMapping.push_back(lsi->getNetworkFunctionsPortsNameOnSwitchMap(vnf->getName()));
+			vnfsPortsMapping.push_back(lsi->getNetworkFunctionsPortsNameOnSwitchMap(vnf->getId()));
 		}
 
 		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Starting the monitoring controller for the new graph");
@@ -1527,10 +1527,10 @@ bool GraphManager::updateGraph(string graphID, highlevel::Graph *newGraph)
 		for(list<highlevel::VNFs>::iterator vnf = vnfs.begin(); vnf != vnfs.end(); vnf++)
 		{
 			stringstream name;
-			name << lsi->getDpid() << "_" << vnf->getName();
+			name << lsi->getDpid() << "_" << vnf->getId();
 			vnfsMapping.push_back(make_pair(vnf->getId(),name.str()));
 			
-			vnfsPortsMapping.push_back(lsi->getNetworkFunctionsPortsNameOnSwitchMap(vnf->getName()));
+			vnfsPortsMapping.push_back(lsi->getNetworkFunctionsPortsNameOnSwitchMap(vnf->getId()));
 		}
 
 		monitoringController->startMonitoring(graph->getMeasureString(),portsMapping,vnfsMapping,vnfsPortsMapping);
