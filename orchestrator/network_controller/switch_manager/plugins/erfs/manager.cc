@@ -57,6 +57,7 @@ CreateLsiOut *ERFSManager::createLsi(CreateLsiIn cli)
     }
 
     // Add NF ports
+    map<string,map<string, unsigned int> > out_nf_ports_name_and_id;
     typedef map<string,PortsNameIdMap> NfPortsMapMap;
     NfPortsMapMap out_nf_ports;
     map<string,nf_t> nf_types = cli.getNetworkFunctionsType();
@@ -64,12 +65,16 @@ CreateLsiOut *ERFSManager::createLsi(CreateLsiIn cli)
     set<string> nfs = cli.getNetworkFunctionsName();
     for(set<string>::iterator nf = nfs.begin(); nf != nfs.end(); nf++) {
 //        list<string> port_name_on_switch;
+        map<string, unsigned int> port_names_and_id;
         AddNFportsIn anfpi(dpid, *nf, nf_types[*nf], cli.getNetworkFunctionsPortsInfo(*nf));
         AddNFportsOut *anfpo = addNFPorts(anfpi);
-        if (anfpo == NULL) logger(ORCH_WARNING, ERFS_MAN_MODULE_NAME, __FILE__, __LINE__, "error in nfport add");
+        if (anfpo == NULL) 
+            logger(ORCH_WARNING, ERFS_MAN_MODULE_NAME, __FILE__, __LINE__, "error in nfport add");
         out_nf_ports.insert(NfPortsMapMap::value_type(*nf, anfpo->getPorts()));
         out_nf_ports_name_on_switch[*nf] = anfpo->getPortsNameOnSwitch();
         delete anfpo;
+
+        out_nf_ports_name_and_id[*nf] = port_names_and_id;
     }
 
     // Add Ports for Virtual Links (patch ports)
@@ -84,7 +89,7 @@ CreateLsiOut *ERFSManager::createLsi(CreateLsiIn cli)
         vlink_n++;
     }
 
-    CreateLsiOut *clo = new CreateLsiOut(dpid, out_physical_ports, out_nf_ports, endpoints_ports, out_nf_ports_name_on_switch, out_virtual_links);
+    CreateLsiOut *clo = new CreateLsiOut(dpid, out_physical_ports, out_nf_ports, endpoints_ports, out_nf_ports_name_on_switch, out_virtual_links,out_nf_ports_name_and_id);
     return clo;
 }
 
