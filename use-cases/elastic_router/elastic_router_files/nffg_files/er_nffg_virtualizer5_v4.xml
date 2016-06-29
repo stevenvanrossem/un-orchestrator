@@ -265,10 +265,19 @@
 						<value>measurements {
 m1 = cpu(vnf = 2);
 m2 = mem(vnf = 2);
+m3 = overload.risk.rx(interface = virtual-sap1);
+m4 = overload.risk.rx(interface = virtual-sap2);
+m5 = overload.risk.rx(interface = virtual-sap3);
+m6 = overload.risk.rx(interface = virtual-sap4);
 }
 zones {
 z1 = (AVG(val = m1, max_age = "5 minute") &lt; 0.5);
 z2 = (AVG(val = m2, max_age = "5 minute") &gt; 0.5);
+z3 = (AVG(val = m3, max_age = "5 minute") &lt; 0.5);
+z4 = (AVG(val = m4, max_age = "5 minute") &gt; 0.5);
+z5 = (AVG(val = m5, max_age = "5 minute") &lt; 0.5);
+z6 = (AVG(val = m6, max_age = "5 minute") &gt; 0.5);
+
 }
 actions {
 z1->z2 = Publish(topic = "alarms", message = "z1 to z2"); Notify(target = "alarms", message = "z1 to z2");
@@ -277,6 +286,10 @@ z2->z1 = Publish(topic = "alarms", message = "z2 to z");
 z1-> = Publish(topic = "alarms", message = "left z1");
 z1 = Publish(topic = "alarms", message = "in z1");
 z2 = Publish(topic = "alarms", message = "in z2");
+->z3 = Publish(topic = "alarms", message = "entered z3");
+->z4 = Publish(topic = "alarms", message = "entered z4");
+->z5 = Publish(topic = "alarms", message = "entered z5");
+->z6 = Publish(topic = "alarms", message = "entered z6");
 }</value>
 				        </metadata>
 				</node>
