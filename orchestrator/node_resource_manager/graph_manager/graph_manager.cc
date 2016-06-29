@@ -557,7 +557,7 @@ bool GraphManager::checkGraphValidity(highlevel::Graph *graph, ComputeController
 		nf_manager_ret_t retVal = computeController->retrieveDescription(nf->getId(),nf->getName());
 		if(retVal == NFManager_NO_NF)
 		{
-			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "NF \"%s\" cannot be retrieved",nf->getName().c_str());
+			logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "NF \"%s\" cannot be retrieved",nf->getName().c_str());
 			return false;
 		}
 		else if(retVal == NFManager_SERVER_ERROR)
@@ -595,7 +595,7 @@ bool GraphManager::newGraph(highlevel::Graph *graph)
 	assert(tenantLSIs.count(graph->getID()) == 0);
 
 	/**
-	*	@outline:
+*	@outline:
 	*
 	*		0) check the validity of the graph
 	*		1) create the Openflow controller for the tenant LSI
@@ -1831,26 +1831,23 @@ highlevel::Graph *GraphManager::updateGraph_add(string graphID, highlevel::Graph
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "3-b) considering the new virtual network functions (%d)",network_functions.size());
 
 	//Itarate on all the new network functions
-	//TODO: when the hotplug will be introduced, here we will also iterate on the network functions to be updated
 	for(list<highlevel::VNFs>::iterator nf = network_functions.begin(); nf != network_functions.end(); nf++)
 	{
 		AddNFportsOut *anpo = NULL;
 		try
 		{
-			//TODO: for the hotplug, modify lsi->addNF as suggested into the function itself.
 			list<highlevel::vnf_port_t> nf_ports = nf->getPorts(); // nf_it->second;
 			list<unsigned int> nf_ports_id_list = nf->getPortsId();
 			
 			//before
 			map<string, list<struct nf_port_info> >pi_map_before = lsi->getNetworkFunctionsPortsInfo();
-                        map<string, list<struct nf_port_info> >::iterator pi_it_before = pi_map_before.find(nf->getId()); //pi_it_before==pi_map.end() in case of a new NF
+			map<string, list<struct nf_port_info> >::iterator pi_it_before = pi_map_before.find(nf->getId()); //pi_it_before==pi_map.end() in case of a new NF
 
 			lsi->addNF(nf->getId()/*first*/, /*nf->second*/ nf_ports_id_list, computeController->getNFSelectedImplementation(nf->getId()/*first*/)->getPortTypes());
 
 			//after
 			map<string, list<struct nf_port_info> >pi_map = lsi->getNetworkFunctionsPortsInfo();//for each network function, retrieve a list of "port name, port type"
 			map<string, list<struct nf_port_info> >::iterator pi_it = pi_map.find(nf->getId()/*first*/); //select the info related to the network function currently considered
-			//TODO: when the hotplug will be introduced, pi_it->second will also contain the old ports of the VNF. Then a further skimming will be required
 			assert(pi_it != pi_map.end());
 			list<struct nf_port_info> newPortList;
 			if(pi_it->second.size() == nf_ports.size())
@@ -1892,7 +1889,6 @@ highlevel::Graph *GraphManager::updateGraph_add(string graphID, highlevel::Graph
 			}
 
 			//FIXME: useful? Probably no!
-			//TODO: not sure that this works in case of hotplug. In fact anpo->getPortsNameOnSwitch() returns a list of ports name on the switch, but it does not 
 			//map such names with ports names calculated before (or with the port id). 
 			//I think that it should be done something similar to anpo->getPorts(), which maps the identifier on the switch to the port name.
 			uint64_t lsiID = lsi->getDpid();
@@ -1900,7 +1896,7 @@ highlevel::Graph *GraphManager::updateGraph_add(string graphID, highlevel::Graph
 			for(list<struct nf_port_info>::iterator port_it = newPortList.begin(); port_it != newPortList.end(); port_it++)
 			{
 				stringstream ss;
-        			ss << lsiID << "_" << port_it->port_name;
+				ss << lsiID << "_" << port_it->port_name;
 				newPortsNamesAndID[ss.str()] = port_it->port_id;
 			}
 			lsi->setNetworkFunctionsPortsNameOnSwitch(anpo->getNfId(), newPortsNamesAndID);
@@ -1990,7 +1986,6 @@ highlevel::Graph *GraphManager::updateGraph_add(string graphID, highlevel::Graph
 	/**
 	*	4) Start or update the new NFs
 	*/
-	//TODO: in case of hotplug, the function is already running then a different function on the compute controller should be called.
 #ifdef RUN_NFS
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "4) start the new NFs");
 
@@ -2005,7 +2000,6 @@ highlevel::Graph *GraphManager::updateGraph_add(string graphID, highlevel::Graph
 		list<port_mapping_t > nfs_control_configuration = nf->getControlPorts();
 		list<string> environment_variables_tmp = nf->getEnvironmentVariables();
 #endif
-		//TODO: for the hotplug, we may extend the computeController with a call that says if a VNF is already running or not.
 		//If not, startNF should then be called; if yes, o new function must be called
 		if(nfPortIdToNameOnSwitch.size() != nf->getPortsId().size())
 		{
