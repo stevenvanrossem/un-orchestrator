@@ -1,0 +1,55 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+require 'getoptlong'
+
+opts = GetoptLong.new(
+  [ '--sics-gitlab-username', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--sics-gitlab-password', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--vm-memory', GetoptLong::OPTIONAL_ARGUMENT ],
+  [ '--vm-cores', GetoptLong::OPTIONAL_ARGUMENT ]
+)
+
+username=''
+password=''
+memory=512
+cores=1
+
+opts.each do |opt, arg|
+  case opt
+    when '--sics-gitlab-username'
+      username=arg
+	when '--sics-gitlab-password'
+	  password=arg	
+	when '--vm-memory'
+	  memory=arg	
+	when '--vm-cores'
+	  cores=arg	
+  end
+end
+
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "ubuntu/trusty64"
+  config.vm.provider "virtualbox" do |v|
+      v.memory = "#{memory}"
+      v.cpus = "#{cores}"
+  end
+
+  config.vm.network "private_network", ip: "192.168.10.102"
+  config.vm.network "private_network", ip: "192.168.20.102"
+  config.vm.network "private_network", ip: "192.168.30.102"
+  config.vm.network "private_network", ip: "192.168.40.102"
+
+  # normally the ansible provider should be used, however, because
+  # Ansible is not well supported on Windows machines, ansible is triggered from 
+  # the vm itself via a shell script
+   
+  config.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get install -y git
+    apt-get install -y tcpreplay
+    git clone https://"#{username}":"#{password}"@ghetto.sics.se/nigsics/UNIFY-ER-aggregator.git
+    sh /vagrant/provisioning/run.sh
+  SHELL
+   
+end
