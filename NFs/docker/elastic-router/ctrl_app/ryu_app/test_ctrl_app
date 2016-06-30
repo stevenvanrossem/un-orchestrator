@@ -1,0 +1,4 @@
+#!/bin/bash
+
+export CFOR='172.17.0.1:8080'
+ryu-manager ctrl_app_er_un_zmq_v1.py

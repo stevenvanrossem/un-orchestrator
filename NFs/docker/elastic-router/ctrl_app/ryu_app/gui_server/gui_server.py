@@ -67,7 +67,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 
 class web_server():
-    def __init__(self, host_port):
+    def __init__(self, host_port, guest_port):
 
         #define("port", default=8888, help="run on the given port", type=int)
 
@@ -82,13 +82,13 @@ class web_server():
         #gui_pipe_recv, self.gui_pipe_send = gipc.pipe()
         #self.queue = multiprocessing.Queue()
         # need to use gipc process, other thread types block the main
-        p = gipc.start_process(target=self.start_server, args=(), kwargs=dict(host_port=host_port))
+        p = gipc.start_process(target=self.start_server, args=(), kwargs=dict(host_port=host_port, guest_port=guest_port))
         #p = multiprocessing.Process(target=self.start_server, args=(self.queue,), kwargs=dict(host_port=host_port))
         #p.start()
 
-    def start_server(self, host_ip='localhost', host_port=10001):
-        # locally listens to 8888 (inside docker container)
-        # but this is mapped by the orchestrator to host_port
+    def start_server(self, host_ip='localhost', host_port=10001, guest_port=8888):
+        # locally listens to guest_port 8888 (inside docker container)
+        # but this is mapped by the orchestrator to host_port (usually 10000)
         app = tornado.web.Application([
             (r'/', IndexHandler, dict(host_ip=host_ip, host_port=host_port)),
             (r'/ws', WebSocketHandler),
@@ -102,7 +102,7 @@ class web_server():
              dict(path=self.settings['static_path'])),
         ])
 
-        app.listen(8888)
+        app.listen(guest_port)
         logging.info('start GUI')
         tornado.ioloop.IOLoop.instance().start()
 
