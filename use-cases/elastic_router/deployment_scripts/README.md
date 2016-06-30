@@ -1,8 +1,8 @@
 # Deployment Scripts (Elastic Router and Traffic Generator)
 The deployment scripts have been grouped according to their tasks, i.e.
 
-* ** elastic_router**: The scripts in this directory automate the creation of virtual environment for ER-demo by deploying all necessary components.
-* ** traffic_generator**: The scripts in this directory create a VM that generates traffic to test ER functions.
+* **elastic_router** : The scripts in this directory automate the creation of virtual environment for ER-demo by deploying all necessary components.
+* **traffic_generator** : The scripts in this directory create a VM that generates traffic to test ER functions.
 
 Both of above directories have their own README files to explain usage.
 
