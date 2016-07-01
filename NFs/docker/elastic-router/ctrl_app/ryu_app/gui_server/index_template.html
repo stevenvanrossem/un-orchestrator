@@ -6,10 +6,51 @@
         <meta http-equiv="Pragma" content="no-cache" />
         <meta http-equiv="Expires" content="0" />
         <style type="text/css">
-          #container {
-            max-width: 600px;
+          #nffgs {
+            float:left;
+            width: 100%;
             height: 600px;
-            margin: auto;
+            margin-top: 30px;
+          }
+          #table{
+            width:30%;
+          }
+          #container_title {
+            float:left;
+            width: 100%;
+            height: 100px;
+            border-style: solid;
+            border-radius: 20px;
+          }
+          #container {
+            float:left;
+            width: 100%;
+            height: 600px;
+            border-style: solid;
+            border-radius: 20px;
+          }
+          #header {
+            float:left;
+            width: 100%;
+            height: 160px;
+          }
+          #scrollbox {
+            float:left;
+            height:150px;
+            width:30%;
+            font-family: Verdana, Tahoma, Arial, Helvetica, sans-serif;
+            font-size: 80%;
+            overflow:auto;
+          }
+          #traffic_counters {
+            float:left;
+            width: 15%;
+            height: 160px;
+            padding: 10px;
+            margin-left: 20px;
+            border-style: solid;
+            border-radius: 20px;
+            border-width: thin;
           }
          </style>
         <script src="sigma.min.js"></script>
@@ -37,36 +78,94 @@
                     // s.startForceAtlas2(settings);
                     }
                  )
-             }
-            function WebSocketTest() {
-                var messageContainer = document.getElementById("messages");
+            }
+            function addLog(text){
+                var messageContainer = document.getElementById("scrollbox");
+                messageContainer.value += text + "\n";
+            }
+            function printCounters(text){
+                var messageContainer = document.getElementById("traffic_counters");
+                messageContainer.innerHTML = text ;
+            }
+            function WebSocketNFFG() {
+                //var messageContainer = document.getElementById("messages");
                 if ("WebSocket" in window) {
-                    messageContainer.innerHTML = "WebSocket is supported by your Browser!";
                     var ws = new WebSocket("ws://{{host_ip}}:{{host_port}}/ws");
                     ws.onopen = function() {
-                        messageContainer.innerHTML = "Connection is open"
-                        // ws.send("Message to send");
+                        addLog("NFFG Connection is open");
                     };
                     ws.onmessage = function (evt) {
                         var received_msg = evt.data;
-                        messageContainer.innerHTML = "Message is received1: " + received_msg;
                         parse_sigma(evt.data);
-                        messageContainer.innerHTML = "Message is received2: " + received_msg;
                     };
                     ws.onclose = function() {
-                        messageContainer.innerHTML = "Connection is closed...";
+                        addLog("NFFG connection is closed...");
                     };
                 } else {
-                    messageContainer.innerHTML = "WebSocket NOT supported by your Browser!";
+                    addLog("WebSocket NOT supported by your Browser!");
+                }
+            }
+            function WebSocketLog() {
+                if ("WebSocket" in window) {
+                    addLog("WebSocket is supported by your Browser!");
+                    var ws = new WebSocket("ws://{{host_ip}}:{{host_port}}/log");
+                    ws.onopen = function() {
+                        addLog("Connection is open")
+                    };
+                    ws.onmessage = function (evt) {
+                        var received_msg = evt.data;
+                        addLog(received_msg);
+                    };
+                    ws.onclose = function() {
+                        addLog("Connection is closed...");
+                    };
+                } else {
+                    addLog("WebSocket NOT supported by your Browser!");
+                }
+            }
+            function WebSocketCounters() {
+                var messageContainer = document.getElementById("messages");
+                if ("WebSocket" in window) {
+                    printCounters("WebSocket is supported by your Browser!");
+                    var ws = new WebSocket("ws://{{host_ip}}:{{host_port}}/count");
+                    ws.onopen = function() {
+                        printCounters("counters: Connection is open")
+                    };
+                    ws.onmessage = function (evt) {
+                        var received_msg = evt.data;
+                        printCounters(received_msg);
+                    };
+                    ws.onclose = function() {
+                        printCounters("counters: Connection is closed...");
+                    };
+                } else {
+                    printCounters("WebSocket NOT supported by your Browser!");
                 }
             }
         </script>
     </head>
     <body>
-        <a href="javascript:WebSocketTest()">Run WebSocket</a>
-        <div id="messages" style="height:200px;background:black;color:white;"></div>
+        <!--<a href="javascript:WebSocketTest()">Run WebSocket</a>-->
+        <!--<div id="messages" style="height:200px;width:30%;background:black;color:white;"></div>-->
+        <div id="header">
+            <textarea id="scrollbox" autocomplete="off" disabled> </textarea>
+            <div id="traffic_counters"></div>
+        </div>
 
-        <div id="container"></div>
+        <div id="nffgs">
+            <table id="table">
+                <tr>
+                    <td>
+                        <div id="container_title">NFFG</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div id="container"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
         <script type="text/javascript">
             // these are just some preliminary settings
             var g = {
@@ -97,7 +196,9 @@
             }
         </script>
         <script type="text/javascript">
-            WebSocketTest();
+            WebSocketNFFG();
+            WebSocketLog();
+            WebSocketCounters();
         </script>
 
     </body>

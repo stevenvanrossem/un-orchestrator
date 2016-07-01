@@ -77,7 +77,8 @@ class ElasticRouter(app_manager.RyuApp):
     try:
         host_ip = os.environ['HOST_IP']
     except:
-        host_ip = '192.168.10.40'
+        #host_ip = '192.168.10.40'
+        host_ip = 'localhost'
 
 
     # file name + location (execution dir) of the config file to load
@@ -106,8 +107,6 @@ class ElasticRouter(app_manager.RyuApp):
         upper = self.config["ingress_rate_upper_threshold"]
         lower = self.config["ingress_rate_lower_threshold"]
         self.monitorApp = ElasticRouterMonitor(self, upper_threshold=upper, lower_threshold=lower)
-        # monitor function to trigger nffg change
-        self.monitor_thread = hub.spawn(self._monitor)
 
         # start DD client
         self.zmq_ = er_ddclient(self.monitorApp, self)
@@ -124,6 +123,11 @@ class ElasticRouter(app_manager.RyuApp):
         CTX = zmq.Context(1)
         self.gui_sender = zmq.Socket(CTX, zmq.PUSH)
         self.gui_sender.connect('ipc:///tmp/ws_message')
+        self.gui_log_sender = zmq.Socket(CTX, zmq.PUSH)
+        self.gui_log_sender.connect('ipc:///tmp/log_message')
+        self.gui_count_sender = zmq.Socket(CTX, zmq.PUSH)
+        self.gui_count_sender.connect('ipc:///tmp/count_message')
+
         # clear parsed nffg
         copyfile('gui_server/empty.json', 'gui_server/parsed_nffg.json')
         # start gui web server at port 8888
@@ -133,7 +137,11 @@ class ElasticRouter(app_manager.RyuApp):
         # start rest api to easily scale in/out
         self.rest_api_ = er_rest_api.rest_api.start_rest_server(self.monitorApp, self, port=self.rest_api_port)
 
+        # monitor function to monitor and trigger scaling
+        self.monitor_thread = hub.spawn(self._monitor)
+
         # parse nffg to start Ctrl app
+        self.gui_log_sender.send_string('start ER')
         self.parse_nffg(self.nffg)
 
         #for i in range(100):
@@ -168,6 +176,7 @@ class ElasticRouter(app_manager.RyuApp):
         #copyfile('gui_server/nffg_scale_in.json', 'gui_server/parsed_nffg.json')
         # send parsed nffg to gui
         self.gui_sender.send_string('parsed_nffg.json')
+        self.gui_log_sender.send_string('parsed nffg')
 
     # monitor stats and trigger scaling
     def _monitor(self):
@@ -196,10 +205,20 @@ class ElasticRouter(app_manager.RyuApp):
 
 
             # print some statistics
+            DP_rate_string_html = ''
             for DP_name in self.DP_instances:
                 DP = self.DP_instances.get(DP_name)
-                self.logger.info("{0} total ingress rate: {1} pps".format(DP_name, self.monitorApp.DP_ingress_rate[DP_name]))
-            self.logger.info("total ingress rate: {0} pps".format(self.monitorApp.complete_ingress_rate))
+                DP_rate_string = "{0} total ingress rate: {1:.2f} pps".format(DP_name, self.monitorApp.DP_ingress_rate[DP_name])
+                self.logger.info(DP_rate_string)
+                DP_rate_string_html += DP_rate_string + '<br>'
+
+            total_rate = "total ingress rate: {0:.2f} pps".format(self.monitorApp.complete_ingress_rate)
+            total_rx_bytes = "total rx traffic:{0:.2f} MB".format(self.monitorApp.total_rx_bytes/(10**6))
+
+            self.logger.info(total_rate + '\n' + total_rx_bytes)
+
+            total_rate_html = DP_rate_string_html + '<br>' + total_rate + '<br>' + total_rx_bytes
+            self.gui_count_sender.send_string(total_rate_html)
 
 
             # not needed for UNIFY version
@@ -222,7 +241,9 @@ class ElasticRouter(app_manager.RyuApp):
 
     def scale(self, scaling_ports, direction):
 
-        self.logger.info("scale {0} started!".format(direction))
+        scale_log_string = "scale {0} started!".format(direction)
+        self.logger.info(scale_log_string)
+        self.gui_log_sender.send_string(scale_log_string)
 
         # need to scale both nffg and internal objects
         # because we need the translation between old and new DPs
@@ -356,6 +377,7 @@ class ElasticRouter(app_manager.RyuApp):
         # copyfile('gui_server/nffg_scale_in.json', 'gui_server/parsed_nffg.json')
         # send parsed nffg to gui
         self.gui_sender.send_string('parsed_nffg.json')
+        self.gui_log_sender.send_string('scale intermediate')
 
         ## set parsed nffg
         #copyfile('gui_server/nffg_scale_{0}.json'.format(direction), 'gui_server/parsed_nffg.json')
@@ -454,6 +476,7 @@ class ElasticRouter(app_manager.RyuApp):
         #self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
 
         self.logger.info('scaling finished!')
+        self.gui_log_sender.send_string('scaling finished')
 
 
 
@@ -585,8 +608,10 @@ class ElasticRouter(app_manager.RyuApp):
                #print 'first measurement'
                #print 'previous time: {0}'.format(previous_time)
                #print 'port_uptime: {0}'.format(port_uptime)
-               this_DP.port_txstats[stat.port_no] = stat.tx_packets
-               this_DP.port_rxstats[stat.port_no] = stat.rx_packets
+               this_DP.port_txstats_packets[stat.port_no] = stat.tx_packets
+               this_DP.port_rxstats_packets[stat.port_no] = stat.rx_packets
+               this_DP.port_txstats_bytes[stat.port_no] = stat.tx_bytes
+               this_DP.port_rxstats_bytes[stat.port_no] = stat.rx_bytes
                this_DP.previous_monitor_time[stat.port_no] = port_uptime
                return
             else :
@@ -597,19 +622,30 @@ class ElasticRouter(app_manager.RyuApp):
                #print 'port_uptime: {0}'.format(port_uptime)
 
 
-            if this_DP and stat.port_no in this_DP.port_txstats :
-               this_DP.port_txrate[stat.port_no] = (stat.tx_packets - this_DP.port_txstats[stat.port_no])/float(time_delta)
+            if this_DP and stat.port_no in this_DP.port_txstats_packets :
+               this_DP.port_txrate_packets[stat.port_no] = (stat.tx_packets - this_DP.port_txstats_packets[stat.port_no])/float(time_delta)
                #print(this_DP.port_txrate[stat.port_no])
-            if this_DP and stat.port_no in this_DP.port_rxstats :
-               this_DP.port_rxrate[stat.port_no] = (stat.rx_packets - this_DP.port_rxstats[stat.port_no])/float(time_delta)
+            if this_DP and stat.port_no in this_DP.port_rxstats_packets :
+               this_DP.port_rxrate_packets[stat.port_no] = (stat.rx_packets - this_DP.port_rxstats_packets[stat.port_no])/float(time_delta)
                '''
                self.logger.debug('{1} {2} rx rate: {0}'.format(this_DP.port_rxrate[stat.port_no], this_DP.name, \
                                                                this_DP.get_port_by_number(stat.port_no).ifname))
                '''
+            if this_DP and stat.port_no in this_DP.port_txstats_bytes:
+                this_DP.port_txrate_bytes[stat.port_no] = (stat.tx_bytes - this_DP.port_txstats_bytes[stat.port_no]) / float(time_delta)
+                # print(this_DP.port_txrate[stat.port_no])
+            if this_DP and stat.port_no in this_DP.port_rxstats_bytes:
+                this_DP.port_rxrate_bytes[stat.port_no] = (stat.rx_bytes - this_DP.port_rxstats_bytes[stat.port_no]) / float(time_delta)
+                # keep couner of total received bytes
+                self.monitorApp.total_rx_bytes += this_DP.port_rxrate_bytes[stat.port_no]
 
-            this_DP.port_txstats[stat.port_no] = stat.tx_packets
-            this_DP.port_rxstats[stat.port_no] = stat.rx_packets
+            this_DP.port_txstats_packets[stat.port_no] = stat.tx_packets
+            this_DP.port_rxstats_packets[stat.port_no] = stat.rx_packets
+            this_DP.port_txstats_bytes[stat.port_no] = stat.tx_bytes
+            this_DP.port_rxstats_bytes[stat.port_no] = stat.rx_bytes
             this_DP.previous_monitor_time[stat.port_no] = port_uptime
+
+
 
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)

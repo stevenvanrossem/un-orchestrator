@@ -25,6 +25,9 @@ class ElasticRouterMonitor:
         self.ingress_rate_upper_threshold = upper_threshold
         self.ingress_rate_lower_threshold = lower_threshold
 
+        # counter of all rx traffic in bytes
+        self.total_rx_bytes = 0
+
 
     def init_measurement(self):
         self.DP_ingress_rate = {}
@@ -50,7 +53,7 @@ class ElasticRouterMonitor:
             return False
         # enough measurements collected?
         for DP_name in self.ERctrlapp.DP_instances:
-            if len(self.ERctrlapp.DP_instances[DP_name].port_rxrate) < 1:
+            if len(self.ERctrlapp.DP_instances[DP_name].port_rxrate_packets) < 1:
                 return False
 
         return True
@@ -61,10 +64,10 @@ class ElasticRouterMonitor:
             self.check_ingress_rate(DP)
 
     def check_ingress_rate(self, DP):
-        for n in DP.port_rxrate:
-            self.DP_ingress_rate[DP.name] += int(DP.port_rxrate[n])
+        for n in DP.port_rxrate_packets:
+            self.DP_ingress_rate[DP.name] += (DP.port_rxrate_packets[n])
             if DP.get_port_by_number(n).port_type ==  DPPort.External :
-                self.complete_ingress_rate += int(DP.port_rxrate[n])
+                self.complete_ingress_rate += (DP.port_rxrate_packets[n])
 
     def check_scaling_out(self):
         """
