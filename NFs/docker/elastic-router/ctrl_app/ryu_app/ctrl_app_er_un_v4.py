@@ -19,7 +19,7 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 import urllib2
 import copy
-
+import json
 import os
 import time
 
@@ -31,6 +31,7 @@ from er_ddclient import er_ddclient
 import er_rest_api
 from shutil import copyfile
 from gui_server.gui_server import web_server
+from gui_server.graph_builder import build_graph
 
 # this version must use xml based nffg
 os.environ["NFFG_FORMAT"] = "xml"
@@ -71,6 +72,12 @@ class ElasticRouter(app_manager.RyuApp):
         gui_port = os.environ['GUI_PORT']
     except:
         gui_port = 8888
+
+    # ip address of host machine
+    try:
+        host_ip = os.environ['HOST_IP']
+    except:
+        host_ip = '192.168.10.40'
 
 
     # file name + location (execution dir) of the config file to load
@@ -121,7 +128,7 @@ class ElasticRouter(app_manager.RyuApp):
         copyfile('gui_server/empty.json', 'gui_server/parsed_nffg.json')
         # start gui web server at port 8888
         # TODO start gui server here
-        self.gui_server = web_server(host_port, guest_port)
+        self.gui_server = web_server(self.host_ip, host_port, guest_port)
 
         # start rest api to easily scale in/out
         self.rest_api_ = er_rest_api.rest_api.start_rest_server(self.monitorApp, self, port=self.rest_api_port)
@@ -155,9 +162,12 @@ class ElasticRouter(app_manager.RyuApp):
                 self.logger.info('Removed DP: {0}'.format(DP_name))
 
         # set parsed nffg
-        copyfile('gui_server/nffg_scale_in.json', 'gui_server/parsed_nffg.json')
+        graph_dict = build_graph(self.DP_instances, 'gui_server/base_ER.json')
+        with open('gui_server/parsed_nffg.json', 'w') as outfile:
+            json.dump(graph_dict, outfile)
+        #copyfile('gui_server/nffg_scale_in.json', 'gui_server/parsed_nffg.json')
         # send parsed nffg to gui
-        self.gui_sender.send_string('nffg_scale_in.json')
+        self.gui_sender.send_string('parsed_nffg.json')
 
     # monitor stats and trigger scaling
     def _monitor(self):
@@ -340,9 +350,17 @@ class ElasticRouter(app_manager.RyuApp):
         er_nffg.send_nffg(self.REST_Cf_Or, (nffg_intermediate))
 
         # set parsed nffg
-        copyfile('gui_server/nffg_scale_{0}.json'.format(direction), 'gui_server/parsed_nffg.json')
+        graph_dict = build_graph(self.DP_instances, 'gui_server/base_ER.json')
+        with open('gui_server/parsed_nffg.json', 'w') as outfile:
+            json.dump(graph_dict, outfile)
+        # copyfile('gui_server/nffg_scale_in.json', 'gui_server/parsed_nffg.json')
         # send parsed nffg to gui
-        self.gui_sender.send_string('nffg_scale_{0}.json'.format(direction))
+        self.gui_sender.send_string('parsed_nffg.json')
+
+        ## set parsed nffg
+        #copyfile('gui_server/nffg_scale_{0}.json'.format(direction), 'gui_server/parsed_nffg.json')
+        ## send parsed nffg to gui
+        #self.gui_sender.send_string('nffg_scale_{0}.json'.format(direction))
 
         # get new updated NFFG
         #self.nffg_json = self.get_nffg_json()

@@ -23,7 +23,10 @@ import time
 
 from tornado.options import define, options, parse_command_line
 
-
+class MyStaticFileHandler(tornado.web.StaticFileHandler):
+    def set_extra_headers(self, path):
+        # Disable cache
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
 class IndexHandler(tornado.web.RequestHandler):
     def initialize(self, host_ip='localhost', host_port='8888'):
@@ -67,7 +70,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 
 class web_server():
-    def __init__(self, host_port, guest_port):
+    def __init__(self, host_ip, host_port, guest_port):
 
         #define("port", default=8888, help="run on the given port", type=int)
 
@@ -82,7 +85,7 @@ class web_server():
         #gui_pipe_recv, self.gui_pipe_send = gipc.pipe()
         #self.queue = multiprocessing.Queue()
         # need to use gipc process, other thread types block the main
-        p = gipc.start_process(target=self.start_server, args=(), kwargs=dict(host_port=host_port, guest_port=guest_port))
+        p = gipc.start_process(target=self.start_server, args=(), kwargs=dict(host_ip=host_ip, host_port=host_port, guest_port=guest_port))
         #p = multiprocessing.Process(target=self.start_server, args=(self.queue,), kwargs=dict(host_port=host_port))
         #p.start()
 
@@ -98,7 +101,7 @@ class web_server():
              dict(path=self. settings['plugin_path'])),
             (r"/(sigma\.layout.*)", tornado.web.StaticFileHandler,
              dict(path=self.settings['plugin_path'])),
-            (r"/(.*\.json)", tornado.web.StaticFileHandler,
+            (r"/(.*\.json)", MyStaticFileHandler,
              dict(path=self.settings['static_path'])),
         ])
 
