@@ -23,9 +23,9 @@ class DDClient(ClientSafe):
     cAdvisor DoubleDecker client
     """
 
-    def __init__(self, name, dealer_url, customer, key_file, verbose, cadvisor_port):
-        super().__init__(name, dealer_url, customer, key_file)
-
+    def __init__(self, name, dealer_url, key_file, verbose, cadvisor_port):
+        super().__init__(name, dealer_url, key_file)
+        self.name = name
         self.to_monitor = dict()
         self.STATE = CLIENT_STATUS_DISCONNECTED
         self.verbose = verbose
@@ -126,16 +126,19 @@ class DDClient(ClientSafe):
         self.handle_jsonrpc(src=src, msg=msg)
 
     def on_reg(self):
-        self.logger.debug("Registered with broker")
+        self.logger.warning("Registered with broker")
         self.STATE = CLIENT_STATUS_CONNECTED
-
+        rpc_obj = {"jsonrpc": "2.0", "method": "hello", "params": {"name": self.name, "type": "cadvisor"}}
+        rpc_obj_json = json.dumps(rpc_obj)
+        self.publish('unify:mmp', rpc_obj_json)
+                        
     def on_discon(self):
-        self.logger.debug("Disconnected from broker")
+        self.logger.warning("Disconnected from broker")
         self.STATE = CLIENT_STATUS_DISCONNECTED
         print("on_dis")
 
     def on_error(self, code, msg):
-        self.logger.debug("DD Client ERROR:%s Message:%s" % (str(code), str(msg)))
+        self.logger.warning("DD Client ERROR:%s Message:%s" % (str(code), str(msg)))
 
     def publish_measurement(self, result):
         if not self.STATE == CLIENT_STATUS_DISCONNECTED:

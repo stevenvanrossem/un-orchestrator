@@ -30,7 +30,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="CAdvisor Aggregator DoubleDecker Client")
     parser.add_argument('name', help="Identity of this client")
-    parser.add_argument('customer', help="Name of the customer to get the keys (i.e. 'a' for the customer-a.json file)")
     parser.add_argument(
         '-d',
         "--dealer",
@@ -77,11 +76,10 @@ if __name__ == '__main__':
         raise ValueError('Invalid log level: %s' % args.loglevel)
     logging.basicConfig(filename=args.logfile, level=numeric_log_level, format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
     logging.getLogger("urllib3").setLevel(logging.WARNING)
-
+    logging.info("Starting DDClient name: %s dealer: %s key: %s cadvisor_port %s" %(args.name, args.dealer, args.keyfile, args.port))
     client = DDClient(
         name=args.name,
         dealer_url=args.dealer,
-        customer=args.customer,
         key_file=args.keyfile,
         verbose=args.verbose,
         cadvisor_port=args.port,
