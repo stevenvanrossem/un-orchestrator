@@ -20,8 +20,8 @@ meta_data = {
 'pipelinedb' : {'repo_name':'un-orchestrator', 'github_link':'',
             'comp_path':'', 'image_id':'gitlab.testbed.se:5000/pipelinedb:latest'},
 
-'opentsdb' : {'repo_name':'un-orchestrator', 'github_link':'',
-            'comp_path':'', 'image_id':'gitlab.testbed.se:5000/opentsdb:latest'},
+'opentsdb' : {'repo_name':'un-orchestrator', 'github_link':'https://github.com/netgroup-polito/un-orchestrator.git',
+            'comp_path':'use-cases/elastic_router/opentsdb', 'image_id':'gitlab.testbed.se:5000/ostdb_client:latest'},
 
 'aggregator' : {'repo_name':'un-orchestrator', 'github_link':'',
             'comp_path':'', 'image_id':'gitlab.testbed.se:5000/aggregator:latest'},
@@ -33,7 +33,10 @@ meta_data = {
             'comp_path':'', 'image_id':'gitlab.testbed.se:5000/ovs:latest'},
 
 'ctrl_app' : {'repo_name':'un-orchestrator', 'github_link':'https://github.com/netgroup-polito/un-orchestrator.git',
-            'comp_path':'NFs/docker/elastic-router/ctrl_app/', 'image_id':'gitlab.testbed.se:5000/ctrl:latest'}
+            'comp_path':'NFs/docker/elastic-router/ctrl_app/', 'image_id':'gitlab.testbed.se:5000/ctrl:latest'},
+
+'stackexchange' : {'repo_name':'un-orchestrator', 'github_link':'',
+            'comp_path':'', 'image_id':'stackexchange/bosun:latest'}
 }
 
 
@@ -209,13 +212,14 @@ def deploy_component(comp_details):
 def pull_docker_image(comp_details):
 
     print_info('Going to pull image -> '+comp_details['image_id'])
-    if not username or not password:
-        print_error('You must provide username and password at command line.')
-        return 1
-    r = run_command_get_code('docker login -u '+username+' -p '+password+' gitlab.testbed.se:5000')
-    if not r == 0:
-        print_error('Could not login at gitlab.testbed.se:5000\n')
-        return r
+    if comp_details['image_id'].startswith('gitlab.testbed.se:5000'):
+        if not username or not password:
+            print_error('You must provide username and password at command line.')
+            return 1
+        r = run_command_get_code('docker login -u '+username+' -p '+password+' gitlab.testbed.se:5000')
+        if not r == 0:
+            print_error('Could not login at gitlab.testbed.se:5000\n')
+            return r
     r = run_command_get_code('sudo docker pull '+comp_details['image_id'])
     if r == 0:
         print_success('Successfully pulled image -> '+comp_details['image_id'])
@@ -250,7 +254,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "-c",
         "--components",
-        help="List of components to be installed, e.g., all, cadvisor, ramon, pipelinedb, opentsdb, doubledecker, ovs, mmp, ctrl_app, aggregator.",
+        help="List of components to be installed, e.g., all, cadvisor, ramon, pipelinedb, opentsdb, doubledecker, ovs, mmp, ctrl_app, aggregator, stackexchange.",
         )
     parser.add_argument(
         "-u",
