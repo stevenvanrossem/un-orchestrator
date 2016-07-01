@@ -15,6 +15,19 @@ RUN pip3 install jsonrpcserver
 RUN pip3 install jsonrpcclient
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install curl
 
+# RUN pip3 install future
+# Fetch and install Doubledecker
+RUN mkdir /dd
+RUN mkdir /measure
+ADD https://github.com/acreo/DoubleDecker-py/archive/master.tar.gz /dd
+WORKDIR /dd
+RUN tar xzf master.tar.gz
+RUN rm master.tar.gz
+WORKDIR /dd/DoubleDecker-py-master/
+RUN python3 setup.py build
+RUN python3 setup.py install
+
+
 # Grab cadvisor from the staging directory.
 ADD cadvisor /usr/bin/cadvisor
 EXPOSE 8080
@@ -23,7 +36,7 @@ EXPOSE 8080
 WORKDIR /proxy
 
 ADD cadvproxy /proxy/cadvproxy
-ADD doubledecker /proxy/doubledecker
+#ADD doubledecker /proxy/doubledecker
 COPY main.py /proxy
 COPY run.sh /proxy
 CMD ./run.sh
