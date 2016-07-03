@@ -68,20 +68,19 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 class NFFG_WebSocketHandler(tornado.websocket.WebSocketHandler):
 
-    #def initialize(self):
-
-        # with open("some_image.png", "rb") as imageFile:
-        #    self.str = base64.b64encode(imageFile.read())
-
+    def initialize(self, socket='ipc:///tmp/nffg_message'):
+        self.socketfile = socket
 
     def open(self):
         CTX = zmq.Context(1)
         self.socket = zmq.Socket(CTX, zmq.PULL)
-        self.socket.bind("ipc:///tmp/ws_message")
+        self.socket.bind(self.socketfile)
         self.stream = ZMQStream(self.socket)
         self.stream.on_recv(self.send_data)
 
-        self.write_message('parsed_nffg.json')
+        #only send to nffg1 container at start
+        if 'nffg1' in self.socketfile:
+            self.write_message('parsed_nffg.json')
         logging.info('new connection')
 
     def on_message(self, message):
@@ -122,7 +121,9 @@ class web_server():
         # but this is mapped by the orchestrator to host_port (usually 10000)
         app = tornado.web.Application([
             (r'/', IndexHandler, dict(host_ip=host_ip, host_port=host_port)),
-            (r'/ws', NFFG_WebSocketHandler),
+            (r'/nffg1', NFFG_WebSocketHandler, dict(socket='ipc:///tmp/nffg1_message')),
+            (r'/nffg2', NFFG_WebSocketHandler, dict(socket='ipc:///tmp/nffg2_message')),
+            (r'/nffg3', NFFG_WebSocketHandler, dict(socket='ipc:///tmp/nffg3_message')),
             (r'/log', WebSocketHandler, dict(socket='ipc:///tmp/log_message')),
             (r'/count', WebSocketHandler, dict(socket='ipc:///tmp/count_message')),
             (r"/(sigma\.min\.js)", tornado.web.StaticFileHandler,

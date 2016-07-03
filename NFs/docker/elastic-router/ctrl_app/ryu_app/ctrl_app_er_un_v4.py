@@ -31,7 +31,7 @@ from er_ddclient import er_ddclient
 import er_rest_api
 from shutil import copyfile
 from gui_server.gui_server import web_server
-from gui_server.graph_builder import build_graph
+from gui_server.graph_builder import build_graph, build_graph_list, change_graph
 
 # this version must use xml based nffg
 os.environ["NFFG_FORMAT"] = "xml"
@@ -121,8 +121,12 @@ class ElasticRouter(app_manager.RyuApp):
 
         # open zmq bus to send updated nffg's to the gui
         CTX = zmq.Context(1)
-        self.gui_sender = zmq.Socket(CTX, zmq.PUSH)
-        self.gui_sender.connect('ipc:///tmp/ws_message')
+        self.gui_nffg1_sender = zmq.Socket(CTX, zmq.PUSH)
+        self.gui_nffg1_sender.connect('ipc:///tmp/nffg1_message')
+        self.gui_nffg2_sender = zmq.Socket(CTX, zmq.PUSH)
+        self.gui_nffg2_sender.connect('ipc:///tmp/nffg2_message')
+        self.gui_nffg3_sender = zmq.Socket(CTX, zmq.PUSH)
+        self.gui_nffg3_sender.connect('ipc:///tmp/nffg3_message')
         self.gui_log_sender = zmq.Socket(CTX, zmq.PUSH)
         self.gui_log_sender.connect('ipc:///tmp/log_message')
         self.gui_count_sender = zmq.Socket(CTX, zmq.PUSH)
@@ -131,7 +135,6 @@ class ElasticRouter(app_manager.RyuApp):
         # clear parsed nffg
         copyfile('gui_server/empty.json', 'gui_server/parsed_nffg.json')
         # start gui web server at port 8888
-        # TODO start gui server here
         self.gui_server = web_server(self.host_ip, host_port, guest_port)
 
         # start rest api to easily scale in/out
@@ -143,10 +146,6 @@ class ElasticRouter(app_manager.RyuApp):
         # parse nffg to start Ctrl app
         self.gui_log_sender.send_string('start ER')
         self.parse_nffg(self.nffg)
-
-        #for i in range(100):
-        #    self.gui_sender.send_string('test{0}'.format(i))
-        #    time.sleep(1)
 
 
     def parse_nffg(self, nffg):
@@ -170,12 +169,7 @@ class ElasticRouter(app_manager.RyuApp):
                 self.logger.info('Removed DP: {0}'.format(DP_name))
 
         # set parsed nffg
-        graph_dict = build_graph(self.DP_instances, 'gui_server/base_ER.json')
-        with open('gui_server/parsed_nffg.json', 'w') as outfile:
-            json.dump(graph_dict, outfile)
-        #copyfile('gui_server/nffg_scale_in.json', 'gui_server/parsed_nffg.json')
-        # send parsed nffg to gui
-        self.gui_sender.send_string('parsed_nffg.json')
+        graph_dict = build_graph(self.DP_instances, 'gui_server/base_ER.json', output_file='gui_server/parsed_nffg.json')
         self.gui_log_sender.send_string('parsed nffg')
 
     # monitor stats and trigger scaling
@@ -244,6 +238,7 @@ class ElasticRouter(app_manager.RyuApp):
         scale_log_string = "scale {0} started!".format(direction)
         self.logger.info(scale_log_string)
         self.gui_log_sender.send_string(scale_log_string)
+        self.gui_nffg1_sender.send_string('parsed_nffg.json')
 
         # need to scale both nffg and internal objects
         # because we need the translation between old and new DPs
@@ -280,7 +275,6 @@ class ElasticRouter(app_manager.RyuApp):
             new_DP_list.append(new_DP)
 
             id_add = id_add + 1
-
 
 
         # add internal ports/links to new DP
@@ -321,6 +315,7 @@ class ElasticRouter(app_manager.RyuApp):
                             int_port.forward_extport = ext_port
                             break
 
+        self.gui_log_sender.send_string('create intermediate nffg')
         # add new DP to intermediate nffg
         # clean all existing vnfs and flowentries
         nffg_intermediate = (copy.deepcopy(self.nffg))
@@ -362,30 +357,18 @@ class ElasticRouter(app_manager.RyuApp):
         #intermediate_file = 'ER_scale_{0}_intermediate.json'.format(direction)
         intermediate_file = 'ER_scale_{0}_intermediate.xml'.format(direction)
         file = open(intermediate_file, 'w')
-        file.write((nffg_intermediate))
+        file.write(nffg_intermediate)
         file.close()
 
-
+        self.gui_log_sender.send_string('send intermediate nffg')
+        graph_dict = build_graph_list(new_DP_list, 'gui_server/parsed_nffg.json', y_offset=4)
+        self.gui_nffg2_sender.send_string('parsed_nffg.json')
         # send via cf-or
-        #self.send_nffg(nffg_intermediate)
-        er_nffg.send_nffg(self.REST_Cf_Or, (nffg_intermediate))
+        er_nffg.send_nffg(self.REST_Cf_Or, nffg_intermediate)
 
-        # set parsed nffg
-        graph_dict = build_graph(self.DP_instances, 'gui_server/base_ER.json')
-        with open('gui_server/parsed_nffg.json', 'w') as outfile:
-            json.dump(graph_dict, outfile)
-        # copyfile('gui_server/nffg_scale_in.json', 'gui_server/parsed_nffg.json')
-        # send parsed nffg to gui
-        self.gui_sender.send_string('parsed_nffg.json')
+
         self.gui_log_sender.send_string('scale intermediate')
 
-        ## set parsed nffg
-        #copyfile('gui_server/nffg_scale_{0}.json'.format(direction), 'gui_server/parsed_nffg.json')
-        ## send parsed nffg to gui
-        #self.gui_sender.send_string('nffg_scale_{0}.json'.format(direction))
-
-        # get new updated NFFG
-        #self.nffg_json = self.get_nffg_json()
 
         VNFs_to_be_deleted = []
         for old_port in scale_port_dict:
@@ -398,7 +381,16 @@ class ElasticRouter(app_manager.RyuApp):
 
     def scale_finish(self):
 
-        self.logger.info('set new flows with higher priority')
+        log_string = 'set new flows with higher priority'
+        self.logger.info(log_string)
+        self.gui_log_sender.send_string(log_string)
+
+        # grey-out edges
+        change_graph(base_file='gui_server/parsed_nffg.json', edges=self.VNFs_to_be_deleted, color='grey',
+                     output_file='gui_server/intermediate_nffg.json')
+        new_DPs = [DP_name for DP_name in self.DP_instances if DP_name not in self.VNFs_to_be_deleted]
+        change_graph(base_file='gui_server/intermediate_nffg.json', edges=new_DPs, color='red')
+        self.gui_nffg2_sender.send_string('intermediate_nffg.json')
 
         self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
 
@@ -412,7 +404,9 @@ class ElasticRouter(app_manager.RyuApp):
         # need some time here to install flows, otherwise packet loss
         hub.sleep(5)
 
-        self.logger.info('delete old VNFs')
+        log_string = 'delete old VNFs'
+        self.logger.info(log_string)
+        self.gui_log_sender.send_string(log_string)
 
         # delete the old intermediate VNFs
         # first delete external incoming flows for all old DPs (scaled out topo)
@@ -437,7 +431,12 @@ class ElasticRouter(app_manager.RyuApp):
         # need some time here to delete all flows, otherwise packet loss
         #hub.sleep(5)
 
-        self.logger.info('add new flows with priority 10')
+        graph_dict = change_graph(base_file='gui_server/intermediate_nffg.json', nodes=self.VNFs_to_be_deleted)
+        self.gui_nffg2_sender.send_string('intermediate_nffg.json')
+
+        scale_log_string = 'add new flows with priority 10'
+        self.logger.info(scale_log_string)
+        self.gui_log_sender.send_string(scale_log_string)
 
         self.VNFs_to_be_deleted = []
         #self.scaled_nffg = None
@@ -453,7 +452,9 @@ class ElasticRouter(app_manager.RyuApp):
         # need some time here to install flows, otherwise packet loss
         hub.sleep(1)
 
-        self.logger.info('delete old flows with priority 9-11')
+        scale_log_string = 'delete old flows with priority 9-11'
+        self.logger.info(scale_log_string)
+        self.gui_log_sender.send_string(scale_log_string)
 
         #new_nffg = er_nffg.get_nffg(self.REST_Cf_Or)
         #need some time here to install flows, otherwise packet loss
@@ -477,6 +478,7 @@ class ElasticRouter(app_manager.RyuApp):
 
         self.logger.info('scaling finished!')
         self.gui_log_sender.send_string('scaling finished')
+        self.gui_nffg3_sender.send_string('parsed_nffg.json')
 
 
 

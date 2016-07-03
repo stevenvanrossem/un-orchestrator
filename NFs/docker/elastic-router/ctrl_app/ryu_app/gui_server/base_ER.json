@@ -1,12 +1,4 @@
 {
-  "nodes": [
-    {
-      "id": "ctrl",
-      "label": "ER Ctrl App",
-      "x": 0,
-      "y": -4,
-      "size": 3
-    }
-  ],
+  "nodes": [],
   "edges": []
 }
