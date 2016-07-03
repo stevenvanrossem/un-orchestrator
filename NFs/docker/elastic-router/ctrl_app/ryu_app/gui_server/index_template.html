@@ -6,10 +6,54 @@
         <meta http-equiv="Pragma" content="no-cache" />
         <meta http-equiv="Expires" content="0" />
         <style type="text/css">
-          #container {
-            max-width: 400px;
-            height: 400px;
-            margin: auto;
+          #nffgs {
+            float:left;
+            width: 100%;
+            height: 100%;
+            margin-top: 30px;
+          }
+          table.nffg_table{
+            width:100%;
+            border-spacing:5px;
+          }
+          .nffg_cell {
+            border-style: solid;
+            border-radius: 20px;
+            border-width: thin;
+            padding: 0;
+          }
+          .container_title {
+            height: 60px;
+            text-align: center;
+            vertical-align: middle;
+            line-height: 60px;
+          }
+          div.nffg_div {
+            height: 620px;
+            margin: 5px;
+          }
+          #header {
+            float:left;
+            width: 100%;
+            height: 160px;
+          }
+          #scrollbox {
+            float:left;
+            height:160px;
+            width:30%;
+            font-family: Verdana, Tahoma, Arial, Helvetica, sans-serif;
+            font-size: 80%;
+            overflow:auto;
+          }
+          #traffic_counters {
+            float:left;
+            width: 15%;
+            height: 160px;
+            padding: 10px;
+            margin-left: 20px;
+            border-style: solid;
+            border-radius: 20px;
+            border-width: thin;
           }
          </style>
         <script src="sigma.min.js"></script>
@@ -30,43 +74,145 @@
                 startingIterations: 1,
                 iterationsPerRender: 1
             };
-            function parse_sigma(data) {
+            function parse_sigma(data, s) {
                 sigma.parsers.json(data, s,
                 function() {
                     s.refresh();
-                    s.startForceAtlas2(settings);
+                    // s.startForceAtlas2(settings);
                     }
                  )
-             }
-            function WebSocketTest() {
-                var messageContainer = document.getElementById("messages");
+            }
+            function addLog(text){
+                var messageContainer = document.getElementById("scrollbox");
+                messageContainer.value += text + "\n";
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }
+            function printCounters(text){
+                var messageContainer = document.getElementById("traffic_counters");
+                messageContainer.innerHTML = text ;
+            }
+            function WebSocketNFFG1() {
+                //var messageContainer = document.getElementById("messages");
                 if ("WebSocket" in window) {
-                    messageContainer.innerHTML = "WebSocket is supported by your Browser!";
-                    var ws = new WebSocket("ws://{{host_ip}}:{{host_port}}/ws");
+                    var ws = new WebSocket("ws://{{host_ip}}:{{host_port}}/nffg1");
                     ws.onopen = function() {
-                        messageContainer.innerHTML = "Connection is open"
-                        // ws.send("Message to send");
+                        addLog("NFFG Connection is open");
                     };
                     ws.onmessage = function (evt) {
                         var received_msg = evt.data;
-                        messageContainer.innerHTML = "Message is received1: " + received_msg;
-                        parse_sigma(evt.data);
-                        messageContainer.innerHTML = "Message is received2: " + received_msg;
+                        parse_sigma(evt.data, s1);
                     };
                     ws.onclose = function() {
-                        messageContainer.innerHTML = "Connection is closed...";
+                        addLog("NFFG connection is closed...");
                     };
                 } else {
-                    messageContainer.innerHTML = "WebSocket NOT supported by your Browser!";
+                    addLog("WebSocket NOT supported by your Browser!");
+                }
+            }
+            function HighlightNFFG(nffg){
+                document.getElementById("nffg1").style.border = "thin solid #000000";
+                document.getElementById("nffg2").style.border = "thin solid #000000";
+                document.getElementById("nffg3").style.border = "thin solid #000000";
+                document.getElementById(nffg).style.border = "thick solid #000000";
+                if (nffg == "nffg1") {
+                    parse_sigma("base_ER.json", s2);
+                    parse_sigma("base_ER.json", s3);
+                }
+            }
+            function WebSocketNFFG(s, nffg) {
+                //var messageContainer = document.getElementById("messages");
+                if ("WebSocket" in window) {
+                    var ws = new WebSocket("ws://{{host_ip}}:{{host_port}}/".concat(nffg));
+                    ws.onopen = function() {
+                        addLog(nffg.concat(" connection is open"));
+                    };
+                    ws.onmessage = function (evt) {
+                        var received_msg = evt.data;
+                        parse_sigma(evt.data, s);
+                        HighlightNFFG(nffg)
+                    };
+                    ws.onclose = function() {
+                        addLog(nffg.concat(" connection is closed"));
+                    };
+                } else {
+                    addLog("WebSocket NOT supported by your Browser!");
+                }
+            }
+            function WebSocketLog() {
+                if ("WebSocket" in window) {
+                    addLog("WebSocket is supported by your Browser!");
+                    var ws = new WebSocket("ws://{{host_ip}}:{{host_port}}/log");
+                    ws.onopen = function() {
+                        addLog("Connection is open")
+                    };
+                    ws.onmessage = function (evt) {
+                        var received_msg = evt.data;
+                        addLog(received_msg);
+                    };
+                    ws.onclose = function() {
+                        addLog("Connection is closed...");
+                    };
+                } else {
+                    addLog("WebSocket NOT supported by your Browser!");
+                }
+            }
+            function WebSocketCounters() {
+                var messageContainer = document.getElementById("messages");
+                if ("WebSocket" in window) {
+                    printCounters("WebSocket is supported by your Browser!");
+                    var ws = new WebSocket("ws://{{host_ip}}:{{host_port}}/count");
+                    ws.onopen = function() {
+                        printCounters("counters: Connection is open")
+                    };
+                    ws.onmessage = function (evt) {
+                        var received_msg = evt.data;
+                        printCounters(received_msg);
+                    };
+                    ws.onclose = function() {
+                        printCounters("counters: Connection is closed...");
+                    };
+                } else {
+                    printCounters("WebSocket NOT supported by your Browser!");
                 }
             }
         </script>
     </head>
     <body>
-        <a href="javascript:WebSocketTest()">Run WebSocket</a>
-        <div id="messages" style="height:200px;background:black;color:white;"></div>
+        <!--<a href="javascript:WebSocketTest()">Run WebSocket</a>-->
+        <!--<div id="messages" style="height:200px;width:30%;background:black;color:white;"></div>-->
+        <div id="header">
+            <textarea id="scrollbox" autocomplete="off" disabled> </textarea>
+            <div id="traffic_counters"></div>
+        </div>
 
-        <div id="container"></div>
+        <div id="nffgs">
+
+            <table class="nffg_table">
+                <tr>
+                    <td class="nffg_cell">
+                        <div class="container_title">ORIGINAL NFFG</div>
+                    </td>
+                    <td class="nffg_cell">
+                        <div class="container_title">INTERMEDIATE NFFG</div>
+                    </td>
+                    <td class="nffg_cell">
+                        <div class="container_title">SCALED NFFG</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td id="nffg1" class="nffg_cell">
+                        <div class="nffg_div" id="container1"></div>
+                    </td>
+                    <td id="nffg2" class="nffg_cell">
+                        <div class="nffg_div" id="container2"></div>
+                    </td>
+                    <td id="nffg3" class="nffg_cell">
+                        <div class="nffg_div" id="container3"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
         <script type="text/javascript">
             // these are just some preliminary settings
             var g = {
@@ -74,11 +220,11 @@
                 edges: []
             };
             // Create new Sigma instance in graph-container div (use your div name here)
-               s = new sigma({
+            s1 = new sigma({
                graph: g,
-               container: 'container',
+               container: 'container1',
                renderer: {
-                container: document.getElementById('container'),
+                container: document.getElementById('container1'),
                 type: 'canvas'
                },
                settings: {
@@ -86,18 +232,40 @@
                 maxNodeSize: 16,
                 defaultNodeColor: '#ec5148'
                }
-               });
-            function parse_sigma2(data) {
-                sigma.parsers.json(data,
-                s,
-                function() {
-                    s.refresh();
-                  }
-                 );
-            }
+             });
+            s2 = new sigma({
+              graph: g,
+              container: 'container2',
+              renderer: {
+               container: document.getElementById('container2'),
+               type: 'canvas'
+              },
+              settings: {
+               minNodeSize: 8,
+               maxNodeSize: 16,
+               defaultNodeColor: '#ec5148'
+              }
+            });
+            s3 = new sigma({
+              graph: g,
+              container: 'container3',
+              renderer: {
+               container: document.getElementById('container3'),
+               type: 'canvas'
+              },
+              settings: {
+               minNodeSize: 8,
+               maxNodeSize: 16,
+               defaultNodeColor: '#ec5148'
+              }
+            });
         </script>
         <script type="text/javascript">
-            WebSocketTest();
+            WebSocketNFFG(s1, "nffg1");
+            WebSocketNFFG(s2, "nffg2");
+            WebSocketNFFG(s3, "nffg3");
+            WebSocketLog();
+            WebSocketCounters();
         </script>
 
     </body>

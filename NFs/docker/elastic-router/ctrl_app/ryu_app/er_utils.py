@@ -39,10 +39,14 @@ class DP:
         self.mac_to_port = {}
 
         # statistics of this DP
-        self.port_txstats = {}
-        self.port_rxstats = {}
-        self.port_txrate = {}
-        self.port_rxrate = {}
+        self.port_txstats_packets = {}
+        self.port_rxstats_packets = {}
+        self.port_txrate_packets = {}
+        self.port_rxrate_packets = {}
+        self.port_txstats_bytes = {}
+        self.port_rxstats_bytes = {}
+        self.port_txrate_bytes = {}
+        self.port_rxrate_bytes = {}
         self.previous_monitor_time = {} #store time of monitor data to calculate correct timedelta and rx_rate
 
         # openflow table of this DP
