@@ -4,14 +4,18 @@
 sleep 3
 
 #DD command
-./ryu_ddclient.py -k /a-keys.json -d tcp://172.17.0.1:7777 ryu a
+#./ryu_ddclient.py -k ./DoubleDecker-master/keys/a-keys.json -d tcp://172.17.0.1:5555 ryu a &
+#./ryu_ddclient.py -k ./DoubleDecker-py-master/doubledecker/a-keys.json -d tcp://172.17.0.1:5555 ryu a &
+#./ryu_ddclient.py -k ./a-keys.json -d tcp://172.17.0.1:5555 ryu a &
 
 echo "Control app container started"
 
+#echo "start ssh"
+#service ssh start
 
 echo "start ryu"
 cd ryu_app/
-ryu-manager ctrl_app_er_un_zmq_v1.py
+ryu-manager ctrl_app_er_un_v4.py
 
 # keep container running
 #while true

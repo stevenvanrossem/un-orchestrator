@@ -51,7 +51,7 @@ COPY ./a-keys.json ./a-keys.json
 # setup ryu files
 COPY ./ryu_app ./ryu_app
 
-ADD start_DD2.sh start.sh
+ADD start.sh start.sh
 RUN chmod +x start.sh
 
 CMD ./start.sh
