@@ -45,6 +45,9 @@ class CAdvisorMonitorThread(threading.Thread):
             count = 64
         self.url = ('http://localhost:'+str(port)+'/api/v2.0/stats/' +
                     container_id + '?type=docker&count='+str(round(count)))
+        self.spec_url = ('http://localhost:'+str(port)+'/api/v2.0/spec/' +
+                    container_id + '?type=docker')
+                    
         self.event = threading.Event()
         self.lock = threading.Lock()
         self.logger = logging.getLogger("MonitorThread")
@@ -70,6 +73,22 @@ class CAdvisorMonitorThread(threading.Thread):
         Get cAdvisor statistics via its RESTful API, then publish cpu[%] and
         memory[megabyte] usage on the message bus.
         """
+        try: 
+            r = requests.get(self.spec_url)
+            if r.status_code != 200:
+                self.logger.error("error:", r.status_code)
+                return None
+
+            j = r.json()
+            for n in j:
+                if 'aliases' in j[n]:
+                    for alias in j[n]['aliases']:
+                        if alias != self.container_id:
+                            self.spec_json["parameters"]["containerName"] = alias
+                                                        
+        except requests.exceptions.RequestException:
+            self.logger.error("RequestException when connecting to cAdvisor")
+            return None
 
         try:
             r = requests.get(self.url)

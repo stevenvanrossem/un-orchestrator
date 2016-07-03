@@ -1,12 +1,13 @@
 #!/bin/bash
 #Generate pcap files
-echo "generating pcap file trace1"
-echo "generating pcap file trace2"
-echo "generating pcap file trace3"
-echo "generating pcap file trace4"
+cd /vagrant/provisioning/UNIFY-ER-aggregator/traffic_generator/
+./tgen-psk.py --shape_file shape_example --ipdst 10.0.2.3,10.0.3.3,10.0.4.3 er1.pcap
+./tgen-psk.py --shape_file shape_example --ipdst 10.0.1.3,10.0.3.3,10.0.4.3 er2.pcap
+./tgen-psk.py --shape_file shape_example --ipdst 10.0.1.3,10.0.2.3,10.0.4.3 er3.pcap
+./tgen-psk.py --shape_file shape_example --ipdst 10.0.1.3,10.0.2.3,10.0.3.3 er4.pcap
 
 #Generate traffic
-sudo tcpreplay -i eth1 /vagrant/provisioning/trace1.pcap &
-sudo tcpreplay -i eth2 /vagrant/provisioning/trace2.pcap &
-sudo tcpreplay -i eth3 /vagrant/provisioning/trace3.pcap &
-sudo tcpreplay -i eth4 /vagrant/provisioning/trace4.pcap &
+sudo tcpreplay -i eth1 er1.pcap &
+sudo tcpreplay -i eth2 er2.pcap &
+sudo tcpreplay -i eth3 er3.pcap &
+sudo tcpreplay -i eth4 er4.pcap &

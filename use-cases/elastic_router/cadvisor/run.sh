@@ -19,4 +19,6 @@ while : ; do
   echo "."
   sleep 1;
 done
-python3 main.py $cname /keys/$ckey -p $cport;
+echo "Starting DoubleDecker proxy" 
+echo "python3 main.py $cname -k /keys/$ckey -p $cport"
+python3 main.py $cname -k /keys/$ckey -p $cport -d $DEALER_PORT
