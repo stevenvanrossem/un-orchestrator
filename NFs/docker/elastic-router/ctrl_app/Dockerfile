@@ -25,7 +25,7 @@ ADD authorized_keys /root/.ssh/authorized_keys
 RUN chmod 700 /root/.ssh
 RUN chmod 600 /root/.ssh/authorized_keys
 
-ADD ryu_ddclient.py ryu_ddclient.py
+#ADD ryu_ddclient.py ryu_ddclient.py
 
 # setup DoubleDecker
 RUN apt-get update
@@ -51,7 +51,7 @@ COPY ./a-keys.json ./a-keys.json
 # setup ryu files
 COPY ./ryu_app ./ryu_app
 
-ADD start_DD2.sh start.sh
+ADD start.sh start.sh
 RUN chmod +x start.sh
 
 CMD ./start.sh
