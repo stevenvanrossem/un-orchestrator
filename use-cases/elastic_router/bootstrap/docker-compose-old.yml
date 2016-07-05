@@ -53,17 +53,4 @@
       - ddbroker:broker
     volumes:
       - /etc/doubledecker:/keys:ro
-  name-resolver:
-    image: gitlab.testbed.se:5000/name-resolver
-    container_name: name-resolver
-    links: 
-      - aggregator
-    ports:
-      - 2626:2626
-  virtualizer:
-    image: gitlab.testbed.se:5000/virtualizer
-    container_name: virtualizer
-    links:
-      - name-resolver
-    ports: 
-      - 9090:9090
+
