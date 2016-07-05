@@ -90,6 +90,9 @@ class ElasticRouter(app_manager.RyuApp):
 
         self.logger.setLevel(logging.DEBUG)
         self.logger.debug('Cf-Or interface: {0}'.format(self.REST_Cf_Or))
+        
+        # initialize last scaling direction variable
+        self.scale_dir = None
 
         # ovs switches attached to elastic router
         self.DP_instances = {}
@@ -234,7 +237,7 @@ class ElasticRouter(app_manager.RyuApp):
             hub.sleep(2)
 
     def scale(self, scaling_ports, direction):
-
+        self.scale_dir = direction
         scale_log_string = "scale {0} started!".format(direction)
         self.logger.info(scale_log_string)
         self.gui_log_sender.send_string(scale_log_string)
@@ -470,7 +473,11 @@ class ElasticRouter(app_manager.RyuApp):
         # er_nffg.send_nffg(self.REST_Cf_Or ,er_nffg.remove_quotations_from_ports(new_nffg))
 
         #add the final measure data
-        new_nffg = er_nffg.add_measure_to_ovs_vnfs(new_nffg)
+        new_nffg = er_nffg.add_measure_to_ovs_vnfs(new_nffg, self.scale_dir)
+        file = open('ER_scale_finish-with-measure.xml', 'w')
+        file.write(new_nffg)
+        file.close()
+
         # send the final nffg
         self.nffg = er_nffg.send_nffg(self.REST_Cf_Or, new_nffg)
 
