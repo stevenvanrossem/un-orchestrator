@@ -3,6 +3,7 @@
 import logging
 import json
 from jsonrpcclient.request import Notification
+from jsonrpcserver.exceptions import ServerError
 from jsonrpcserver import Methods, dispatch
 from doubledecker.clientSafe import ClientSafe
 from cadvproxy.cadv_monitor import CAdvisorMonitorThread
@@ -12,6 +13,7 @@ __email__ = 'umar.toseef@eict.de'
 
 # Based on HTTP error codes
 REQUEST_ACCEPTED = 201
+REQUEST_FAILED = 400
 REQUEST_NOT_ACCEPTED = 404
 CLIENT_STATUS_CONNECTED = 1
 CLIENT_STATUS_DISCONNECTED = 2
@@ -55,6 +57,7 @@ class DDClient(ClientSafe):
 
         if "parameters" not in spec_json.keys() or "containerID" not in spec_json["parameters"].keys():
             self.logger.debug("No params passed to start_monitoring()")
+            raise ServerError(data="No params passed to start_monitoring()")
             return REQUEST_NOT_ACCEPTED
 
         params = spec_json["parameters"]
@@ -67,6 +70,7 @@ class DDClient(ClientSafe):
 
         if container_id in self.to_monitor.keys():
             self.logger.debug("ERROR start_monitoring: Already monitoring: "+str(container_id))
+            raise ServerError(data="ERROR start_monitoring: Already monitoring: "+str(container_id))
             return REQUEST_NOT_ACCEPTED
 
         if new_thread.container_exists():
@@ -77,6 +81,7 @@ class DDClient(ClientSafe):
             return REQUEST_ACCEPTED
         else:
             self.logger.debug("FAIL start monitoring "+str(container_id))
+            raise ServerError(data="FAIL start monitoring "+str(container_id))
             return REQUEST_NOT_ACCEPTED
 
     def stop_monitoring(self, spec_json):
@@ -93,6 +98,7 @@ class DDClient(ClientSafe):
 
         if "parameters" not in spec_json.keys() or "containerID" not in spec_json["parameters"].keys():
             self.logger.debug("No params passed to start_monitoring()")
+            raise ServerError(data="No params passed to start_monitoring()")
             return REQUEST_NOT_ACCEPTED
 
         params = spec_json["parameters"]
@@ -104,6 +110,7 @@ class DDClient(ClientSafe):
             return REQUEST_ACCEPTED
         else:
             self.logger.debug("FAIL stop monitoring "+str(container_id))
+            raise ServerError(data="FAIL stop monitoring "+str(container_id))
             return REQUEST_NOT_ACCEPTED
 
     def reset_monitoring(self):

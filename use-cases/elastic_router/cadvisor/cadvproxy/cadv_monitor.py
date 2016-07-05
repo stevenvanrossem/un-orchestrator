@@ -43,10 +43,10 @@ class CAdvisorMonitorThread(threading.Thread):
             count = 2
         if count > 64: # Maximum 64 steps (~92 sec) are supported by the method
             count = 64
-        self.url = ('http://localhost:'+str(port)+'/api/v2.0/stats/' +
-                    container_id + '?type=docker&count='+str(round(count)))
-        self.spec_url = ('http://localhost:'+str(port)+'/api/v2.0/spec/' +
-                    container_id + '?type=docker')
+        self.url = ('http://localhost:'+str(port)+'/api/v2.0/stats/docker/' +
+                    container_id + '?count='+str(round(count)))
+        self.spec_url = ('http://localhost:'+str(port)+'/api/v2.0/spec/docker/' +
+                    container_id)
                     
         self.event = threading.Event()
         self.lock = threading.Lock()
@@ -59,13 +59,17 @@ class CAdvisorMonitorThread(threading.Thread):
             self.event.wait(self.interval)
 
     def container_exists(self):
+        self.logger.debug("container_exists called")
         try:
             r = requests.get(self.url)
             if r.status_code != 200:
+                self.logger.debug("request.get(%s) returned %d - returning False"%(self.url, r.status_code))
                 return False
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as e:
+            self.logger.debug("request.get(%s) raised exception %s"%(self.url, str(e)))
             return False
 
+        self.logger.debug("container exists! returning true")
         return True
 
     def monitor(self):
