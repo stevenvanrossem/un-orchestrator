@@ -15,7 +15,7 @@ echo "Control app container started"
 
 echo "start ryu"
 cd ryu_app/
-ryu-manager ctrl_app_er_un_zmq_v3.py
+ryu-manager ctrl_app_er_un_v4.py
 
 # keep container running
 #while true

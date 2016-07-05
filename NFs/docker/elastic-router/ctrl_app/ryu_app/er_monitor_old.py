@@ -25,9 +25,6 @@ class ElasticRouterMonitor:
         self.ingress_rate_upper_threshold = upper_threshold
         self.ingress_rate_lower_threshold = lower_threshold
 
-        # counter of all rx traffic in bytes
-        self.total_rx_bytes = 0
-
 
     def init_measurement(self):
         self.DP_ingress_rate = {}
@@ -53,7 +50,7 @@ class ElasticRouterMonitor:
             return False
         # enough measurements collected?
         for DP_name in self.ERctrlapp.DP_instances:
-            if len(self.ERctrlapp.DP_instances[DP_name].port_rxrate_packets) < 1:
+            if len(self.ERctrlapp.DP_instances[DP_name].port_rxrate) < 1:
                 return False
 
         return True
@@ -64,10 +61,10 @@ class ElasticRouterMonitor:
             self.check_ingress_rate(DP)
 
     def check_ingress_rate(self, DP):
-        for n in DP.port_rxrate_packets:
-            self.DP_ingress_rate[DP.name] += (DP.port_rxrate_packets[n])
+        for n in DP.port_rxrate:
+            self.DP_ingress_rate[DP.name] += int(DP.port_rxrate[n])
             if DP.get_port_by_number(n).port_type ==  DPPort.External :
-                self.complete_ingress_rate += (DP.port_rxrate_packets[n])
+                self.complete_ingress_rate += int(DP.port_rxrate[n])
 
     def check_scaling_out(self):
         """
@@ -108,13 +105,9 @@ class ElasticRouterMonitor:
             logging.info('Scaling already in progress')
             return scaling_out_ports
 
-        # only scale out in case of single DP
-        if len(self.ERctrlapp.DP_instances) != 1:
-            logging.info('Scaling out not possible with multiple DPs')
-            return scaling_out_ports
-
         #  only scale out in case of single DP
         if len(self.ERctrlapp.DP_instances) != 1:
+            logging.info('Scaling out not possible with multiple DPs')
             return scaling_out_ports
 
         # get first DP (only triggered if 1 DP in topology)
@@ -125,14 +118,14 @@ class ElasticRouterMonitor:
 
         if len(scaling_out_ports) > 0:
             self.scaling_lock.acquire()
-            logging.info('scaling out: {0} ports: {1}'.format(this_DP.name, scaling_out_ports))
+            logging.info('scaling out: {0} ports: {1}'.format(this_DP.name,scaling_out_ports ))
 
         return scaling_out_ports
 
     def scaling_finish(self):
         # scaled out DPs are detected (intermediate configuration)
         logging.info('scaling_intermediate_finish')
-        # set openflow table of new DPs
+        # TODO set openflow table of new DPs
         # fill of tables at DP creation during scaling
         # and fill tables at DP detection
 

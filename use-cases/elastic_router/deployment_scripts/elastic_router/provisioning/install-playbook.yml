@@ -33,6 +33,9 @@
         - libjson-c2
         - libzmq3-dev
         
+    - name: "Install docker-compose"
+      pip: name="docker-compose"
+
     - name: "fetch rofl"
       git: repo=https://github.com/bisdn/rofl-common
            dest=/vagrant/rofl-common
