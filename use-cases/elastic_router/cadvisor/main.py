@@ -41,7 +41,7 @@ if __name__ == '__main__':
         "--logfile",
         help='File to write logs to',
         nargs='?',
-        default='log.txt')
+        default=None)
     parser.add_argument(
         '-l',
         "--loglevel",

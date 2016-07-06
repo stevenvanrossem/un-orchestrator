@@ -1,0 +1,56 @@
+  ddbroker:
+    image: gitlab.testbed.se:5000/ddbroker
+    container_name: ddbroker
+    ports:
+      - 5555:5555
+      - 5556:5556
+      - 5557:5557
+    volumes:
+      - /etc/doubledecker:/keys:ro
+    environment:
+      - DEALER_PORT=tcp://194.28.123.165:5555
+      - BROKER_SCOPE=0/0/1
+      - BROKER_PORT=tcp://*:5555
+
+  opentsdb:
+    image: stackexchange/bosun
+    container_name: opentsdb
+    ports:
+      - 8070:8070
+      - 4242:4242
+      - 60030:60030
+
+  opentsdb_dd:
+    image: gitlab.testbed.se:5000/ostdb_client
+    container_name: otsdb_dd
+    links:
+      - opentsdb:otsdb
+      - ddbroker:dealer
+    volumes:
+      - /etc/doubledecker:/keys
+
+  pipelinedb:
+    image: gitlab.testbed.se:5000/pipelinedb
+    container_name: pipelinedb
+
+  mmp:
+    image: gitlab.testbed.se:5000/mmp
+    container_name: mmp
+    links:
+      - ddbroker:broker
+    volumes:
+      - /:/rootfs:ro
+      - /etc/doubledecker:/keys:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+
+  aggregator:
+    image: gitlab.testbed.se:5000/aggregator
+    container_name: aggregator
+    links:
+      - pipelinedb
+      - ddbroker:broker
+    volumes:
+      - /etc/doubledecker:/keys:ro
+

@@ -21,6 +21,6 @@
       "net":["10.0.4.0/24"]
     }
   ],
-  "ingress_rate_upper_threshold":70,
-  "ingress_rate_lower_threshold":30
+  "ingress_rate_upper_threshold":190,
+  "ingress_rate_lower_threshold":130
 }

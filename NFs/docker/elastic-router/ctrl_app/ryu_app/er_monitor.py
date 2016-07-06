@@ -81,8 +81,14 @@ class ElasticRouterMonitor:
         scaling_out_ports = []
         non_scaling_ports = []
 
-        #  only scale out in case of single DP
+        # only scale out if lock is free
+        if self.scaling_lock.locked():
+            logging.info('Scaling already in progress')
+            return scaling_out_ports
+
+        # only scale out in case of single DP
         if len(self.ERctrlapp.DP_instances) != 1:
+            logging.info('Scaling out not possible with multiple DPs')
             return scaling_out_ports
 
 
@@ -145,6 +151,16 @@ class ElasticRouterMonitor:
         # eg. [[port1, port2, port3, port4]]
         # all external ports must be in the array
         scaling_in_ports = []
+
+        # only scale in if lock is free
+        if self.scaling_lock.locked():
+            logging.info('Scaling already in progress')
+            return scaling_in_ports
+
+        # only scale in in case of multiple DPs
+        if len(self.ERctrlapp.DP_instances) <= 1:
+            logging.info('Scaling in not possible with single DP')
+            return scaling_in_ports
 
         if self.complete_ingress_rate < self.ingress_rate_lower_threshold:
             # add all external ports from the DP to the scaled in DP

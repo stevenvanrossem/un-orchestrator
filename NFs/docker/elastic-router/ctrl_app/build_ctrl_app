@@ -9,3 +9,5 @@ sudo docker build --tag="gitlab.testbed.se:5000/ctrl" .
 sudo docker login -u unify -p unify-demo-stress-out -e steven.vanrossem@intec.ugent.be gitlab.testbed.se:5000
 #sudo docker tag ctrl gitlab.testbed.se:5000/ctrl
 sudo docker push gitlab.testbed.se:5000/ctrl
+
+#sudo docker pull gitlab.testbed.se:5000/ctrl
