@@ -47,6 +47,9 @@ This folder contains some examples of virtual network functions that are known t
 The `docker/elastic router` folder contains the source code of the Elastic Router VNFs.
 These VNFs should be linked by the name-resolver.
 
+## GUI
+This folder contains a nice GUI that allows to draw an NF-FG and deploy it on the UN, as well as to visualize NF-FGs already deployed.
+
 ## Use-cases
 This folder contains some running use-cases for the UN, including configuration files and VNFs.
 It contains the additional files to deploy different use-cases.
