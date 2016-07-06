@@ -87,6 +87,79 @@ MEASURE_SCALEOUT = (" measurements {"
     """->z9 = Publish(topic = "alarms", message = "entered z9");"""
     "}")
 
+# scaled-in version of the NFFG
+# nf_id 1 -> ctrl
+# nf_id 2 -> ovs1
+MEASURE_SCALEIN = (" measurements {"
+    "m1 = cpu(vnf = 1);"
+    "m2 = cpu(vnf = 2);"
+    "m6 = overload.risk.rx(interface = virtual-sap1);"
+    "m7 = overload.risk.rx(interface = virtual-sap2);"
+    "m8 = overload.risk.rx(interface = virtual-sap3);"
+    "m9 = overload.risk.rx(interface = virtual-sap4);"
+    "}"
+    "zones {"
+    """z1 = (AVG(val = m1, max_age = "5 minute") < 0.5);"""
+    """z2 = (AVG(val = m2, max_age = "5 minute") > 0.5);"""
+    """z3 = (AVG(val = m6, max_age = "5 minute") < 0.5);"""
+    """z4 = (AVG(val = m7, max_age = "5 minute") > 0.5);"""
+    """z5 = (AVG(val = m8, max_age = "5 minute") < 0.5);"""
+    """z6 = (AVG(val = m9, max_age = "5 minute") > 0.5);"""
+    "}"
+    "actions {"
+    """z1->z2 = Publish(topic = "alarms", message = "z1 to z2"); Notify(target = "alarms", message = "z1 to z2");"""
+    """z2->z1 = Publish(topic = "alarms", message = "z2 to z");"""
+    """->z1 = Publish(topic = "alarms", message = "entered z1");"""
+    """z1-> = Publish(topic = "alarms", message = "left z1");"""
+    """z1 = Publish(topic = "alarms", message = "in z1");"""
+    """z2 = Publish(topic = "alarms", message = "in z2");"""
+    """->z3 = Publish(topic = "alarms", message = "entered z3");"""
+    """->z4 = Publish(topic = "alarms", message = "entered z4");"""
+    """->z5 = Publish(topic = "alarms", message = "entered z5");"""
+    """->z6 = Publish(topic = "alarms", message = "entered z6");"""
+    "}")
+
+# scaled-out version of the NFFG
+# nf_id 1 -> ctrl
+# nf_id 3,4,5,6 -> ovs1,2,3,4
+MEASURE_SCALEOUT = (" measurements {"
+    "m1 = cpu(vnf = 1);"
+    "m2 = cpu(vnf = 3);"
+    "m3 = cpu(vnf = 4);"
+    "m4 = cpu(vnf = 5);"
+    "m5 = cpu(vnf = 6);"
+    "m6 = overload.risk.rx(interface = virtual-sap1);"
+    "m7 = overload.risk.rx(interface = virtual-sap2);"
+    "m8 = overload.risk.rx(interface = virtual-sap3);"
+    "m9 = overload.risk.rx(interface = virtual-sap4);"
+    "}"
+    "zones {"
+    """z1 = (AVG(val = m1, max_age = "5 minute") < 0.5);"""
+    """z2 = (AVG(val = m2, max_age = "5 minute") > 0.5);"""
+    """z3 = (AVG(val = m3, max_age = "5 minute") < 0.5);"""
+    """z4 = (AVG(val = m4, max_age = "5 minute") > 0.5);"""
+    """z5 = (AVG(val = m5, max_age = "5 minute") < 0.5);"""
+    """z6 = (AVG(val = m6, max_age = "5 minute") > 0.5);"""
+    """z7 = (AVG(val = m7, max_age = "5 minute") > 0.5);"""
+    """z8 = (AVG(val = m8, max_age = "5 minute") > 0.5);"""
+    """z9 = (AVG(val = m9, max_age = "5 minute") > 0.5);"""
+    "}"
+    "actions {"
+    """z1->z2 = Publish(topic = "alarms", message = "z1 to z2"); Notify(target = "alarms", message = "z1 to z2");"""
+    """z2->z1 = Publish(topic = "alarms", message = "z2 to z");"""
+    """->z1 = Publish(topic = "alarms", message = "entered z1");"""
+    """z1-> = Publish(topic = "alarms", message = "left z1");"""
+    """z1 = Publish(topic = "alarms", message = "in z1");"""
+    """z2 = Publish(topic = "alarms", message = "in z2");"""
+    """->z3 = Publish(topic = "alarms", message = "entered z3");"""
+    """->z4 = Publish(topic = "alarms", message = "entered z4");"""
+    """->z5 = Publish(topic = "alarms", message = "entered z5");"""
+    """->z6 = Publish(topic = "alarms", message = "entered z6");"""
+    """->z7 = Publish(topic = "alarms", message = "entered z7");"""
+    """->z8 = Publish(topic = "alarms", message = "entered z8");"""
+    """->z9 = Publish(topic = "alarms", message = "entered z9");"""
+    "}")
+
 def get_virtualizer_nffg(nffg_xml):
     try:
         tree = ET.fromstring(nffg_xml)
@@ -436,16 +509,17 @@ def add_measure_to_ovs_vnfs(nffg_xml, direction):
 
         logging.debug("found NF: {0}".format(nf.name.get_value()))
         if 'ovs' in nf_type and 'in' in direction:
+            #measurestring = MEASURE_STRING2.format(nf_id)
             measurestring = MEASURE_SCALEIN
             nf.metadata.add(MetadataMetadata(key='measure', value=measurestring))
             # only add to one of the VNFs
-            break 
+            break
         elif 'ovs' in nf_type and 'out' in direction:
             measurestring = MEASURE_SCALEOUT
             nf.metadata.add(MetadataMetadata(key='measure', value=measurestring))
-            # only add to one of the VNFs
+             # only add to one of the VNFs
             break
-        
+
     return nffg.xml()
 
 
@@ -484,10 +558,13 @@ def add_ovs_vnf(nffg_xml, nffg_id, ovs_id, name, vnftype, numports, add_measure=
     vnf.metadata.add(MetadataMetadata(key='variable:OVS_DPID', value='99{0}'.format(str(ovs_id).zfill(14))))
     vnf.metadata.add(MetadataMetadata(key='variable:CONTROLLER', value='tcp:10.0.10.100:6633'))
 
+    # create very long measure string without newlines included, without escaped chars, fit for printing into xml...
+    #measurestring = MEASURE_STRING2.format(nffg_id)
 
     if add_measure:
         # create very long measure string without newlines included, without escaped chars, fit for printing into xml...
-        measurestring = MEASURE_SCALEDIN
+        measurestring = MEASURE_SCALEIN
+
         vnf.metadata.add(MetadataMetadata(key='measure', value=measurestring))
 
     vnf.set_operation(operation="create",  recursive=False)

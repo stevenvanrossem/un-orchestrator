@@ -1,24 +1,24 @@
 #/bin/bash
 
 # start iperf server in every sap node
-ip netns exec sap1 iperf -s -u &
-ip netns exec sap2 iperf -s -u &
-ip netns exec sap3 iperf -s -u &
-ip netns exec sap4 iperf -s -u &
+#ip netns exec sap1 iperf -s -u &
+#ip netns exec sap2 iperf -s -u &
+#ip netns exec sap3 iperf -s -u &
+#ip netns exec sap4 iperf -s -u &
 
 ip netns exec sap1 iperf -c 10.0.2.1 -u -t10000 -b0.1M &
-ip netns exec sap1 iperf -c 10.0.3.1 -u -t10000 -b0.1M &
-ip netns exec sap1 iperf -c 10.0.4.1 -u -t10000 -b0.1M &
+#ip netns exec sap1 iperf -c 10.0.3.1 -u -t10000 -b0.1M &
+#ip netns exec sap1 iperf -c 10.0.4.1 -u -t10000 -b0.1M &
 
-ip netns exec sap2 iperf -c 10.0.1.1 -u -t10000 -b0.1M &
+#ip netns exec sap2 iperf -c 10.0.1.1 -u -t10000 -b0.1M &
 ip netns exec sap2 iperf -c 10.0.3.1 -u -t10000 -b0.1M &
-ip netns exec sap2 iperf -c 10.0.4.1 -u -t10000 -b0.1M &
+#ip netns exec sap2 iperf -c 10.0.4.1 -u -t10000 -b0.1M &
 
-ip netns exec sap3 iperf -c 10.0.1.1 -u -t10000 -b0.1M &
-ip netns exec sap3 iperf -c 10.0.2.1 -u -t10000 -b0.1M &
+#ip netns exec sap3 iperf -c 10.0.1.1 -u -t10000 -b0.1M &
+#ip netns exec sap3 iperf -c 10.0.2.1 -u -t10000 -b0.1M &
 ip netns exec sap3 iperf -c 10.0.4.1 -u -t10000 -b0.1M &
 
 ip netns exec sap4 iperf -c 10.0.1.1 -u -t10000 -b0.1M &
-ip netns exec sap4 iperf -c 10.0.2.1 -u -t10000 -b0.1M & 
-ip netns exec sap4 iperf -c 10.0.3.1 -u -t10000 -b0.1M &
+#ip netns exec sap4 iperf -c 10.0.2.1 -u -t10000 -b0.1M & 
+#ip netns exec sap4 iperf -c 10.0.3.1 -u -t10000 -b0.1M &
 
