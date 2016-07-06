@@ -38,7 +38,6 @@ os.environ["NFFG_FORMAT"] = "xml"
 import er_nffg
 
 from eventlet.green import zmq
-#CTX = zmq.Context(1)
 
 class ElasticRouter(app_manager.RyuApp):
 
@@ -47,10 +46,6 @@ class ElasticRouter(app_manager.RyuApp):
     }
 
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
-    # Cf_Or interface available in docker container
-    #REST_Cf_Or =  'http://172.17.0.1:8080'
-
-
 
     # TODO: put globals in separate file
     # cf-or address set from the nnfg as ENV variable
@@ -80,6 +75,12 @@ class ElasticRouter(app_manager.RyuApp):
         #host_ip = '192.168.10.40'
         host_ip = 'localhost'
 
+    # ip address of host machine
+    try:
+        auto_scale = ('true' in os.environ['AUTO_SCALE'].lower())
+    except:
+        auto_scale = False
+
 
     # file name + location (execution dir) of the config file to load
     # TODO load json config file from rest api
@@ -90,6 +91,9 @@ class ElasticRouter(app_manager.RyuApp):
 
         self.logger.setLevel(logging.DEBUG)
         self.logger.debug('Cf-Or interface: {0}'.format(self.REST_Cf_Or))
+
+        # initialize last scaling direction variable
+        self.scale_dir = None
 
         # ovs switches attached to elastic router
         self.DP_instances = {}
@@ -216,25 +220,30 @@ class ElasticRouter(app_manager.RyuApp):
 
 
             # not needed for UNIFY version
-            '''
-            # check if scaling is needed
-            if len(self.DP_instances) > 1:
-                # only scale in multiple DPs to 1 datapath
+            if self.auto_scale:
+                scale_direction = None
+                # check if scaling is needed
                 scaling_ports = self.monitorApp.check_scaling_in()
                 if len(scaling_ports) > 0:
-                    #self.scaled_nffg = self.scale_in(scaling_ports)
-                    self.VNFs_to_be_deleted = self.scale(scaling_ports,'in')
-            else:
-                # only scale out if 1 DP is in the nffg
-                scaling_ports =  self.monitorApp.check_scaling_out()
-                if len(scaling_ports) > 0:
-                    #self.scaled_nffg = self.scale_out(scaling_ports)
-                    self.VNFs_to_be_deleted = self.scale(scaling_ports,'out')
-            '''
+                    scale_direction = 'in'
+                else:
+                    scaling_ports = self.monitorApp.check_scaling_out()
+                    if len(scaling_ports) > 0:
+                        scale_direction = 'out'
+
+                if scale_direction:
+                    #start_time = time.time()
+                    self.VNFs_to_be_deleted = self.scale(scaling_ports,scale_direction)
+                    #self.monitorApp.scaling_lock.acquire()
+                    #self.monitorApp.scaling_lock.release()
+                    #scaling_time = time.time() - start_time
+                    #self.logger.info('scaling in finished ({0} seconds)'.format(round(scaling_time, 2)))
+
             hub.sleep(2)
 
     def scale(self, scaling_ports, direction):
 
+        self.scale_dir = direction
         scale_log_string = "scale {0} started!".format(direction)
         self.logger.info(scale_log_string)
         self.gui_log_sender.send_string(scale_log_string)
@@ -470,7 +479,11 @@ class ElasticRouter(app_manager.RyuApp):
         # er_nffg.send_nffg(self.REST_Cf_Or ,er_nffg.remove_quotations_from_ports(new_nffg))
 
         #add the final measure data
-        new_nffg = er_nffg.add_measure_to_ovs_vnfs(new_nffg)
+        #new_nffg = er_nffg.add_measure_to_ovs_vnfs(new_nffg)
+        new_nffg = er_nffg.add_measure_to_ovs_vnfs(new_nffg, self.scale_dir)
+        file = open('ER_scale_finish-with-measure.xml', 'w')
+        file.write(new_nffg)
+        file.close()
         # send the final nffg
         self.nffg = er_nffg.send_nffg(self.REST_Cf_Or, new_nffg)
 
@@ -604,7 +617,6 @@ class ElasticRouter(app_manager.RyuApp):
             port_uptime  = stat.duration_sec + stat.duration_nsec * 10**(-9)
             this_DP.previous_monitor_time.setdefault(stat.port_no,0)
             previous_time = this_DP.previous_monitor_time[stat.port_no]
-
             if previous_time <= 0 or previous_time >= port_uptime:
                # first measurement
                #print 'ER: {0}-{1}'.format(ER.name, stat.port_no)
@@ -623,6 +635,7 @@ class ElasticRouter(app_manager.RyuApp):
                #self.logger.debug('time delta: {0}'.format(time_delta))
                #print 'previous time: {0}'.format(previous_time)
                #print 'port_uptime: {0}'.format(port_uptime)
+
 
             if this_DP and stat.port_no in this_DP.port_txstats_packets :
                this_DP.port_txrate_packets[stat.port_no] = (stat.tx_packets - this_DP.port_txstats_packets[stat.port_no])/float(time_delta)
