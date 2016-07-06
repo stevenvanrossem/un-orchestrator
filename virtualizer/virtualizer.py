@@ -370,6 +370,15 @@ def extractVNFsInstantiated(content):
 		
 	return nfinstances
 
+def findEndPointId(universal_node, endpoint_name):
+	endpoints = universal_node.ports
+
+	for endpoint in endpoints:
+		if endpoint_name in endpoint.name.get_value():
+			return endpoint.id.get_value()
+	LOG.error("Endpoint '%s' not found in universal node", endpoint_name)
+
+
 def extractRules(content):
 	'''
 	Parses the message and translates the flowrules in the internal JSON representation
@@ -388,8 +397,8 @@ def extractRules(content):
 	universal_node = infrastructure.nodes.node[constants.NODE_ID]
 	flowtable = universal_node.flowtable
 
+
 	endpoints_dict = {}
-	endpoint_id = 1
 
 	flowrules = []
 	for flowentry in flowtable:		
@@ -457,10 +466,11 @@ def extractRules(content):
 			if port.name.get_value() not in physicalPortsVirtualization:
 				LOG.error("Physical port "+ port.name.get_value()+" is not present in the UN")
 				raise ClientError("Physical port "+ port.name.get_value()+" is not present in the UN")
-			port_name = physicalPortsVirtualization[port.name.get_value()]		
+			port_name = physicalPortsVirtualization[port.name.get_value()]
+			port_id = findEndPointId(universal_node, port.name.get_value())
 			if port_name not in endpoints_dict:
-				endpoints_dict[port_name] = EndPoint(_id = str(endpoint_id) ,_type = "interface", interface = port_name, name = port.name.get_value())
-				endpoint_id = endpoint_id + 1
+				endpoints_dict[port_name] = EndPoint(_id=str(port_id), _type="interface", interface=port_name,
+													 name=port.name.get_value())
 			match.port_in = "endpoint:" + endpoints_dict[port_name].id
 		elif tokens[4] == 'NF_instances':
 			#This is a port of the NF. I have to extract the port ID and the type of the NF.
@@ -511,10 +521,11 @@ def extractRules(content):
 			#This is a port of the universal node. We have to extract the ID
 			#Then, I have to retrieve the virtualized port name, and from there
 			#the real name of the port on the universal node
-			port_name = physicalPortsVirtualization[port.name.get_value()]		
+			port_name = physicalPortsVirtualization[port.name.get_value()]
+			port_id = findEndPointId(universal_node, port.name.get_value())
 			if port_name not in endpoints_dict:
-				endpoints_dict[port_name] = EndPoint(_id = str(endpoint_id) ,_type = "interface", interface = port_name, name = port.name.get_value())
-				endpoint_id = endpoint_id + 1
+				endpoints_dict[port_name] = EndPoint(_id=str(port_id), _type="interface", interface=port_name,
+													 name=port.name.get_value())
 			flowrule.actions.append(Action(output = "endpoint:" + endpoints_dict[port_name].id))
 		elif tokens[4] == 'NF_instances':
 			#This is a port of the NF. I have to extract the port ID and the type of the NF.
