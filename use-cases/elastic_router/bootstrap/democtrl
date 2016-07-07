@@ -38,11 +38,12 @@ docker-compose kill
 docker-compose rm -f 
 echo "Stopping node-orchestrator.." 
 sudo pkill -f node-orchestrator
+sudo pkill -f gdb
 echo "Removing any leftover containers.."
-docker ps -a --filter="name=ratemon*" | egrep -o -e '(ratemon-.+)'  | xargs docker rm -f
-docker ps -a --filter="name=cadvisor*" | egrep -o -e '(cadvisor-.+)'  | xargs docker rm -f
-docker ps -a --filter="name=*ctrl*" | egrep -o -e '(.+ctrl.+)'  | xargs docker rm -f
-docker ps -a --filter="name=2_*" | egrep -o -e '(2_.+)'  | xargs docker rm -f
+docker ps -a -q --filter="name=ratemon*" | xargs -r docker rm -f 
+docker ps -a -q --filter="name=cadvisor*" | xargs -r docker rm -f 
+docker ps -a -q --filter="name=*ctrl*" |  xargs -r docker rm -f
+docker ps -a -q --filter="name=2_*" |  xargs -r docker rm -f
 
 sudo ovs-vsctl del-br Bridge1
 sudo ovs-vsctl del-br Bridge2
@@ -51,7 +52,10 @@ sudo ovs-vsctl del-br Bridge2
 function start_bg () {
 echo "Starting node-orchestrator"
 cd $ORCHDIR
-sudo ./node-orchestrator --d ./config/orchestrator_config_er_demo.ini  > $CUR/logs/node-orchestrator_stdout.log 2> $CUR/logs/node-orchestrator_stderr.log &
+# for debugging the node-orchestrator
+# sudo screen -r to attach to the gdb session and "run" 
+sudo screen -dmS nodeorc gdb --args /home/unify/un-orchestrator/orchestrator/node-orchestrator --d /home/unify/un-orchestrator/orchestrator/config/orchestrator_config_er_demo.ini
+#sudo ./node-orchestrator --d ./config/orchestrator_config_er_demo.ini  > $CUR/logs/node-orchestrator_stdout.log 2> $CUR/logs/node-orchestrator_stderr.log &
 cd $CUR
 echo "Waiting for node-orchestrator to start.."
 while ! nc -z localhost 8080; do   
@@ -65,7 +69,12 @@ docker-compose up -d
 function start_inter () {
 echo "Starting node-orchestrator"
 cd $ORCHDIR
+# for debugging the node-orchestrator
+# sudo screen -r to attach to the gdb session and "run" 
+#sudo screen -dmS nodeorc gdb --args /home/unify/un-orchestrator/orchestrator/node-orchestrator --d /home/unify/un-orchestrator/orchestrator/config/orchestrator_config_er_demo.ini
 sudo ./node-orchestrator --d ./config/orchestrator_config_er_demo.ini  > >(tee $CUR/logs/node-orchestrator_stdout.log) 2> >(tee $CUR/logs/node-orchestrator_stderr.log >&2) &
+
+
 cd $CUR
 echo "Waiting for node-orchestrator to start.."
 while ! nc -z localhost 8080; do   
@@ -76,15 +85,16 @@ docker-compose up
 
 }
 function stop_all () {
+killall -9 tcpreplay
 docker-compose stop
 echo "Stopped all backgrund containers"
 echo "Stopping node-orchestrator.." 
 sudo pkill -f node-orchestrator
 echo "Stopping any leftover containers.."
-docker ps -a --filter="name=ratemon*" | egrep -o -e '(ratemon-.+)'  | xargs docker rm -f
-docker ps -a --filter="name=cadvisor*" | egrep -o -e '(cadvisor-.+)'  | xargs docker rm -f
-docker ps -a --filter="name=*ctrl*" | egrep -o -e '(.+ctrl.+)'  | xargs docker rm -f
-docker ps -a --filter="name=2_*" | egrep -o -e '(2_.+)'  | xargs docker rm -f
+docker ps -a -q --filter="name=ratemon*"   | xargs -r docker rm -f
+docker ps -a -q --filter="name=cadvisor*"  | xargs -r docker rm -f
+docker ps -a -q --filter="name=*ctrl*"  | xargs -r docker rm -f
+docker ps -a -q --filter="name=2_*" |  xargs -r docker rm -f
 sudo ovs-vsctl del-br Bridge1
 sudo ovs-vsctl del-br Bridge2
 }
@@ -102,6 +112,16 @@ ip netns exec sap1 tcpreplay -i veth0 -l $LOOPS -K ../traffic/er1.pcap &
 ip netns exec sap2 tcpreplay -i veth1 -l $LOOPS -K ../traffic/er2.pcap &
 ip netns exec sap3 tcpreplay -i veth2 -l $LOOPS -K ../traffic/er3.pcap &
 ip netns exec sap4 tcpreplay -i veth3 -l $LOOPS -K ../traffic/er4.pcap 
+}
+
+function start_slow_replay () {
+LOOPS=9999
+PPS=-2
+echo "starting 4 tcp replays, looping $LOOPS times, "
+ip netns exec sap1 tcpreplay --sleep-accel $PPS -i veth0 -l $LOOPS -K ../traffic/er1.pcap &
+ip netns exec sap2 tcpreplay --sleep-accel $PPS -i veth1 -l $LOOPS -K ../traffic/er2.pcap &
+ip netns exec sap3 tcpreplay --sleep-accel $PPS -i veth2 -l $LOOPS -K ../traffic/er3.pcap &
+ip netns exec sap4 tcpreplay --sleep-accel $PPS -i veth3 -l $LOOPS -K ../traffic/er4.pcap 
 }
 
 function start_replay_bg () {
@@ -142,17 +162,18 @@ echo ""
 echo "Elastic router VNFs"
 echo "-------------------"
 docker ps -a --filter="name=2_*"
-#for n in $(docker ps -a --filter="name=2_*" | egrep -o -e '(2_.+)') ; do 
+#for n in $(docker ps -a --filter="name=2_*" | egrep -o -e '(2_.+)') ; do
 #  echo -e "$n\t\t\t\t\t\t Up"
 #done
 
 }
 
 function show_ssh () {
- echo "ssh -L 4242:localhost:4242  -L 10001:localhost:10001 -L 8081:localhost:8081 unify@durak.testbed.se"
+ echo "ssh -L 3000:localhost:3000 -L 4242:localhost:4242  -L 10001:localhost:10001 -L 8081:localhost:8081 unify@durak.testbed.se"
  echo "OpenTSDB GUI http://localhost:4242"
  echo "Elastic Router GUI http://localhost:10001"
  echo "CAdvisor GUI http://localhost:8081"
+ echo "Grafana GUI http://localhost:3000"
 }
 
 cmd="$1"
@@ -174,6 +195,10 @@ case $cmd in
    ;; 
  replay)
    start_replay
+   stop_replay
+   ;;
+ replay-slow)
+   start_slow_replay
    stop_replay
    ;;
  replay-bg)
