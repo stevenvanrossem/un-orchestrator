@@ -1,3 +1,6 @@
+#define __USE_GNU 1
+#define _GNU_SOURCE 1
+
 #include "utils/constants.h"
 #include "utils/logger.h"
 #include "node_resource_manager/rest_server/rest_server.h"
@@ -19,6 +22,18 @@
 
 #include "node_resource_manager/database_manager/SQLite/INIReader.h"
 
+#include <signal.h>
+#include <execinfo.h>
+#include <sys/types.h>
+/* get REG_EIP from ucontext.h */
+#include <ucontext.h>
+char *executable_name = NULL;
+#ifdef __x86_64__
+#define USE_REG REG_RIP
+#else
+#define USE_REG REG_EIP
+#endif
+
 /**
 *	Global variables (defined in ../utils/constants.h)
 */
@@ -39,14 +54,7 @@ SQLiteManager *dbm = NULL;
 /**
 *	Private prototypes
 */
-
-//<<<<<<< HEAD
-//bool parse_command_line(int argc, char *argv[],int *core_mask,char **config_file, bool *init_db, char **pwd);
-//bool parse_config_file(char *config_file, int *rest_port, bool *cli_auth, char **nffg_file_name, set<string> &physical_ports, char **descr_file_name, char **client_name, char **broker_address, char **key_path, bool *orchestrator_in_band, char **un_interface, char **un_address, char **ipsec_certificate);
-//=======
 bool parse_command_line(int argc, char *argv[],int *core_mask,char **config_file);
-//bool parse_config_file(char *config_file, int *rest_port, bool *cli_auth, char **nffg_file_name, char **ports_file_name, char **descr_file_name, char **client_name, char **broker_address, char **key_path, bool *orchestrator_in_band, char **un_interface, char **un_address, char **ipsec_certificate);
-//>>>>>>> permissions
 bool parse_config_file(char *config_file, int *rest_port, bool *cli_auth, char **nffg_file_name, set<string> &physical_ports, char **descr_file_name, char **client_name, char **broker_address, char **key_path, bool *orchestrator_in_band, char **un_interface, char **un_address, char **ipsec_certificate);
 
 bool usage(void);
@@ -57,7 +65,7 @@ void terminateRestServer(void);
 /**
 *	Implementations
 */
-
+#if 0
 void singint_handler(int sig)
 {
     logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The '%s' is terminating...",MODULE_NAME);
@@ -76,6 +84,80 @@ void singint_handler(int sig)
 
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Bye :D");
 	exit(EXIT_SUCCESS);
+}
+#endif
+
+void signal_handler(int sig, siginfo_t *info, void *secret)
+{
+	switch(sig)
+	{
+		case SIGINT:
+			logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The '%s' is terminating...",MODULE_NAME);
+
+			MHD_stop_daemon(http_daemon);
+			terminateRestServer();
+
+			if(dbm != NULL) {
+				//dbm->updateDatabase();
+				dbm->cleanTables();
+			}
+#ifdef ENABLE_DOUBLE_DECKER_CONNECTION
+			DoubleDeckerClient::terminate();
+#endif
+
+			logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Bye :D");
+			exit(EXIT_SUCCESS);
+		break;
+		case SIGSEGV:
+		{
+			void *trace[16];
+			char **messages = (char **)NULL;
+			int i, trace_size = 0;
+			ucontext_t *uc = (ucontext_t *)secret;
+
+			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "");
+			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Got signal %d, faulty address is %p, from %p", sig, info->si_addr, uc->uc_mcontext.gregs[USE_REG]);
+
+			trace_size = backtrace(trace, 16);
+			/* overwrite sigaction with caller's address */
+			trace[1] = (void *)uc->uc_mcontext.gregs[USE_REG];
+
+			messages = backtrace_symbols(trace, trace_size);
+			/* skip first stack frame (points here) */
+			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Backtrace -");
+			for (i = 1; i < trace_size; ++i)
+			{
+				logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "%s ", messages[i]);
+				size_t p = 0;
+				while (messages[i][p] != '(' && messages[i][p] != ' ' && messages[i][p] != 0)
+					++p;
+				char syscom[256];
+				sprintf(syscom, "addr2line -f -p %p -e %.*s", trace[i], (int)p, messages[i]);
+
+				char *output;
+				FILE *fp;
+				char path[1035];
+
+				/* Open the command for reading. */
+				fp = popen(syscom, "r");
+				if (fp == NULL) {
+					printf("Failed to run command %s", syscom);
+				}
+				fgets(path, sizeof(path), fp);
+				fclose(fp);
+
+				output = strdup(path);
+
+				if (output != NULL)
+				{
+					logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "%s", output);
+					free(output);
+				}
+			}
+			exit(EXIT_FAILURE);
+		}
+		break;
+	}
 }
 
 int main(int argc, char *argv[])
@@ -200,10 +282,12 @@ int main(int argc, char *argv[])
 		}
 	}
 
+#if 0
 	//XXX: this code avoids that the program terminates when system() is executed
 	sigset_t mask;
 	sigfillset(&mask);
 	sigprocmask(SIG_SETMASK, &mask, NULL);
+#endif
 
 #ifdef ENABLE_DOUBLE_DECKER_CONNECTION
 	if(!DoubleDeckerClient::init(client_name, broker_address, key_path))
@@ -236,7 +320,19 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
+#if 0
 	signal(SIGINT,singint_handler);
+#endif
+
+	/* Install signal handlers */
+	struct sigaction sa;
+
+	sa.sa_sigaction = &signal_handler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART | SA_SIGINFO;
+
+	sigaction(SIGSEGV, &sa, NULL);
+	sigaction(SIGINT, &sa, NULL);
 
 	printUniversalNodeInfo();
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The '%s' is started!",MODULE_NAME);
