@@ -166,11 +166,11 @@
       pip: name="gunicorn falcon cython enum"
 
     - name: "initialize db_initalizer"
-      command: "{{ item }}chdir=/vagrant/un-orchestrator/db_initializer"
+      command: "{{ item }} chdir=/vagrant/un-orchestrator/db_initializer"
       with_items:
       - cmake .
       - make
-      - ./db_initalizer admin
+      - ./db_initializer admin
 
 
       
