@@ -106,7 +106,7 @@ class ElasticRouter(app_manager.RyuApp):
 
         self.VNFs_to_be_deleted = []
 
-        self.logger.debug('DP instances: {0}'.format(self.DP_instances))
+        #self.logger.debug('DP instances: {0}'.format(self.DP_instances))
 
         upper = self.config["ingress_rate_upper_threshold"]
         lower = self.config["ingress_rate_lower_threshold"]
@@ -156,6 +156,8 @@ class ElasticRouter(app_manager.RyuApp):
         # check nffg and parse the ovs instances deployed
         nffg_DPs = er_nffg.process_nffg(nffg)
         self.logger.info('parsed DPs: {0}'.format(nffg_DPs))
+        if len(nffg_DPs) == 0:
+            self.logger.info('no DPs found in nffg: {0}'.format(nffg))
         for DP_name in nffg_DPs:
             # if DP already exists in the ctrl app, leave it (otherwise port numbers and registered setting will be lost)
             if DP_name in self.DP_instances:
@@ -327,7 +329,10 @@ class ElasticRouter(app_manager.RyuApp):
         self.gui_log_sender.send_string('create intermediate nffg')
         # add new DP to intermediate nffg
         # clean all existing vnfs and flowentries
+
+        #self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
         nffg_intermediate = (copy.deepcopy(self.nffg))
+        nffg_intermediate = er_nffg.remove_measure_to_ovs_vnfs(nffg_intermediate)
 
         for new_DP in new_DP_list:
             ovs_id = int(new_DP.id) - 1
@@ -358,8 +363,9 @@ class ElasticRouter(app_manager.RyuApp):
                 port_in = port
                 port_SAP = port.linked_port
 
-                nffg_intermediate = er_nffg.add_flowentry_SAP(nffg_intermediate, port_in, port_SAP, priority=9)
-                nffg_intermediate = er_nffg.add_flowentry_SAP(nffg_intermediate, port_SAP, port_in, priority=9)
+                # only need outgoing flows for the new DPs
+                nffg_intermediate = er_nffg.add_flowentry_SAP(nffg_intermediate, port_in, port_SAP, priority=10)
+                #nffg_intermediate = er_nffg.add_flowentry_SAP(nffg_intermediate, port_SAP, port_in, priority=9)
 
 
 
@@ -372,12 +378,14 @@ class ElasticRouter(app_manager.RyuApp):
         self.gui_log_sender.send_string('send intermediate nffg')
         graph_dict = build_graph_list(new_DP_list, 'gui_server/parsed_nffg.json', y_offset=4)
         self.gui_nffg2_sender.send_string('parsed_nffg.json')
+
+
         # send via cf-or
-        er_nffg.send_nffg(self.REST_Cf_Or, nffg_intermediate)
+        self.nffg = er_nffg.send_nffg(self.REST_Cf_Or, nffg_intermediate)
 
 
         self.gui_log_sender.send_string('scale intermediate')
-
+        self.gui_log_sender.send_string('start routing table state transfer')
 
         VNFs_to_be_deleted = []
         for old_port in scale_port_dict:
@@ -401,15 +409,23 @@ class ElasticRouter(app_manager.RyuApp):
         change_graph(base_file='gui_server/intermediate_nffg.json', edges=new_DPs, color='red')
         self.gui_nffg2_sender.send_string('intermediate_nffg.json')
 
-        self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
+        ###self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
 
         # fix priorities of new flow entries to SAPs
-        # TODO only incoming flows matter
-        self.nffg = er_nffg.add_duplicate_flows_with_priority(self.nffg, old_priority=9, new_priority=11)
-        file = open('ER_scale_priorities1.xml', 'w')
-        file.write(self.nffg)
-        file.close()
-        er_nffg.send_nffg(self.REST_Cf_Or, self.nffg)
+        # only incoming flows matter
+        for new_DP in new_DPs:
+            external_ports = [port for port in self.DP_instances[new_DP].ports if port.port_type == DPPort.External]
+            for port in external_ports:
+                port_in = port
+                port_SAP = port.linked_port
+                self.nffg = er_nffg.add_flowentry(self.nffg, port_SAP, port_in, priority=11)
+        #self.nffg = er_nffg.add_duplicate_flows_with_priority(self.nffg, old_priority=9, new_priority=11)
+
+        #file = open('ER_scale_priorities1.xml', 'w')
+        #file.write(self.nffg)
+        #file.close()
+
+        self.nffg = er_nffg.send_nffg(self.REST_Cf_Or, self.nffg)
         # need some time here to install flows, otherwise packet loss
         hub.sleep(5)
 
@@ -419,22 +435,23 @@ class ElasticRouter(app_manager.RyuApp):
 
         # delete the old intermediate VNFs
         # first delete external incoming flows for all old DPs (scaled out topo)
-        self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
+        ###self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
         for del_VNF in self.VNFs_to_be_deleted:
             VNF_id = self.DP_instances[del_VNF].id
             self.nffg = er_nffg.delete_VNF_incoming_ext_flows(self.nffg, VNF_id)
 
 
-        # TODO wait for state transfer to be completed
+        # TODO wait for state transfer to be completed (any state change after new DP were registered)
+
         # delete other flows and complete VNF
         # self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
         for del_VNF in self.VNFs_to_be_deleted:
             VNF_id = self.DP_instances[del_VNF].id
             self.nffg = er_nffg.delete_VNF(self.nffg, VNF_id)
 
-        file = open('ER_scale_priorities2.xml', 'w')
-        file.write(self.nffg)
-        file.close()
+        #file = open('ER_scale_priorities2.xml', 'w')
+        #file.write(self.nffg)
+        #file.close()
 
         self.nffg = er_nffg.send_nffg(self.REST_Cf_Or, self.nffg)
         # need some time here to delete all flows, otherwise packet loss
@@ -453,10 +470,13 @@ class ElasticRouter(app_manager.RyuApp):
         self.parse_nffg(self.nffg)
 
         # fix priorities of new flow entries to SAPs
-        new_nffg = er_nffg.add_duplicate_flows_with_priority(self.nffg, old_priority=9, new_priority=10)
-        file = open('ER_scale_priorities3.xml', 'w')
-        file.write(new_nffg)
-        file.close()
+        #new_nffg = er_nffg.add_duplicate_flows_with_priority(self.nffg, old_priority=9, new_priority=10)
+        new_nffg = er_nffg.add_duplicate_flows_with_priority(self.nffg, old_priority=11, new_priority=10)
+
+        #file = open('ER_scale_priorities3.xml', 'w')
+        #file.write(new_nffg)
+        #file.close()
+
         new_nffg = er_nffg.send_nffg(self.REST_Cf_Or, new_nffg)
         # need some time here to install flows, otherwise packet loss
         hub.sleep(1)
@@ -468,12 +488,12 @@ class ElasticRouter(app_manager.RyuApp):
         #new_nffg = er_nffg.get_nffg(self.REST_Cf_Or)
         #need some time here to install flows, otherwise packet loss
         #hub.sleep(5)
-        new_nffg = er_nffg.delete_flows_by_priority(new_nffg, 9)
+        #new_nffg = er_nffg.delete_flows_by_priority(new_nffg, 9)
         new_nffg = er_nffg.delete_flows_by_priority(new_nffg, 11)
 
-        file = open('ER_scale_finish.xml', 'w')
-        file.write(new_nffg)
-        file.close()
+        #file = open('ER_scale_finish.xml', 'w')
+        #file.write(new_nffg)
+        #file.close()
 
         self.logger.info('restored priorities of flow entries to 10')
         # er_nffg.send_nffg(self.REST_Cf_Or ,er_nffg.remove_quotations_from_ports(new_nffg))
@@ -481,9 +501,11 @@ class ElasticRouter(app_manager.RyuApp):
         #add the final measure data
         #new_nffg = er_nffg.add_measure_to_ovs_vnfs(new_nffg)
         new_nffg = er_nffg.add_measure_to_ovs_vnfs(new_nffg, self.scale_dir)
+
         file = open('ER_scale_finish-with-measure.xml', 'w')
         file.write(new_nffg)
         file.close()
+
         # send the final nffg
         self.nffg = er_nffg.send_nffg(self.REST_Cf_Or, new_nffg)
 
@@ -578,6 +600,7 @@ class ElasticRouter(app_manager.RyuApp):
         this_DP.registered = True
         self.DPIDtoDP[this_DP.datapath_id] = this_DP
         self.logger.info('stored OF switch id: %s' % this_DP.datapath_id)
+        self.gui_log_sender.send_string("registered new OVS: {0}".format(ovs_name))
 
         # fill switch flow entries
         self.send_oftable(this_DP)

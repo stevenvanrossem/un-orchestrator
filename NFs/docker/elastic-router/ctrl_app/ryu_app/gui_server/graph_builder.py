@@ -15,6 +15,9 @@ def build_graph(DP_dict, base_file='base_ER.json', y_offset=0, output_file=None)
     y = 0
     R = 1
     num_DP = len(DP_dict)
+    if num_DP <= 0 :
+        return graph_dict
+
     theta = (2 * pi) / num_DP
     i = 1
     j = 0
@@ -71,7 +74,7 @@ def build_graph(DP_dict, base_file='base_ER.json', y_offset=0, output_file=None)
         sap_dict = {'id': sap_name, 'label': sap_name, 'x': x, 'y': y, 'size': 2, 'color': 'green'}
         graph_dict['nodes'].append(sap_dict)
 
-    logging.info('graph send:{0}'.format(json.dumps(graph_dict, indent=4)))
+    #logging.info('graph send:{0}'.format(json.dumps(graph_dict, indent=4)))
 
     if output_file is None:
         output_file = base_file
