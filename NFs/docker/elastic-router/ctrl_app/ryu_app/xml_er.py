@@ -612,6 +612,7 @@ def get_next_flowrule_id(nffg_xml, add=0):
     list = []
     for k, g in groupby(enumerate(sorted_vnf_id_list), lambda (i, x): i - x):
         list.append(map(itemgetter(1), g))
+        break
 
     if min(list[0]) > 1:
         max_id = 0
