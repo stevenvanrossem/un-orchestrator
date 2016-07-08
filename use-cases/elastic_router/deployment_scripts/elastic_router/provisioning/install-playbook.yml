@@ -111,6 +111,7 @@
       with_items:
       - mkdir -p /etc/doubledecker
       - cp -r /vagrant/un-orchestrator/use-cases/elastic_router/DoubleDecker/keys /etc/doubledecker/
+      - cp -r /vagrant/un-orchestrator/use-cases/elastic_router/DoubleDecker/keys/* /etc/doubledecker/
 
     - name: "fetch UN orchestrator"
       git: repo=https://github.com/netgroup-polito/un-orchestrator.git
