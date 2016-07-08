@@ -145,6 +145,9 @@
       - cmake .
       - make
 
+    - name: "install dockerize"
+      pip: name="dockerize"
+ 
     - name: "build name-resolver container"
       command: "{{ item }} chdir=/vagrant/un-orchestrator/use-cases/elastic_router/name-resolver"
       with_items:
