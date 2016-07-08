@@ -51,8 +51,6 @@ Vagrant.configure(2) do |config|
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
     apt-get install -y ansible
-	# remove default docker-engine because version 1.9.1 is installed in deploy.py
-	apt-get remove docker-engine
     python /vagrant/provisioning/deploy.py -u "#{username}" -p "#{password}" -b "#{branch}" -c all
     sudo ansible-playbook -i "localhost," -c local /vagrant/provisioning/install-playbook.yml
   SHELL

@@ -158,7 +158,7 @@ def handle_docker_installation():
         # Prerequisites
         handle_docker_prerequisites()
 
-        success = install_package('docker-engine')
+        success = install_package('docker-engine=1.9.1-0~trusty')
         if not success:
             print_error("Error in installing package docker-engine: see https://docs.docker.com/engine/installation/linux/ubuntulinux/")
             print_error("Aborting...")
