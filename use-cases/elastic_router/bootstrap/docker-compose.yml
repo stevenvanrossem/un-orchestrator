@@ -19,6 +19,15 @@
       - 8070:8070
       - 4242:4242
       - 60030:60030
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    volumes:
+      - /home/unify/un-orchestrator/use-cases/elastic_router/bootstrap/grafana:/var/lib/grafana
+    ports:
+      - 3000:3000
+    links:
+      - opentsdb
 
   opentsdb_dd:
     image: gitlab.testbed.se:5000/ostdb_client

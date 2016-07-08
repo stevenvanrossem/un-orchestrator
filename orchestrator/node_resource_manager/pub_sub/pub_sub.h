@@ -39,6 +39,10 @@ private:
 	*/
 	static bool connected;
 
+	static char *clientName; 
+	static char *brokerAddress;
+	static char *keyPath;
+
 	/**
 	*	@brief: list contaning messages to be sent (and the related topic)
 	*/

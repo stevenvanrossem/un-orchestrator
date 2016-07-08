@@ -106,7 +106,7 @@
     - name: "fetch UN orchestrator"
       git: repo=https://github.com/netgroup-polito/un-orchestrator.git
            dest=/vagrant/un-orchestrator 
-           version=elastic-router
+           version=new_elastic_router
         
     - name: "unzip json-spirit"
       unarchive: src=/vagrant/un-orchestrator/contrib/json-spirit.zip dest=/vagrant copy=no
@@ -138,11 +138,16 @@
       - ./configure --prefix=/ --datarootdir=/usr/share --with-linux=/lib/modules/$(uname -r)/build
       - make
       - make install
-          
+
     - name: "build name-resolver"
       command: "{{ item }} chdir=/vagrant/un-orchestrator/name-resolver"
       with_items:
       - cmake .
+      - make
+
+    - name: "build name-resolver container"
+      command: "{{ item }} chdir=/vagrant/un-orchestrator/use-cases/elastic_router/name-resolver"
+      with_items:
       - make
 
     - name: "build orchestrator"
@@ -153,3 +158,4 @@
       
     - name: "prepare python environment for virtualizer"
       pip: name="gunicorn falcon cython enum"
+

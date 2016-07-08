@@ -1,0 +1,1 @@
+Script using Dockerize to create a docker container out of the name-resolver binary
