@@ -36,7 +36,10 @@ meta_data = {
             'comp_path':'NFs/docker/elastic-router/ctrl_app/', 'image_id':'gitlab.testbed.se:5000/ctrl:latest'},
 
 'stackexchange' : {'repo_name':'un-orchestrator', 'github_link':'',
-            'comp_path':'', 'image_id':'stackexchange/bosun:latest'}
+            'comp_path':'', 'image_id':'stackexchange/bosun:latest'},
+			
+'virtualizer' : {'repo_name':'un-orchestrator', 'github_link':'https://github.com/netgroup-polito/un-orchestrator.git',
+            'comp_path':'virtualizer/', 'image_id':'gitlab.testbed.se:5000/virtualizer:latest'},
 }
 
 
