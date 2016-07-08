@@ -17,6 +17,7 @@ def build_graph(DP_dict, base_file='base_ER.json', y_offset=0, output_file=None)
     num_DP = len(DP_dict)
     if num_DP == 0:
         return graph_dict
+
     theta = (2 * pi) / num_DP
     i = 1
     j = 0
