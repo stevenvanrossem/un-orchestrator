@@ -10,6 +10,7 @@ MAINTAINER iMinds & Acreo
 RUN apt-get update
 RUN apt-get install -yq iproute net-tools iputils-ping curl python-zmq openssh-server
 RUN pip install ipaddress
+RUN pip install --upgrade pip
 
 # dependencies for rest api
 RUN pip install flask
@@ -30,9 +31,11 @@ RUN chmod 600 /root/.ssh/authorized_keys
 # setup DoubleDecker
 RUN apt-get update
 #RUN apt-get install -yq python3 python3-zmq python3-pip libffi-dev libsodium-dev 
-RUN apt-get install -yq gcc python-setuptools python-dev python-zmq python-pip libffi-dev libsodium-dev 
+RUN apt-get install -yq gcc python-setuptools python-dev python-zmq python-pip libffi-dev libsodium-dev python-nacl
 RUN pip install jsonrpcserver
-RUN pip install PyNaCl
+RUN pip install wheel
+#RUN pip install cffi
+#RUN pip install pynacl
 RUN pip install gipc
 RUN pip install future
 RUN pip install tornado
