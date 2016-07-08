@@ -154,7 +154,7 @@
     - name: "build name-resolver container"
       command: "{{ item }} chdir=/vagrant/un-orchestrator/use-cases/elastic_router/name-resolver"
       with_items:
-      - make
+      - make -f Makefile_vagrant
 
     - name: "build orchestrator"
       command: "{{ item }} chdir=/vagrant/un-orchestrator/orchestrator"
