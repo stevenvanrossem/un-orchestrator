@@ -165,7 +165,7 @@
     - name: "build orchestrator"
       command: "{{ item }} chdir=/vagrant/un-orchestrator/orchestrator"
       with_items:
-      - cmake  -D'ENABLE_KVM=OFF' -D'ENABLE_DOCKER=ON' -D'ENABLE_DOUBLE_DECKER_CONNECTION=ON' -D'ENABLE_UNIFY_MONITORING_CONTROL=ON' -D'ENABLE_UNIFY_PORTS_CONFIGURATION=ON' .
+      - cmake  -D'ENABLE_KVM=OFF' -D'ENABLE_DOCKER=ON' -D'ENABLE_DOUBLE_DECKER_CONNECTION=ON' -D'ENABLE_UNIFY_MONITORING_CONTROLLER=ON' -D'ENABLE_UNIFY_PORTS_CONFIGURATION=ON' .
       - make
       
     - name: "prepare python environment for virtualizer"
