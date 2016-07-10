@@ -17,22 +17,23 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq python \
 # Broker default port 
 EXPOSE 5555 
 
-# TODO: write a run.sh script that handles ENV variables properly
-RUN mkdir /ramon
-ADD ./ratemon_client.py /ramon/
-ADD ./ramon_src/* /ramon/
-WORKDIR /
-RUN wget https://github.com/Acreo/DoubleDecker-py/archive/master.tar.gz -O dd.tar.gz
-RUN tar xzf dd.tar.gz
-RUN rm dd.tar.gz
-WORKDIR /DoubleDecker-py-master/
+RUN mkdir /dd
+ADD https://github.com/acreo/DoubleDecker-py/archive/master.tar.gz /dd
+WORKDIR /dd
+RUN tar xzf master.tar.gz
+RUN rm master.tar.gz
+WORKDIR /dd/DoubleDecker-py-master/
 RUN python3 setup.py build
 RUN python3 setup.py install
+WORKDIR /
+
 RUN pip install sh
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq python-requests python3-requests
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get autoremove -yq
 RUN DEBIAN_FRONTEND=noninteractive apt-get autoclean -yq
 #CMD ./run.sh
+
 
 # [PD] 2016-06-07, added environment variables and new CMD
 ENV name=ramon
@@ -56,12 +57,18 @@ ENV RAMON_ALARM_TRIGGER=90
 ENV RAMON_CUTOFF=90
 # use this percentage as a cutoff when calculating
 # the overload risk
+# TODO: write a run.sh script that handles ENV variables properly
+RUN mkdir /ramon
+ADD ./ratemon_client.py /ramon/
+ADD ./ramon_src/* /ramon/
+
 WORKDIR /ramon/
 CMD ./ratemon_client.py -k ${DOUBLEDECKER_KEYS} \
             ${name} \
             ${NO_HELLO} \
             -p ${ramon_port} \
             -q ${config_port} \
+	    -d ${BROKER_PORT_5555_TCP} \
             --ramon_path ${RAMON_PATH} \
             --ramon_args -i ${interface} \
             -s ${RAMON_SAMPLE_RATE} \
