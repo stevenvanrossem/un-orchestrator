@@ -1,0 +1,9 @@
+all:
+	dockerize -t gitlab.testbed.se:5000/name-resolver \
+	-a /usr/local/lib/libjson_spirit.so /usr/lib/x86_64-linux-gnu/libjson_spirit.so \
+	-a /vagrant/un-orchestrator/use-cases/elastic_router/elastic_router_files/name_resolver_config_er_demo.xml /name_resolver_config.xml \
+	-a /vagrant/un-orchestrator/name-resolver/config/network-functions.xsd /home/unify/un-orchestrator/name-resolver/config/network-functions.xsd \
+	-a /vagrant/un-orchestrator/name-resolver/config/network-functions.xsd /config/network-functions.xsd \
+	-c "/vagrant/un-orchestrator/name-resolver/name-resolver --f /name_resolver_config.xml" \
+	--filetools \
+	/vagrant/un-orchestrator/name-resolver/name-resolver 
