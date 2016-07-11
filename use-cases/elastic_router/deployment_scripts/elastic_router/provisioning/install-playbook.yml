@@ -32,6 +32,7 @@
         - libjson-c-dev
         - libjson-c2
         - libzmq3-dev
+        - iperf
         
     - name: "Install docker-compose"
       pip: name="docker-compose"

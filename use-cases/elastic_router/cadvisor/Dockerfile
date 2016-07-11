@@ -10,6 +10,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3-zmq
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3-urwid
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3-tornado
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install libffi-dev
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3-requests
 RUN pip3 install pynacl
 RUN pip3 install jsonrpcserver
 RUN pip3 install jsonrpcclient
