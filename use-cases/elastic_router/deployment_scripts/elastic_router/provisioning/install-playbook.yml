@@ -179,5 +179,12 @@
       - make
       - ./db_initializer admin
 
+    - name: "prepare democtrl and docker-compose file (replace home/unify with vagrant directory name)"
+      command: "{{ item }} chdir=/vagrant/un-orchestrator/use-cases/elastic_router/bootstrap"
+      with_items:
+      - sed -i -e 's/home\/unify/vagrant/g' democtrl
+      - sed -i -e 's/home\/unify/vagrant/g' docker-compose.yml
+
+
 
       
