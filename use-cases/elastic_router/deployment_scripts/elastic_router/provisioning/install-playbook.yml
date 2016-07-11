@@ -33,6 +33,7 @@
         - libjson-c2
         - libzmq3-dev
         - iperf
+        - tcpreplay
         
     - name: "Install docker-compose"
       pip: name="docker-compose"
