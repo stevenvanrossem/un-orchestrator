@@ -23,7 +23,7 @@
     image: grafana/grafana
     container_name: grafana
     volumes:
-      - /vagrant/un-orchestrator/use-cases/elastic_router/bootstrap/grafana:/var/lib/grafana
+      - /home/unify/un-orchestrator/use-cases/elastic_router/bootstrap/grafana:/var/lib/grafana
     ports:
       - 3000:3000
     links:
