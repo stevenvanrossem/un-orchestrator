@@ -81,6 +81,14 @@ else
 fi
 }
 
+function start_nffg_gui () {
+echo "starting the nffg gui on TCP:9999. It contacts the un-orchestrator on port TCP:8080"
+cd $CUR/../../../GUI
+screen
+python manage.py runserver
+screen -d
+}
+
 function start_veth () {
 	bash /vagrant/un-orchestrator/use-cases/elastic_router/elastic_router_files/start_veth
 }
@@ -202,12 +210,14 @@ case $cmd in
    ;;
  start)
    start_ovs
+   start_nffg_gui
    start_veth
    start_inter
    stop_all
    ;;
  start-bg) 
    start_ovs
+   start_nffg_gui
    start_veth
    start_bg
    show_status
