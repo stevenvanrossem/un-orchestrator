@@ -442,10 +442,13 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s)
 				//port_l[dnumber].push_back(name_on_switch);
 
 				/*fill the map ports*/
-				n_ports_1[nfp->port_name] = rnumber-1;
+				n_ports_1[nfp->port_name] = rnumber-1; //This is the ID Openflow
 				port_names_on_switch.push_back(name_on_switch);
 				port_names_and_id[name_on_switch] = nfp->port_id;
-				
+
+				logger(ORCH_DEBUG, OVSDB_MODULE_NAME, __FILE__, __LINE__, "Network function ID: %s - port name on graph: %s - port ID on LSI: %d",(*nf).c_str(),(nfp->port_name).c_str(),rnumber-1);
+				logger(ORCH_DEBUG, OVSDB_MODULE_NAME, __FILE__, __LINE__, "Network function ID: %s - port name on LSI: %s",(*nf).c_str(),name_on_switch.c_str());
+				logger(ORCH_DEBUG, OVSDB_MODULE_NAME, __FILE__, __LINE__, "Network function ID: %s - port name on LSI: %s - port ID on graph: %d",(*nf).c_str(),name_on_switch.c_str(),nfp->port_id);
 			}
 
 			/*fill the network_functions_ports*/
@@ -1336,7 +1339,7 @@ void commands::add_endpoint(uint64_t dpi, char local_ip[BUF_SIZE], char remote_i
 
 void commands::cmd_editconfig_lsi_delete(uint64_t dpi, int s)
 {
-	logger(ORCH_DEBUG_INFO, OVSDB_MODULE_NAME, __FILE__, __LINE__, "Deleting LSI with DPI '%d' switch '%s'",dpi, switch_id[dpi].c_str());
+	logger(ORCH_DEBUG_INFO, OVSDB_MODULE_NAME, __FILE__, __LINE__, "Deleting LSI with DPI '%u' switch '%s'",dpi, switch_id[dpi].c_str());
 
     	ssize_t nwritten = 0;
 
@@ -1491,6 +1494,7 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int socketNum
 {
 	list<struct nf_port_info> portInfo = anpi.getNetworkFunctionsPorts();//each element of portInfo contains the port name and the port type
 	uint64_t datapathNumber = anpi.getDpid();
+	map<string, unsigned int> port_names_and_id;
 
 	list<string> ports_name_on_switch;
 	map<string, unsigned int> ports;
@@ -1500,11 +1504,12 @@ AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int socketNum
 		string nameOnSwitch = add_port(pinfo->port_name, datapathNumber, true, socketNumber, pinfo->port_type);
 		ports_name_on_switch.push_back(nameOnSwitch);
 		ports[pinfo->port_name] = rnumber - 1;
+		port_names_and_id[nameOnSwitch] = rnumber - 1;
 
 		logger(ORCH_DEBUG_INFO, OVSDB_MODULE_NAME, __FILE__, __LINE__, "Port '%s' has name '%s' on the switch.",(pinfo->port_name).c_str(),nameOnSwitch.c_str());
 	}
 
-	AddNFportsOut *anf = new AddNFportsOut(anpi.getNfId(), ports, ports_name_on_switch);
+	AddNFportsOut *anf = new AddNFportsOut(anpi.getNfId(), ports, ports_name_on_switch, port_names_and_id);
 
 	return anf;
 }
