@@ -38,7 +38,7 @@ void MonitoringController::startMonitoring(string measure_string, list< pair<str
 			Object port;
 			
 			stringstream port_name;
-			port_name << mm->second << ".lxc";
+			port_name << mm->second << ".d";
 			
 			port["id"] = mm->first;
 			port["name"] = port_name.str();
