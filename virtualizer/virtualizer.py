@@ -931,7 +931,7 @@ def sendToUniversalNode(rules, vnfs, endpoints):
 			nffg.end_points.remove(endpoint)
 
 	graph_url = unOrchestratorURL + "/NF-FG/%s"
-	
+
 	try:
 		if len(nffg.flow_rules) + len(nffg.vnfs) + len(nffg.end_points) == 0:
 			LOG.debug("No elements have to be sent to the universal node orchestrator...sending a delete request")
