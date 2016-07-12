@@ -55,7 +55,7 @@ supported_actions = {
 '''
 equivalent_actions = {
 	"strip_vlan" : "pop_vlan",
-	"pop_tag" : "strip_vlan",
+	"pop_tag" : "pop_vlan",
 	"push_vlan" : "push_vlan",
 	"push_tag" : "push_vlan"
 }
