@@ -34,9 +34,13 @@
         - libzmq3-dev
         - iperf
         - tcpreplay
+        - python2.7
         
     - name: "Install docker-compose"
       pip: name="docker-compose"
+
+    - name: "Prapare python environment for the GUI"
+      pip: name="Django jsonschema json-schema-validator"
 
     - name: "fetch rofl"
       git: repo=https://github.com/bisdn/rofl-common
@@ -150,6 +154,11 @@
       - make
       - make install
 
+    - name: "init submodules"
+      command: "{{ item }} chdir=/vagrant/un-orchestrator"
+      with_items:
+      - git submodule update --init --recursive
+
     - name: "build name-resolver"
       command: "{{ item }} chdir=/vagrant/un-orchestrator/name-resolver"
       with_items:
@@ -179,6 +188,11 @@
       - cmake .
       - make
       - ./db_initializer admin
+      
+      - name: "Initialize database of the GUI"
+      command: "{{ item }} chdir=/vagrant/un-orchestrator/GUI"
+      with_items:
+      - python manage.py migrate
 
     - name: "prepare democtrl and docker-compose file (replace home/unify with vagrant directory name)"
       command: "{{ item }} chdir=/vagrant/un-orchestrator/use-cases/elastic_router/bootstrap"
