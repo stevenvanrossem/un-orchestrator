@@ -32,9 +32,15 @@
         - libjson-c-dev
         - libjson-c2
         - libzmq3-dev
+        - iperf
+        - tcpreplay
+        - python2.7
         
     - name: "Install docker-compose"
       pip: name="docker-compose"
+
+    - name: "Prapare python environment for the GUI"
+      pip: name="Django jsonschema json-schema-validator"
 
     - name: "fetch rofl"
       git: repo=https://github.com/bisdn/rofl-common
@@ -50,6 +56,9 @@
       - ../configure
       - make
       - make install
+
+    - name: "init rofl"
+      command: "ldconfig . chdir=/vagrant/rofl-common/build//src/rofl/.libs" 
       
     - name: "fetch zeromq - A DoubleDecker prequisite"
       get_url: url="http://github.com/zeromq/czmq/archive/v3.0.2.tar.gz" dest=/vagrant/v3.0.2.tar.gz
@@ -103,6 +112,12 @@
       - make
       - make install
 
+    - name : "copy doubledecker keys"
+      shell: "{{ item }}"
+      with_items:
+      - mkdir -p /etc/doubledecker
+      - cp -r /vagrant/un-orchestrator/use-cases/elastic_router/DoubleDecker/keys/* /etc/doubledecker/
+
     - name: "fetch UN orchestrator"
       git: repo=https://github.com/netgroup-polito/un-orchestrator.git
            dest=/vagrant/un-orchestrator 
@@ -139,26 +154,52 @@
       - make
       - make install
 
+    - name: "init submodules"
+      command: "{{ item }} chdir=/vagrant/un-orchestrator"
+      with_items:
+      - git submodule update --init --recursive
+
     - name: "build name-resolver"
       command: "{{ item }} chdir=/vagrant/un-orchestrator/name-resolver"
       with_items:
       - cmake .
       - make
 
-    - name: "Install dockerize"
+    - name: "install dockerize"
       pip: name="dockerize"
-
+ 
     - name: "build name-resolver container"
       command: "{{ item }} chdir=/vagrant/un-orchestrator/use-cases/elastic_router/name-resolver"
       with_items:
-      - make
+      - make -f Makefile_vagrant
 
     - name: "build orchestrator"
       command: "{{ item }} chdir=/vagrant/un-orchestrator/orchestrator"
       with_items:
-      - cmake  -D'ENABLE_KVM=OFF' -D'ENABLE_DOCKER=ON' -D'ENABLE_DOUBLE_DECKER_CONNECTION=ON' -D'ENABLE_UNIFY_MONITORING_CONTROL=ON' -D'ENABLE_UNIFY_PORTS_CONFIGURATION=ON' .
+      - cmake  -D'ENABLE_KVM=OFF' -D'ENABLE_DOCKER=ON' -D'ENABLE_DOUBLE_DECKER_CONNECTION=ON' -D'ENABLE_UNIFY_MONITORING_CONTROLLER=ON' -D'ENABLE_UNIFY_PORTS_CONFIGURATION=ON' .
       - make
       
     - name: "prepare python environment for virtualizer"
       pip: name="gunicorn falcon cython enum"
 
+    - name: "initialize db_initalizer"
+      command: "{{ item }} chdir=/vagrant/un-orchestrator/db_initializer"
+      with_items:
+      - cmake .
+      - make
+      - ./db_initializer admin
+      
+      - name: "Initialize database of the GUI"
+      command: "{{ item }} chdir=/vagrant/un-orchestrator/GUI"
+      with_items:
+      - python manage.py migrate
+
+    - name: "prepare democtrl and docker-compose file (replace home/unify with vagrant directory name)"
+      command: "{{ item }} chdir=/vagrant/un-orchestrator/use-cases/elastic_router/bootstrap"
+      with_items:
+      - sed -i -e 's/home\/unify/vagrant/g' democtrl
+      - sed -i -e 's/home\/unify/vagrant/g' docker-compose.yml
+
+
+
+      

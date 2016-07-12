@@ -132,18 +132,19 @@ class CAdvisorMonitorThread(threading.Thread):
                 # Handling thread synchronization
                 with self.lock:
                     self.ddClient.publish_measurement(self.spec_json)
-
-                interfaces = j.get(i)[0]['network']['interfaces']
-                for x in range(len(interfaces)):
-                    rx_packets_now = j.get(i)[0]['network']['interfaces'][x]['rx_packets']
-                    rx_packets_prev = j.get(i)[-1]['network']['interfaces'][x]['rx_packets']
-                    rx_packets_rate = float(rx_packets_now - rx_packets_prev)/float(timestamp_now - timestamp_prev)*1e9
-                    self.spec_json_rx["results"]["rx_rate"] = rx_packets_rate
-                    iface_name = j.get(i)[0]['network']['interfaces'][x]['name']
-                    self.spec_json_rx["parameters"]["interface"] = iface_name
-                    # Handling thread synchronization
-                    with self.lock:
-                        self.ddClient.publish_measurement(self.spec_json_rx)
+                from pprint import pformat
+                if 'interfaces' in j.get(i)[0]['network']:
+                    interfaces = j.get(i)[0]['network']['interfaces']
+                    for x in range(len(interfaces)):
+                        rx_packets_now = j.get(i)[0]['network']['interfaces'][x]['rx_packets']
+                        rx_packets_prev = j.get(i)[-1]['network']['interfaces'][x]['rx_packets']
+                        rx_packets_rate = float(rx_packets_now - rx_packets_prev)/float(timestamp_now - timestamp_prev)*1e9
+                        self.spec_json_rx["results"]["rx_rate"] = rx_packets_rate
+                        iface_name = j.get(i)[0]['network']['interfaces'][x]['name']
+                        self.spec_json_rx["parameters"]["interface"] = iface_name
+                        # Handling thread synchronization
+                        with self.lock:
+                            self.ddClient.publish_measurement(self.spec_json_rx)
 
         except requests.exceptions.RequestException:
             self.logger.error("RequestException when connecting to cAdvisor")

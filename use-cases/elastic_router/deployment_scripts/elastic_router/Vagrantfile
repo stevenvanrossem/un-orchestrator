@@ -31,13 +31,26 @@ opts.each do |opt, arg|
   end
 end
 
+# opened tcp ports
+# 10001 : ctrl-app gui
+# 10002 : ovs ssh
+# 3000  : grafana
+# 9090  : virtualizer
+# 9999  : un-gui
+  
 Vagrant.configure(2) do |config|
 
   config.vm.box = "ubuntu/trusty64"
   config.vm.provider "virtualbox" do |v|
       v.memory = "#{memory}"
       v.cpus = "#{cores}"
-  end
+  config.vm.network "forwarded_port", guest: 10001, host: 10001
+  config.vm.network "forwarded_port", guest: 10002, host: 10002
+  config.vm.network "forwarded_port", guest: 3000, host: 3000
+  config.vm.network "forwarded_port", guest: 9090, host: 9090
+  config.vm.network "forwarded_port", guest: 9999, host: 9999
+
+end
 
   config.vm.network "private_network", ip: "10.1.1.2"
   config.vm.network "private_network", ip: "10.1.2.2"

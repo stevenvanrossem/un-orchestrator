@@ -979,7 +979,7 @@ following example:
 		    	"name": "ingress",
 		    	"type": "interface",
 		    	"interface": {
-		      		"interface": "eth1"
+		      		"if-name": "eth1"
 		    	}
 		  	}
 			],

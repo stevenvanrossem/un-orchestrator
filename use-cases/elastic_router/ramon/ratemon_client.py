@@ -48,6 +48,13 @@ import pdb
 
 class MonitoringDataHandler(socketserver.BaseRequestHandler):
 
+    # Maybe cleaner ? 
+ #   def __init__(self,):
+ #       context = zmq.Context.instance()
+ #       self.socket = context.socket(zmq.REQ)
+ #       self.socket.connect('inproc://handlers')
+        
+
     def setup(self):
         context = zmq.Context.instance()
         self.socket = context.socket(zmq.REQ)
@@ -56,7 +63,10 @@ class MonitoringDataHandler(socketserver.BaseRequestHandler):
     def handle(self):
         data = self.request.recv(1024).strip()
         self.socket.send(data)
-
+        self.socket.recv()
+    def finish(self):
+        self.socket.close()
+        
 
 class SecureCli(ClientSafe):
 #    def __init__(self, name, dealerurl, customer, keyfile, mpath, mport=55555, qport=54736, hello=True, ramon_args=None):
@@ -213,7 +223,11 @@ class SecureCli(ClientSafe):
             elif 'initialized' in results:
                 pass
             else:
-                send_immediate = True
+                # this looks a bit funny, commented = False, PONTUS
+                # [PD] 2016-06-12, send_immediate = True should only be used
+                #                  for debugging. Normally the aggregator polls
+                #                  for data from the ratemon_client.
+#                send_immediate = True
                 send_immediate = False
                 if send_immediate:
                     filtered_data = self.filter_ramon_data(results)

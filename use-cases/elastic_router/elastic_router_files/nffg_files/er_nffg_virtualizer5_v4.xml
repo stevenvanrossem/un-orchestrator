@@ -263,20 +263,20 @@
 					<metadata>
 						<key>measure</key>
 						<value>measurements {
-m1 = cpu(vnf = 2);
-m2 = mem(vnf = 2);
-m3 = overload.risk.rx(interface = virtual-sap1);
-m4 = overload.risk.rx(interface = virtual-sap2);
-m5 = overload.risk.rx(interface = virtual-sap3);
-m6 = overload.risk.rx(interface = virtual-sap4);
+m1 = cpu(vnf = 1);
+m2 = cpu(vnf = 2);
+m6 = overload.risk.rx(interface = virtual-sap1);
+m7 = overload.risk.rx(interface = virtual-sap2);
+m8 = overload.risk.rx(interface = virtual-sap3);
+m9 = overload.risk.rx(interface = virtual-sap4);
 }
 zones {
 z1 = (AVG(val = m1, max_age = "5 minute") &lt; 0.5);
 z2 = (AVG(val = m2, max_age = "5 minute") &gt; 0.5);
-z3 = (AVG(val = m3, max_age = "5 minute") &lt; 0.5);
-z4 = (AVG(val = m4, max_age = "5 minute") &gt; 0.5);
-z5 = (AVG(val = m5, max_age = "5 minute") &lt; 0.5);
-z6 = (AVG(val = m6, max_age = "5 minute") &gt; 0.5);
+z3 = (AVG(val = m6, max_age = "5 minute") &lt; 0.5);
+z4 = (AVG(val = m7, max_age = "5 minute") &gt; 0.5);
+z5 = (AVG(val = m8, max_age = "5 minute") &lt; 0.5);
+z6 = (AVG(val = m9, max_age = "5 minute") &gt; 0.5);
 
 }
 actions {

@@ -9,10 +9,10 @@ __author__ = 'umar.toseef'
 
 meta_data = {
 'cadvisor' : {'repo_name':'un-orchestrator', 'github_link':'https://github.com/netgroup-polito/un-orchestrator.git',
-            'comp_path':'use-cases/elastic_router/cadvisor/', 'image_id':'gitlab.testbed.se:5000/cadvisor:latest'},
+            'comp_path':'use-cases/elastic_router/cadvisor/', 'image_id':'gitlab.testbed.se:5000/cadvisor:v1'},
 
-'ramon' : {'repo_name':'un-orchestrator', 'github_link':'https://github.com/netgroup-polito/un-orchestrator.git',
-            'comp_path':'use-cases/elastic_router/ramon/', 'image_id':'gitlab.testbed.se:5000/ramon:latest'},
+'ratemon' : {'repo_name':'un-orchestrator', 'github_link':'https://github.com/netgroup-polito/un-orchestrator.git',
+            'comp_path':'use-cases/elastic_router/ramon/', 'image_id':'gitlab.testbed.se:5000/ratemon:latest'},
 
 'mmp' : {'repo_name':'un-orchestrator', 'github_link':'https://github.com/netgroup-polito/un-orchestrator.git',
             'comp_path':'use-cases/elastic_router/MEASURE-MMP/', 'image_id':'gitlab.testbed.se:5000/mmp:latest'},
@@ -30,7 +30,7 @@ meta_data = {
             'comp_path':'use-cases/elastic_router/DoubleDecker/docker/', 'image_id':'gitlab.testbed.se:5000/doubledecker:latest'},
 
 'ovs' : {'repo_name':'un-orchestrator', 'github_link':'https://github.com/netgroup-polito/un-orchestrator.git',
-            'comp_path':'', 'image_id':'gitlab.testbed.se:5000/ovs:latest'},
+            'comp_path':'NFs/docker/elastic-router/ovs/', 'image_id':'gitlab.testbed.se:5000/ovs:latest'},
 
 'ctrl_app' : {'repo_name':'un-orchestrator', 'github_link':'https://github.com/netgroup-polito/un-orchestrator.git',
             'comp_path':'NFs/docker/elastic-router/ctrl_app/', 'image_id':'gitlab.testbed.se:5000/ctrl:latest'},
@@ -158,7 +158,7 @@ def handle_docker_installation():
         # Prerequisites
         handle_docker_prerequisites()
 
-        success = install_package('docker-engine')
+        success = install_package('docker-engine=1.9.1-0~trusty')
         if not success:
             print_error("Error in installing package docker-engine: see https://docs.docker.com/engine/installation/linux/ubuntulinux/")
             print_error("Aborting...")

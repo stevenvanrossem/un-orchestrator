@@ -12,7 +12,7 @@ RATEMON_CLIENT=./ratemon_client.py
 ## Temporary path to RAMON
 #RAMON_PATH=../../../../aggregator/ramon/ramon_svn/run_monitor.py
 ## Use this path when the submodule for RAMON is OK.
-RAMON_PATH=./ramon_src/run_monitor.py
+: ${RAMON_PATH:=./ramon_src/run_monitor.py}
 
 DOUBLEDECKER_KEYS=/etc/doubledecker/public-keys.json
 

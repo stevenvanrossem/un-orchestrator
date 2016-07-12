@@ -3,6 +3,8 @@ MAINTAINER iMinds
 
 RUN apt-get update --fix-missing
 RUN apt-get install -y openvswitch-switch openvswitch-common openssh-server
+# need ifconfig
+RUN apt-get install -y net-tools
 
 RUN echo 'root:root' | chpasswd
 RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
