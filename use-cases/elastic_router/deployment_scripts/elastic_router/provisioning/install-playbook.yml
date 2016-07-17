@@ -37,7 +37,7 @@
         - python2.7
         
     - name: "Install docker-compose"
-      pip: name="docker-compose"
+      pip: name="docker-compose" version="1.8.0rc1"
 
     - name: "Prapare python environment for the GUI"
       pip: name="Django jsonschema json-schema-validator"
