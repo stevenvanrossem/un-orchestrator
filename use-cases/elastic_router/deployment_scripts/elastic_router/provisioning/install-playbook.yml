@@ -58,7 +58,7 @@
       - make install
 
     - name: "init rofl"
-      command: "ldconfig . chdir=/vagrant/rofl-common/build//src/rofl/.libs" 
+      command: "ldconfig chdir=/vagrant/rofl-common/build//src/rofl/.libs" 
       
     - name: "fetch zeromq - A DoubleDecker prequisite"
       get_url: url="http://github.com/zeromq/czmq/archive/v3.0.2.tar.gz" dest=/vagrant/v3.0.2.tar.gz
