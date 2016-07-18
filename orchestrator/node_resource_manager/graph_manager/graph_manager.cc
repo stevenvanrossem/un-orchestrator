@@ -2092,19 +2092,6 @@ highlevel::Graph *GraphManager::updateGraph_add(string graphID, highlevel::Graph
 		throw GraphManagerException();
 	}
 #else
-			if (pthread_create(&some_thread[i], NULL, &startNF, (void *)&thr[i]) != 0)
-			{
-				assert(0);
-				delete(diff);
-				diff = NULL;
-				logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An error occurred while creating a new thread");
-				throw GraphManagerException();
-			}
-#endif
-			i++;
-		}
-	} // end iteration on network functions
-#else
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "4) Flag RUN_NFS disabled. New NFs will not start");
 #endif //end ifdef RUN_FNS
 
@@ -2849,4 +2836,3 @@ void GraphManager::printInfo(bool completed)
 
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "");
 }
-
