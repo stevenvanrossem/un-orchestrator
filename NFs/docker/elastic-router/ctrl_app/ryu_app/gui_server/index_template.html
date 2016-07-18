@@ -35,7 +35,6 @@
           #header {
             float:left;
             width: 100%;
-            height: 160px;
           }
           #scrollbox {
             float:left;
@@ -55,6 +54,20 @@
             border-radius: 20px;
             border-width: thin;
           }
+		  .img_div {   
+		    width: 10%;
+		    display: inline-block; 
+			margin-left: 10px;
+		  }
+		  div#unify_logo  {
+			background-color: navy;
+			border-radius: 20px;
+			padding:15px;
+		  }
+		  .img_div img {
+			width: 100%;    
+		  }​
+
          </style>
         <script src="sigma.min.js"></script>
         <script src="sigma.parsers.json.min.js"></script>
@@ -182,7 +195,17 @@
         <!--<div id="messages" style="height:200px;width:30%;background:black;color:white;"></div>-->
         <div id="header">
             <textarea id="scrollbox" autocomplete="off" disabled> </textarea>
-            <div id="traffic_counters"></div>
+            <div id="traffic_counters">
+			</div>
+			<div class=img_div id="iminds_logo">
+				<img src="/images/iMinds_logo.png" alt="iMinds" >
+			</div>
+			<div class=img_div id="ugent_logo">
+				<img src="/images/ghent_university_logo.png" alt="ugent" >
+			</div>
+			<div class=img_div id="unify_logo">
+				<img src="/images/unify_logo_claim.png" alt="unify" >
+			</div>
         </div>
 
         <div id="nffgs">
