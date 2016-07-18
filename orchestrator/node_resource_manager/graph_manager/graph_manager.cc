@@ -2024,6 +2024,64 @@ highlevel::Graph *GraphManager::updateGraph_add(string graphID, highlevel::Graph
 			diff = NULL;
 			throw GraphManagerException();
 		}
+#endif
+		else
+		{
+			thr[i].nf_id = nf->getId();
+			thr[i].computeController = computeController;
+			thr[i].namesOfPortsOnTheSwitch = lsi->getNetworkFunctionsPortsNameOnSwitchMap(nf->getId());
+			thr[i].portsConfiguration = nf->getPortsID_configuration();
+#ifdef ENABLE_UNIFY_PORTS_CONFIGURATION
+			thr[i].controlConfiguration = nf->getControlPorts();
+			thr[i].environmentVariables = nf->getEnvironmentVariables();
+#endif
+
+#ifdef STARTVNF_SINGLE_THREAD
+			startNF((void *) &thr[i]);
+#else
+			if (pthread_create(&some_thread[i], NULL, &startNF, (void *)&thr[i]) != 0)
+			{
+				assert(0);
+				delete(diff);
+				diff = NULL;
+				logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An error occurred while creating a new thread");
+				throw GraphManagerException();
+			}
+#endif
+			i++;
+		}
+	} // end iteration on network functions
+	bool ok = true;
+#ifndef STARTVNF_SINGLE_THREAD
+	for(int j = 0; j < i;j++)
+	{
+		void *returnValue;
+		pthread_join(some_thread[j], &returnValue);
+		int *c = (int*)returnValue;
+
+		if(c == 0)
+			ok = false;
+	}
+#endif
+	if(!ok)
+	{
+		for(list<highlevel::VNFs>::iterator nf = network_functions.begin(); nf != network_functions.end(); nf++)
+			computeController->stopNF(nf->getId());
+
+		switchManager.destroyLsi(lsi->getDpid());
+
+/*		delete(graph);
+		delete(lsi);
+		delete(computeController);
+		delete(controller);
+
+		graph = NULL;;
+		lsi = NULL;
+		computeController = NULL;
+		controller = NULL;*/
+		delete(diff);
+		diff = NULL;
+		throw GraphManagerException();
 	}
 #else
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "4) Flag RUN_NFS disabled. New NFs will not start");
