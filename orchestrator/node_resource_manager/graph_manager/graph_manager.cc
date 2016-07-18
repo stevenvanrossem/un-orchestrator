@@ -2032,7 +2032,7 @@ highlevel::Graph *GraphManager::updateGraph_add(string graphID, highlevel::Graph
 			diff = NULL;
 			throw GraphManagerException();
 		}
-		#endif
+#endif
 		else
 		{
 			thr[i].nf_id = nf->getId();
@@ -2059,6 +2059,38 @@ highlevel::Graph *GraphManager::updateGraph_add(string graphID, highlevel::Graph
 			i++;
 		}
 	} // end iteration on network functions
+	bool ok = true;
+#ifndef STARTVNF_SINGLE_THREAD
+	for(int j = 0; j < i;j++)
+	{
+		void *returnValue;
+		pthread_join(some_thread[j], &returnValue);
+		int *c = (int*)returnValue;
+
+		if(c == 0)
+			ok = false;
+	}
+#endif
+	if(!ok)
+	{
+		for(list<highlevel::VNFs>::iterator nf = network_functions.begin(); nf != network_functions.end(); nf++)
+			computeController->stopNF(nf->getId());
+
+		switchManager.destroyLsi(lsi->getDpid());
+
+/*		delete(graph);
+		delete(lsi);
+		delete(computeController);
+		delete(controller);
+
+		graph = NULL;;
+		lsi = NULL;
+		computeController = NULL;
+		controller = NULL;*/
+		delete(diff);
+		diff = NULL;
+		throw GraphManagerException();
+	}
 #else
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "4) Flag RUN_NFS disabled. New NFs will not start");
 #endif //end ifdef RUN_FNS
