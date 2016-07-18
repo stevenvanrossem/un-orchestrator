@@ -1991,6 +1991,13 @@ highlevel::Graph *GraphManager::updateGraph_add(string graphID, highlevel::Graph
 
 	computeController->setLsiID(dpid);
 
+
+#ifndef STARTVNF_SINGLE_THREAD
+	pthread_t some_thread[network_functions.size()];
+#endif
+	to_thread_t thr[network_functions.size()];
+	int i = 0;
+
 	for(list<highlevel::VNFs>::iterator nf = network_functions.begin(); nf != network_functions.end(); nf++)
 	{
 		map<unsigned int, string> nfPortIdToNameOnSwitch = lsi->getNetworkFunctionsPortsNameOnSwitchMap(nf->getId()/*first*/); //Returns the map <port ID, port name on switch>
@@ -2012,6 +2019,7 @@ highlevel::Graph *GraphManager::updateGraph_add(string graphID, highlevel::Graph
 				throw GraphManagerException();
 			}
 		} 
+#if 0
 		else if(!computeController->startNF(nf->getId()/*first*/, nfPortIdToNameOnSwitch, nfs_ports_configuration
 #ifdef ENABLE_UNIFY_PORTS_CONFIGURATION
 			, nfs_control_configuration, environment_variables_tmp
@@ -2024,10 +2032,36 @@ highlevel::Graph *GraphManager::updateGraph_add(string graphID, highlevel::Graph
 			diff = NULL;
 			throw GraphManagerException();
 		}
-	}
+		#endif
+		else
+		{
+			thr[i].nf_id = nf->getId();
+			thr[i].computeController = computeController;
+			thr[i].namesOfPortsOnTheSwitch = lsi->getNetworkFunctionsPortsNameOnSwitchMap(nf->getId());
+			thr[i].portsConfiguration = nf->getPortsID_configuration();
+#ifdef ENABLE_UNIFY_PORTS_CONFIGURATION
+			thr[i].controlConfiguration = nf->getControlPorts();
+			thr[i].environmentVariables = nf->getEnvironmentVariables();
+#endif
+
+#ifdef STARTVNF_SINGLE_THREAD
+			startNF((void *) &thr[i]);
+#else
+			if (pthread_create(&some_thread[i], NULL, &startNF, (void *)&thr[i]) != 0)
+			{
+				assert(0);
+				delete(diff);
+				diff = NULL;
+				logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An error occurred while creating a new thread");
+				throw GraphManagerException();
+			}
+#endif
+			i++;
+		}
+	} // end iteration on network functions
 #else
 	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "4) Flag RUN_NFS disabled. New NFs will not start");
-#endif
+#endif //end ifdef RUN_FNS
 
 	//The new endpoints, VNFs, VNF ports and virtual links have been added to the graph!
 
