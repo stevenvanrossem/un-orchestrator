@@ -19,11 +19,13 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install curl
 # Fetch and install Doubledecker
 RUN mkdir /dd
 RUN mkdir /measure
-ADD https://github.com/acreo/DoubleDecker-py/archive/master.tar.gz /dd
+# ADD https://github.com/acreo/DoubleDecker-py/archive/master.tar.gz /dd
+ADD https://github.com/Acreo/DoubleDecker-py/archive/threadfix.tar.gz /dd
 WORKDIR /dd
-RUN tar xzf master.tar.gz
-RUN rm master.tar.gz
-WORKDIR /dd/DoubleDecker-py-master/
+
+RUN tar xzf threadfix.tar.gz
+RUN rm threadfix.tar.gz
+WORKDIR /dd/DoubleDecker-py-threadfix/
 RUN python3 setup.py build
 RUN python3 setup.py install
 

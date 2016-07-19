@@ -26,7 +26,7 @@ class DDClient(ClientSafe):
     """
 
     def __init__(self, name, dealer_url, key_file, verbose, cadvisor_port):
-        super().__init__(name, dealer_url, key_file)
+        super().__init__(name, dealer_url, key_file, threaded=True)
         self.name = name
         self.to_monitor = dict()
         self.STATE = CLIENT_STATUS_DISCONNECTED
