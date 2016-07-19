@@ -24,7 +24,7 @@ class DDProxy(ClientSafe):
     def on_reg(self):
         self.subscribe('measurement', 'all')
 
-    def on_data(self, msg):
+    def on_data(self, src, msg):
         self.handle_jsonrpc(src=src, topic=None, msg=msg)
         # try:
         #     message = json.loads(msg.decode('utf-8'))
