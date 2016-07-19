@@ -242,8 +242,8 @@ class SecureCli(ClientSafe):
     def filter_ramon_data(self,ramon_data):
 #        pdb.set_trace()
         result = {}
-        result['lm'] = float(ramon_data['mu_rx'])
-        result['lsd'] = sqrt(float(ramon_data['sigma2_rx']))
+        result['lm'] = float(ramon_data['mu_tx'])
+        result['lsd'] = sqrt(float(ramon_data['sigma2_tx']))
         result['name'] = self.mname
         result['linerate'] = int(ramon_data['linerate'])
         result['overload_risk'] = ramon_data['overload_risk_tx']
