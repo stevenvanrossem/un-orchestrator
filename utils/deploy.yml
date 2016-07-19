@@ -5,7 +5,7 @@
 #Requires to install ansible:
 # sudo apt-get install ansible
 #Run in with the command: 
-# sudo ansible-playbook --ask-sudo-pass -i "localhost," -c local  deploy.yml --extra-vars "cores=1 docker=OFF native=OFF kvm=ON double_decker=OFF"
+# sudo ansible-playbook --ask-sudo-pass -i "localhost," -c local  deploy.yml --extra-vars "cores=1 docker=OFF native=OFF kvm=ON double_decker=OFF gui=OFF"
 
 #TODO: install docker if needed
 
@@ -15,6 +15,7 @@
     enable_kvm: '{{ kvm }}'
     enable_docker: '{{ docker }}'
     enable_native: '{{ native }}'
+    enable_gui: '{{ gui }}'
   
   tasks:
     - name: "updates apt"
@@ -35,7 +36,7 @@
         - libsqlite3-dev
         - libssl-dev
         - unzip
-        - automake      
+        - automake
         - autoconf
         - libtool
         - pkg-config
@@ -64,7 +65,14 @@
         - libgtk2.0-dev
         - bridge-utils
       when: enable_kvm == "ON"
-      
+
+    - name: "install dependencies for the GUI"
+      apt: pkg={{item}} state=installed
+      with_items:
+        - python2.7
+        - python-pip
+      when: enable_gui == "ON"
+
     - name: "install dependencies for docker environment"
       apt: pkg={{item}} state=installed
       with_items:
@@ -211,6 +219,21 @@
       - make -j{{ cores }}
       - make install
       when: enable_kvm == "ON"
+
+    - name: "Prapare python environment for the GUI"
+      pip: name="Django jsonschema json-schema-validator"
+      when: enable_gui == "ON"
+
+    - name: "init submodules"
+      command: "{{ item }} chdir={{ path }}/un-orchestrator"
+      with_items:
+      - git submodule update --init --recursive
+
+      - name: "Initialize database of the GUI"
+      command: "{{ item }} chdir={{ path }}/un-orchestrator/GUI"
+      with_items:
+      - python manage.py migrate
+      when: enable_gui == "ON"
 
     - name: "build database initializer (with {{ cores }} cores)"
       command: "{{ item }} chdir={{ path }}/un-orchestrator/db_initializer"

@@ -9,7 +9,7 @@ __author__ = 'umar.toseef'
 
 meta_data = {
 'cadvisor' : {'repo_name':'un-orchestrator', 'github_link':'https://github.com/netgroup-polito/un-orchestrator.git',
-            'comp_path':'use-cases/elastic_router/cadvisor/', 'image_id':'gitlab.testbed.se:5000/cadvisor:latest'},
+            'comp_path':'use-cases/elastic_router/cadvisor/', 'image_id':'gitlab.testbed.se:5000/cadvisor:v1'},
 
 'ratemon' : {'repo_name':'un-orchestrator', 'github_link':'https://github.com/netgroup-polito/un-orchestrator.git',
             'comp_path':'use-cases/elastic_router/ramon/', 'image_id':'gitlab.testbed.se:5000/ratemon:latest'},

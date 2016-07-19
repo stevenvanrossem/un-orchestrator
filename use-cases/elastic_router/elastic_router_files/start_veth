@@ -1,41 +1,57 @@
-#/bin/bash
+#!/bin/bash
 
-sudo ip link add veth0 type veth peer name veth0un
-sudo ip link add veth1 type veth peer name veth1un
-sudo ip link add veth2 type veth peer name veth2un
-sudo ip link add veth3 type veth peer name veth3un
+if ip addr | grep -q "veth0un"; then
+	echo "veth0un exists"
+else
+	sudo ip link add veth0 type veth peer name veth0un
+	ip link set dev veth0 addr aa:00:00:0:00:01
+	sudo ip link set veth0 up
+	sudo ip link set veth0un up
+	ip netns add sap1
+	ip link set veth0 netns sap1
+	ip netns exec sap1 ifconfig veth0 10.0.1.1/24 up
+	ip netns exec sap1 ip route add default dev veth0
+	echo "veth0un and sap1 created"
+fi
 
-ip link set dev veth0 addr aa:00:00:0:00:01
-ip link set dev veth1 addr aa:00:00:0:00:02
-ip link set dev veth2 addr aa:00:00:0:00:03
-ip link set dev veth3 addr aa:00:00:0:00:04
+if ip addr | grep -q "veth1un"; then
+	echo "veth1un exists"
+else
+	sudo ip link add veth1 type veth peer name veth1un
+	ip link set dev veth1 addr aa:00:00:0:00:02
+	sudo ip link set veth1 up
+	sudo ip link set veth1un up
+	ip netns add sap2
+	ip link set veth1 netns sap2
+	ip netns exec sap2 ifconfig veth1 10.0.2.1/24 up
+	ip netns exec sap2 ip route add default dev veth1
+	echo "veth1un and sap2 created"
+fi
 
-sudo ip link set veth0 up
-sudo ip link set veth0un up
-sudo ip link set veth1 up
-sudo ip link set veth1un up
-sudo ip link set veth2 up
-sudo ip link set veth2un up
-sudo ip link set veth3 up
-sudo ip link set veth3un up
+if ip addr | grep -q "veth2un"; then
+	echo "veth2un exists"
+else
+	sudo ip link add veth2 type veth peer name veth2un
+	ip link set dev veth2 addr aa:00:00:0:00:03
+	sudo ip link set veth2 up
+	sudo ip link set veth2un up
+	ip netns add sap3
+	ip link set veth2 netns sap3
+	ip netns exec sap3 ifconfig veth2 10.0.3.1/24 up
+	ip netns exec sap3 ip route add default dev veth2
+	echo "veth2un and sap3 created"
+fi
 
-ip netns add sap1
-ip link set veth0 netns sap1
-ip netns exec sap1 ifconfig veth0 10.0.1.1/24 up
-ip netns exec sap1 ip route add default dev veth0
-
-ip netns add sap2
-ip link set veth1 netns sap2
-ip netns exec sap2 ifconfig veth1 10.0.2.1/24 up
-ip netns exec sap2 ip route add default dev veth1
-
-ip netns add sap3
-ip link set veth2 netns sap3
-ip netns exec sap3 ifconfig veth2 10.0.3.1/24 up
-ip netns exec sap3 ip route add default dev veth2
-
-ip netns add sap4
-ip link set veth3 netns sap4
-ip netns exec sap4 ifconfig veth3 10.0.4.1/24 up
-ip netns exec sap4 ip route add default dev veth3
-
+if ip addr | grep -q "veth3un"; then
+	echo "veth3un exists"
+else
+	sudo ip link add veth3 type veth peer name veth3un
+	ip link set dev veth3 addr aa:00:00:0:00:04
+	sudo ip link set veth3 up
+	sudo ip link set veth3un up
+	ip netns add sap4
+	ip link set veth3 netns sap4
+	ip netns exec sap4 ifconfig veth3 10.0.4.1/24 up
+	ip netns exec sap4 ip route add default dev veth3
+	echo "veth3un and sap4 created"
+fi
