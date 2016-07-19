@@ -1,11 +1,11 @@
 # Porting of the UN to the OpenWRT platform
 
-This document contains the instructions required to compile the UN for the OpenWRT platform.
+This document contains the instructions required to compile the UN for the OpenWrt platform.
 
 Warning: The current status of the porting is very preliminary; not all the components have been compiled so far, nor we are sure that the software behaves properly. Therefore this document should be intended as an initial proof-of-concept.
 
-In this page there is the list of all devices that are supported by OpenWrt, with the reference to a device page.
-https://wiki.openwrt.org/toh/start
+This [page](https://wiki.openwrt.org/toh/start) contains a list of devices supported by OpenWRT. In particular, we tested the above instructions on a [Netgear R6300v2](https://wiki.openwrt.org/toh/netgear/netgear_r6300_v2 "Netgear R6300v2").
+
 
 ## How to cross-compile the un-orchestrator for ARM architecture
 
@@ -64,8 +64,8 @@ $ cp * ../../orchestrator/node_resource_manager/database_manager/SQLite
 ```
 ### Set up a cross-compilation toolchain
 
-The version of the SDK used for our tests is: 
-OpenWrt-SDK-15.05-bcm53xx_gcc-4.8-linaro_uClibc-0.9.33.2_eabi.Linux-x86_64 for Netgear R6300
+The version of the SDK used for our tests, for the Netgear R6300v23 box, is the following: 
+OpenWrt-SDK-15.05-bcm53xx_gcc-4.8-linaro_uClibc-0.9.33.2_eabi.Linux-x86_64.
 
 At first, download the OpenWrt SDK Barries Breaker source code from:
 https://downloads.openwrt.org/chaos_calmer/15.05/bcm53xx/generic/OpenWrt-SDK-15.05-bcm53xx_gcc-4.8-linaro_uClibc-0.9.33.2_eabi.Linux-x86_64.tar.bz2
