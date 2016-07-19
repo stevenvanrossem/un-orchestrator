@@ -1,0 +1,66 @@
+#!/bin/bash
+CUR=$(pwd)
+ORCHDIR=/home/unify/un-orchestrator/orchestrator
+
+if [ "$#" -lt 1 ]
+then
+ echo "$0 is used to control the OVSs in the ER demo"
+ echo "Available commands: "
+ echo "$0 fault     - Add openflow error in OVS5"
+ echo "$0 check     - Dump ovs flows"
+ echo "$0 restore   - Restore proper openflow" 
+ exit
+else
+ echo -e "\c"
+fi
+
+function openflow_restore() {
+# Revert directing all traffic from OVS5 to OVS3
+ssh root@localhost -p 10006 "ovs-ofctl --strict del-flows ovs5 priority=40,ip,nw_dst=10.0.1.0/24; ovs-ofctl --strict del-flows ovs5 priority=40,ip,nw_dst=10.0.3.0/24"
+#ssh root@localhost -p 10006 "ovs-ofctl --strict del-flows ovs5 priority=40,ip,nw_dst=10.0.1.0/24"
+# ssh root@localhost -p 10006 "ovs-ofctl add-flow ovs5 priority=40,ip,nw_dst=10.0.1.0/24,actions=output:2"
+# ssh root@localhost -p 10006 "ovs-ofctl add-flow ovs5 priority=40,ip,nw_dst=10.0.2.0/24,actions=output:3"
+# ssh root@localhost -p 10006 "ovs-ofctl add-flow ovs5 priority=40,ip,nw_dst=10.0.3.0/24,actions=output:4"
+# ssh root@localhost -p 10006 "ovs-ofctl add-flow ovs5 priority=40,ip,nw_dst=10.0.4.0/24,actions=output:1"
+}
+
+function add_openflow_fault () {
+# Direct all traffic from OVS5 to OVS3
+ssh root@localhost -p 10006 "ovs-ofctl add-flow ovs5 priority=40,ip,nw_dst=10.0.1.0/24,actions=output:3; ovs-ofctl add-flow ovs5 priority=40,ip,nw_dst=10.0.3.0/24,actions=output:3"
+#ssh root@localhost -p 10006 "ovs-ofctl add-flow ovs5 priority=40,ip,nw_dst=10.0.1.0/24,actions=output:1"
+#ssh root@localhost -p 10006 "ovs-ofctl add-flow ovs5 priority=40,ip,nw_dst=10.0.2.0/24,actions=drop"
+#ssh root@localhost -p 10006 "ovs-ofctl add-flow ovs5 priority=40,ip,nw_dst=10.0.3.0/24,actions=drop"
+# ssh root@localhost -p 10006 "ovs-ofctl add-flow ovs5 priority=40,ip,nw_dst=10.0.4.0/24,actions=drop"
+ssh root@localhost -p 10004 "ovs-ofctl --strict del-flows ovs3 priority=30,ip,nw_dst=10.0.4.0/24 ; ovs-ofctl --strict del-flows ovs3 priority=30,ip,nw_dst=10.0.3.0/24 ; ovs-ofctl --strict del-flows ovs3 priority=30,ip,nw_dst=10.0.1.0/24 ; ovs-ofctl add-flow ovs3 priority=30,in_port=1,ip,nw_dst=10.0.4.0/24,actions=output:4 ;  ovs-ofctl add-flow ovs3 priority=30,in_port=1,ip,nw_dst=10.0.3.0/24,actions=output:3 ; ovs-ofctl add-flow ovs3 priority=30,in_port=1,ip,nw_dst=10.0.1.0/24,actions=output:2 "
+
+}
+
+function check_openflow () {
+echo "OVS1 flows" 
+ssh root@localhost -p 10002 "ovs-ofctl dump-flows ovs1"
+echo "OVS2 flows" 
+ssh root@localhost -p 10003 "ovs-ofctl dump-flows ovs2"
+echo "OVS3 flows"
+ssh root@localhost -p 10004 "ovs-ofctl dump-flows ovs3"
+echo "OVS4 flows" 
+ssh root@localhost -p 10005 "ovs-ofctl dump-flows ovs4"
+echo "OVS5 flows" 
+ssh root@localhost -p 10006 "ovs-ofctl dump-flows ovs5" 
+}
+
+cmd="$1"
+
+case $cmd in
+ fault)
+  add_openflow_fault
+  ;;
+ check)
+  check_openflow
+  ;;
+ restore)
+  openflow_restore
+  ;; 
+ *) 
+  echo "unknown command"
+  ;;
+esac
