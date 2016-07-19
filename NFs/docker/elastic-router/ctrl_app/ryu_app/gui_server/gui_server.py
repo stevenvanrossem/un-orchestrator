@@ -103,7 +103,8 @@ class web_server():
 
         self.settings = {
             "static_path": os.path.dirname(__file__),
-            "plugin_path": os.path.join(os.path.dirname(__file__), "plugins")
+            "plugin_path": os.path.join(os.path.dirname(__file__), "plugins"),
+			"images_path": os.path.join(os.path.dirname(__file__), "images")
         }
 
         #sender = zmq.Socket(CTX, zmq.PUSH)
@@ -132,8 +133,10 @@ class web_server():
              dict(path=self. settings['plugin_path'])),
             (r"/(sigma\.layout.*)", tornado.web.StaticFileHandler,
              dict(path=self.settings['plugin_path'])),
+			(r"/images/(.*)", tornado.web.StaticFileHandler,
+             dict(path=self.settings['images_path'])),
             (r"/(.*\.json)", MyStaticFileHandler,
-             dict(path=self.settings['static_path'])),
+             dict(path=self.settings['static_path']))
         ])
 
         app.listen(guest_port)
