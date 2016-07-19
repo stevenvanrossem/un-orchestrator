@@ -118,6 +118,17 @@ class DDProxy(ClientSafe):
             self.session.post(self.tsdb_url, data=json.dumps(tsdb_json))
         except requests.exceptions.ConnectionError:
             logging.warning('Failed to push_opentsdb :(((')
+
+#        tsdb_json = {'metric': 'overload_risk_tx',
+#                         'timestamp': int(time.time()),
+#                         'value': overload_risk_tx,
+#                         'tags': {'tool': 'ratemon', 'source': ddsrc}
+#                         }
+#        try:
+#            self.session.post(self.tsdb_url, data=json.dumps(tsdb_json))
+#        except requests.exceptions.ConnectionError:
+#            logging.warning('Failed to push_opentsdb :(((')
+
         tsdb_json = {'metric': 'lsd',
                          'timestamp': int(time.time()),
                          'value': lsd,

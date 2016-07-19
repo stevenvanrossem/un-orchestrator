@@ -246,7 +246,14 @@ class SecureCli(ClientSafe):
         result['lsd'] = sqrt(float(ramon_data['sigma2_rx']))
         result['name'] = self.mname
         result['linerate'] = int(ramon_data['linerate'])
-        result['overload_risk'] = ramon_data['overload_risk_rx']
+        result['overload_risk'] = ramon_data['overload_risk_tx']
+#        result['overload_risk_tx'] = ramon_data['overload_risk_tx']
+        # Adding conversion from NAN to 0.0 here , NaN messes up grafana
+        # // Pontus
+        if result['overload_risk'] == "nan":
+            result['overload_risk'] = "0.0"
+#        if result['overload_risk_tx'] == "nan":
+#            result['overload_risk_tx'] = "0.0"
         return result
 
     # NOTE: Keep this code as a reference on how to send a configuration message to the rate monitor.

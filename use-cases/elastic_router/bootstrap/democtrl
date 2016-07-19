@@ -16,6 +16,7 @@ then
  echo "$0 stop        - Stop services"
  echo "$0 remove      - Stop AND remove _all_ containers"
  echo "$0 ssh         - Print SSH tunnel commands" 
+ echo "$0 fault       - Add openflow error in OVS5"
  exit
 else
  echo -e "\c"
@@ -165,14 +166,37 @@ docker ps -a --filter="name=2_*"
 #  echo -e "$n\t\t\t\t\t\t Up"
 #done
 
+echo ""
+echo "Tcpreplay running on PIDs:" 
+echo "--------------------------"
+echo $(pidof tcpreplay)
 }
 
 function show_ssh () {
- echo "ssh -L 3000:localhost:3000 -L 4242:localhost:4242  -L 10001:localhost:10001 -L 8081:localhost:8081 unify@durak.testbed.se"
+ echo "ssh -L 3000:localhost:3000 -L 4242:localhost:4242  -L 10001:localhost:10001 -L 8081:localhost:8081 -L 9999:localhost:9999 unify@durak.testbed.se "
  echo "OpenTSDB GUI http://localhost:4242"
  echo "Elastic Router GUI http://localhost:10001"
  echo "CAdvisor GUI http://localhost:8081"
  echo "Grafana GUI http://localhost:3000"
+ echo "UN GUI http://localhost:9999" 
+}
+
+function add_openflow_fault () {
+ssh root@localhost -p 10006 "ovs-ofctl add-flow ovs5 priority=40,ip,nw_dst=10.0.1.0/24,actions=output:3"
+ssh root@localhost -p 10006 "ovs-ofctl add-flow ovs5 priority=40,ip,nw_dst=10.0.3.0/24,actions=output:3"
+}
+
+function check_openflow () {
+echo "OVS1 flows" 
+ssh root@localhost -p 10002 "ovs-ofctl dump-flows ovs1"
+echo "OVS2 flows" 
+ssh root@localhost -p 10003 "ovs-ofctl dump-flows ovs2"
+echo "OVS3 flows"
+ssh root@localhost -p 10004 "ovs-ofctl dump-flows ovs3"
+echo "OVS4 flows" 
+ssh root@localhost -p 10005 "ovs-ofctl dump-flows ovs4"
+echo "OVS5 flows" 
+ssh root@localhost -p 10006 "ovs-ofctl dump-flows ovs5" 
 }
 
 cmd="$1"
@@ -214,6 +238,12 @@ case $cmd in
   ;;
  ssh)
   show_ssh
+  ;;
+ fault)
+  add_openflow_fault
+  ;;
+ ofcheck)
+  check_openflow
   ;;
  *) 
   echo "unknown command"
