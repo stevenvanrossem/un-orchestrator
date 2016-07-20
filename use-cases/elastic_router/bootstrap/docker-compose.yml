@@ -6,11 +6,11 @@
       - 5556:5556
       - 5557:5557
     volumes:
-      - /etc/doubledecker:/keys:ro
+      - /etc/doubledecker:/keys:rw
     environment:
       - DEALER_PORT=tcp://194.28.123.165:5555
       - BROKER_SCOPE=0/0/1
-      - BROKER_PORT=tcp://*:5555
+      - BROKER_PORT=tcp://*:5555,ipc:///keys/ddbroker
 
   opentsdb:
     image: stackexchange/bosun

@@ -47,6 +47,7 @@ docker ps -a -q --filter="name=cadvisor*" | xargs -r docker rm -f
 docker ps -a -q --filter="name=*ctrl*" |  xargs -r docker rm -f
 docker ps -a -q --filter="name=2_*" |  xargs -r docker rm -f
 
+sudo killall -9 ddtcpreplay
 sudo ovs-vsctl del-br Bridge1
 sudo ovs-vsctl del-br Bridge2
 }
@@ -122,6 +123,7 @@ docker ps -a -q --filter="name=*ctrl*"  | xargs -r docker rm -f
 docker ps -a -q --filter="name=2_*" |  xargs -r docker rm -f
 sudo ovs-vsctl del-br Bridge1
 sudo ovs-vsctl del-br Bridge2
+sudo rm -rf /etc/doubledecker/ddbroker*
 }
 
 function start_er () {
@@ -137,6 +139,20 @@ ip netns exec sap1 tcpreplay -i veth0 -l $LOOPS -K ../traffic/er1.pcap &
 ip netns exec sap2 tcpreplay -i veth1 -l $LOOPS -K ../traffic/er2.pcap &
 ip netns exec sap3 tcpreplay -i veth2 -l $LOOPS -K ../traffic/er3.pcap &
 ip netns exec sap4 tcpreplay -i veth3 -l $LOOPS -K ../traffic/er4.pcap 
+}
+
+function start_ddreplay () {
+echo "starting 4 DD tcp replay"
+
+DDNAME=tcp1 KEYFILE=/etc/doubledecker/public-keys.json DEALER=ipc:///etc/doubledecker/ddbroker ip netns exec sap1 ddtcpreplay -K -i veth0 -l 0 ../traffic/rise-er1.pcap ../traffic/high-er1.pcap ../traffic/fall-er1.pcap ../traffic/low-er1.pcap  &
+DDNAME=tcp2 KEYFILE=/etc/doubledecker/public-keys.json DEALER=ipc:///etc/doubledecker/ddbroker ip netns exec sap2 ddtcpreplay -K -i veth1 -l 0 ../traffic/rise-er2.pcap ../traffic/high-er2.pcap ../traffic/fall-er2.pcap ../traffic/low-er2.pcap  &
+DDNAME=tcp3 KEYFILE=/etc/doubledecker/public-keys.json DEALER=ipc:///etc/doubledecker/ddbroker ip netns exec sap3 ddtcpreplay -K -i veth2 -l 0 ../traffic/rise-er3.pcap ../traffic/high-er3.pcap ../traffic/fall-er3.pcap ../traffic/low-er3.pcap  &
+DDNAME=tcp4 KEYFILE=/etc/doubledecker/public-keys.json DEALER=ipc:///etc/doubledecker/ddbroker ip netns exec sap4 ddtcpreplay -K -i veth3 -l 0 ../traffic/rise-er4.pcap ../traffic/high-er4.pcap ../traffic/fall-er4.pcap ../traffic/low-er4.pcap  
+
+#ip netns exec sap1 tcpreplay -i veth0 -l $LOOPS -K ../traffic/er1.pcap &
+#ip netns exec sap2 tcpreplay -i veth1 -l $LOOPS -K ../traffic/er2.pcap &
+#ip netns exec sap3 tcpreplay -i veth2 -l $LOOPS -K ../traffic/er3.pcap &
+#ip netns exec sap4 tcpreplay -i veth3 -l $LOOPS -K ../traffic/er4.pcap 
 }
 
 function start_slow_replay () {
@@ -247,6 +263,9 @@ case $cmd in
  start-er)
    start_er
    ;; 
+ ddreplay)
+   start_ddreplay
+   ;;
  replay)
    start_replay
    stop_replay
