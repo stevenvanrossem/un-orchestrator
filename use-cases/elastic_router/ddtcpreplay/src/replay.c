@@ -162,8 +162,8 @@ static int replay_file(tcpreplay_t *ctx, int idx) {
   char *path;
   pcap_t *pcap = NULL;
   char ebuf[PCAP_ERRBUF_SIZE];
-  fprintf(stderr, "replay_file(%d, %s)\n", idx,
-          ctx->options->sources[idx].filename);
+  //  fprintf(stderr, "replay_file(%d, %s)\n", idx,
+  //        ctx->options->sources[idx].filename);
   assert(ctx);
   assert(ctx->options->sources[idx].type = source_filename);
 
