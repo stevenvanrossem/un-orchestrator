@@ -81,6 +81,12 @@ class ElasticRouter(app_manager.RyuApp):
     except:
         auto_scale = False
 
+    # ip address of host machine
+    try:
+        DD_enable = not ('false' in os.environ['DD_ENABLE'].lower())
+    except:
+        DD_enable = True
+
 
     # file name + location (execution dir) of the config file to load
     # TODO load json config file from rest api
@@ -113,7 +119,8 @@ class ElasticRouter(app_manager.RyuApp):
         self.monitorApp = ElasticRouterMonitor(self, upper_threshold=upper, lower_threshold=lower)
 
         # start DD client
-        self.zmq_ = er_ddclient(self.monitorApp, self)
+        if self.DD_enable:
+            self.zmq_ = er_ddclient(self.monitorApp, self)
 
         # parse the nffg from the Cf-Or
         self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
