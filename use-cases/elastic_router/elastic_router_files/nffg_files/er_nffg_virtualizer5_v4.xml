@@ -174,7 +174,10 @@
 						<value>xml</value>
 					</metadata>
 					-->
-					
+					<metadata>
+						<key>variable:DD_ENABLE</key>
+						<value>False</value>
+					</metadata>
 				</node>
 				<node operation="create">
 					<id>2</id>
