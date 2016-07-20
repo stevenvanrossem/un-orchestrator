@@ -27,7 +27,13 @@ void VlanAction::toJSON(Object &action)
 	{
 		stringstream s_label;
 		s_label << label;
-		action[vlan_op] = s_label.str();
+		if(type == ACTION_VLAN_PUSH)
+			action[vlan_op] = s_label.str();
+		else
+		{
+			assert(type == ACTION_VLAN_POP);
+			action[vlan_op] = true;
+		}
 	}
 }
 
