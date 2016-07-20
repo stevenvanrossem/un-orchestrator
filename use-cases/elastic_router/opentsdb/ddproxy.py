@@ -204,7 +204,11 @@ if __name__ == '__main__':
         raise ValueError('Invalid log level: %s' % args.loglevel)
 
     logging.basicConfig(format='%(levelname)s:%(message)s', filename=args.logfile, level=numeric_level)
-
+    
+    dealer = args.dealer 
+    if dealer is None:
+        dealer = 'tcp://ddbroker:5555'
+    
     logging.info("Safe client")
     dd_proxy = DDProxy(name=args.name.encode('utf8'),
                        dealerurl=args.dealer,
