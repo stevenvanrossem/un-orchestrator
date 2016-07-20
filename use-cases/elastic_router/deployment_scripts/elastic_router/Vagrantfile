@@ -16,6 +16,9 @@ memory=3072
 cores=2
 branch='new_elastic_router'
 
+username='unify'
+password='unify-demo-stress-out'
+
 opts.each do |opt, arg|
   case opt
     when '--docker-registry-username'
@@ -52,7 +55,8 @@ Vagrant.configure(2) do |config|
   config.vm.network "forwarded_port", guest: 9090, host: 9090
   config.vm.network "forwarded_port", guest: 9999, host: 9999
   config.vm.network "forwarded_port", guest: 8081, host: 8081
-    config.vm.network "forwarded_port", guest: 4242, host: 4242
+  config.vm.network "forwarded_port", guest: 4242, host: 4242
+
 
 end
 
