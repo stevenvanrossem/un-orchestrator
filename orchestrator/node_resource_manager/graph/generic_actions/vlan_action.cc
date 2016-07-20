@@ -69,7 +69,6 @@ void VlanAction::fillFlowmodMessage(rofl::openflow::cofflowmod &message, unsigne
 
 void VlanAction::print()
 {
-#if 0
 	stringstream type_print;
 	switch(type)
 	{
@@ -91,7 +90,6 @@ void VlanAction::print()
 	if(type == ACTION_VLAN_PUSH || type == ACTION_ENDPOINT_VLAN_PUSH)
 		cout << " " << label;
 	cout << endl;
-#endif
 }
 
 string VlanAction::prettyPrint()
