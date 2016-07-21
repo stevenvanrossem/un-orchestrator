@@ -11,6 +11,10 @@ import logging
 nffg_log = logging.getLogger(__name__)
 nffg_log.setLevel(logging.DEBUG)
 
+#pool of numbers to pop from
+flow_id_pool = list(range(1000, 9999, 1))
+from random import randint
+
 # fixed universal node id, always pick this one
 NODE_ID = 'UUID11'
 
@@ -357,7 +361,8 @@ def delete_VNF(nffg_xml, vnf_id):
     flow_list_id = []
     for flow in flow_list:
         flow.set_operation(operation="delete", recursive=False)
-        flow_list_id.append(flow.id.get_value())
+        id = flow.id.get_value()
+        flow_list_id.append(id)
     logging.info("flows to delete: {0}".format(flow_list_id))
 
     vnf = un.NF_instances.node.__getitem__(vnf_id)
@@ -596,8 +601,17 @@ def add_ovs_vnf(nffg_xml, nffg_id, ovs_id, name, vnftype, numports, add_measure=
     un.flowtable.add(new_flowentry)
     return nffg.xml()
 
+def add_flowrule_id(id):
+    global flow_id_pool
+    flow_id_pool.append(id)
 
 def get_next_flowrule_id(nffg_xml, add=0):
+    global flow_id_pool
+
+    next_id = flow_id_pool.pop(0)
+    next_id = randint(10000, 99999)
+    return next_id
+
     nffg = get_virtualizer_nffg(nffg_xml)
     un = get_UN_node(nffg)
 

@@ -43,6 +43,8 @@ end
 # 8081  : cadvisor
 # 4242  : openTSDB
 # 5555  : DD broker
+# 8082  : 2nd cadvisor
+# 9096  : Prometheus
   
 Vagrant.configure(2) do |config|
 
@@ -58,6 +60,8 @@ Vagrant.configure(2) do |config|
   config.vm.network "forwarded_port", guest: 8081, host: 8081
   config.vm.network "forwarded_port", guest: 4242, host: 4242
   config.vm.network "forwarded_port", guest: 5555, host: 5555
+  config.vm.network "forwarded_port", guest: 8082, host: 8082
+  config.vm.network "forwarded_port", guest: 9096, host: 9096
 
 
 end
