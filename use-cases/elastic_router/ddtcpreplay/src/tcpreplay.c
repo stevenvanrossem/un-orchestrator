@@ -58,7 +58,6 @@ pthread_mutex_t dd_startm = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t dd_runc = PTHREAD_COND_INITIALIZER;
 
 tcpreplay_t *ctx;
-static dd_t *ddclient;
 
 #define ST_RISE 0
 #define ST_HIGH 1
@@ -240,7 +239,7 @@ int main(int argc, char *argv[]) {
     keyfile = "/etc/doubledecker/public-keys.json";
     printf("env variable KEYFILE empty, using %s\n", keyfile);
   }
-  ddclient = dd_new(ddname, dealer, keyfile, on_reg, on_discon, on_data, on_pub,
+  ctx->ddclient = dd_new(ddname, dealer, keyfile, on_reg, on_discon, on_data, on_pub,
                     on_error);
 
   /* init the signal handlers */
@@ -249,6 +248,7 @@ int main(int argc, char *argv[]) {
   /* main loop */
   rcode = tcpreplay_replay(ctx);
 
+  
   if (rcode < 0) {
     notice("\nFailed: %s\n", tcpreplay_geterr(ctx));
     exit(rcode);
@@ -272,7 +272,7 @@ int main(int argc, char *argv[]) {
     }
   }
   tcpreplay_close(ctx);
-  dd_destroy(&ddclient);
+  dd_destroy(&ctx->ddclient);
   return 0;
 } /* main() */
 

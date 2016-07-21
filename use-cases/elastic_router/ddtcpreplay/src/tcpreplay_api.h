@@ -25,7 +25,7 @@
 #include "defines.h"
 #include "common/sendpacket.h"
 #include "common/tcpdump.h"
-
+#include "dd.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -201,6 +201,7 @@ typedef struct tcpreplay_s {
     volatile bool abort;
     volatile bool suspend;
     bool running;
+    dd_t *ddclient;
 } tcpreplay_t;
 
 

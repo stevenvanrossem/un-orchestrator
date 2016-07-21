@@ -62,8 +62,7 @@ int tcpr_replay_index(tcpreplay_t *ctx) {
   int rcode = 0;
   int idx;
   assert(ctx);
-  //    fprintf(stderr,"tcpr_replay_index(%p)\n",ctx);
-  // Wait until run_loop == 1
+
   pthread_mutex_lock(&dd_startm);
   while (run_loop == 0)
     pthread_cond_wait(&dd_runc, &dd_startm);
@@ -162,8 +161,6 @@ static int replay_file(tcpreplay_t *ctx, int idx) {
   char *path;
   pcap_t *pcap = NULL;
   char ebuf[PCAP_ERRBUF_SIZE];
-  //  fprintf(stderr, "replay_file(%d, %s)\n", idx,
-  //        ctx->options->sources[idx].filename);
   assert(ctx);
   assert(ctx->options->sources[idx].type = source_filename);
 

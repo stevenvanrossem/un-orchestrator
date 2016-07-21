@@ -42,6 +42,9 @@
 #include "tcpreplay_opts.h"
 #endif
 
+extern int run_loop;
+extern pthread_mutex_t dd_startm;
+extern pthread_cond_t dd_runc;
 
 
 /**
@@ -1217,14 +1220,20 @@ tcpreplay_abort(tcpreplay_t *ctx)
     assert(ctx);
     ctx->abort = true;
 
-    printf("sendpacket_abort\n");
-
     if (ctx->intf1 != NULL)
         sendpacket_abort(ctx->intf1);
 
     if (ctx->intf2 != NULL)
         sendpacket_abort(ctx->intf2);
 
+    pthread_mutex_lock(&dd_startm);
+    run_loop = 1;
+    pthread_cond_signal(&dd_runc);
+    pthread_mutex_unlock(&dd_startm);
+
+    
+    dd_destroy(&ctx->ddclient);
+//    zsys_shutdown();
     return 0;
 }
 
