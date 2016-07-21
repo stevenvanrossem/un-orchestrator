@@ -34,7 +34,8 @@ supported_matches = {
 	"source_ip": "source_ip",
 	"dest_ip": "dest_ip",
 	"source_mac": "source_mac",
-	"dest_mac": "dest_mac"
+	"dest_mac": "dest_mac",
+	"dl_type" : "ether_type"
 }
 
 '''

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-from sys import maxint
 from exception import ClientError, ServerError
 from collections import OrderedDict
 from requests.exceptions import HTTPError
 __author__ = 'Ivano Cerrato, Stefano Petrangeli'
 
 import falcon
+import time
 import json
 import logging
 import requests
@@ -103,7 +103,7 @@ class DoEditConfig:
 			LOG.debug("%s",content)
 			
 			#TODO: check that flows refer to existing (i.e., deployed) network function.
-			#TODO: check that flows refer to existing ports 
+			#TODO: check that flows refer to existing ports
 			
 			checkCorrectness(content)
 			
@@ -422,9 +422,8 @@ def extractRules(content):
 		match = Match() 
 		if flowentry.match is not None:
 			if type(flowentry.match.get_value()) is str:
-				#The tag <match> contains a sequence of matches separated by " " or ","
-				#matches = flowentry.match.data.split(" ")
-				matches = re.split(',| ', flowentry.match.data)
+				#The tag <match> contains a sequence of matches separated by " " or "," or ";"
+				matches = re.split(',| |;', flowentry.match.data)
 				for m in matches:
 					tokens = m.split("=")
 					elements = len(tokens)
