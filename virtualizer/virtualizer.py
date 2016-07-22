@@ -491,9 +491,8 @@ def extractRules(content):
 	
 		if flowentry.action is not None:
 			if type(flowentry.action.data) is str:
-				#The tag <action> contains a sequence of actions separated by " " or ","
-				#actions = flowentry.action.data.split(" ")
-				actions = re.split(',| ', flowentry.action.data)
+				#The tag <action> contains a sequence of actions separated by " " or "," or ";"
+				actions = re.split(',| |;', flowentry.action.data)
 
 				for a in actions:
 					action = Action()
