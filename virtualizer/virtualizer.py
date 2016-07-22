@@ -5,7 +5,6 @@ from requests.exceptions import HTTPError
 __author__ = 'Ivano Cerrato, Stefano Petrangeli'
 
 import falcon
-import time
 import json
 import logging
 import requests
@@ -231,8 +230,8 @@ def extractVNFsInstantiated(content):
 		print('ParseError: %s' % e.message)
 		raise ServerError("ParseError: %s" % e.message)
 	
-	tmpInfrastructure = Virtualizer.parse(root=tree.getroot())
-	supportedNFs = tmpInfrastructure.nodes.node[constants.NODE_ID].capabilities.supported_NFs
+	currentInfrastructure = Virtualizer.parse(root=tree.getroot())
+	supportedNFs = currentInfrastructure.nodes.node[constants.NODE_ID].capabilities.supported_NFs
 	supportedTypes = []
 	#lowerPortId = {}
 	for nf in supportedNFs:
@@ -248,8 +247,15 @@ def extractVNFsInstantiated(content):
 		raise ClientError("ParseError: %s" % e.message)
 	
 	infrastructure = Virtualizer.parse(root=tree.getroot())
+	# Added to bind refs to currently deployed VNFs and flowrules	
+	infrastructure.bind(reference=currentInfrastructure)
+	"""
+	tmpFile = open(constants.GRAPH_XML_FILE+"mergeVNF", "w")
+	tmpFile.write(infrastructure.xml())
+	tmpFile.close()
+	"""
 	universal_node = infrastructure.nodes.node[constants.NODE_ID]
-	instances = universal_node.NF_instances	
+	instances = universal_node.NF_instances
 	
 	foundTypes = []
 	nfinstances = []
@@ -259,12 +265,8 @@ def extractVNFsInstantiated(content):
 	
 	for instance in instances:
 		if instance.get_operation() is None:
-			LOG.warning("Update of VNF is not supported by the UN! vnf: {0}".format(instance.id.get_value()))
-			LOG.warning("This VNF will be disregarded by the Orchestrator if it already exists, or created if it does not exist")
-
-			#LOG.error("Update of VNF is not supported by the UN! vnf: " + instance.id.get_value())
-			#LOG.error("If you want to create a new instance please set \"operation=create\" to the node element")
-			#raise ClientError("Update of VNF is not supported by the UN! vnf: "+instance.id.get_value())
+			LOG.warning("VNF {0} has no operation set and will be ignored".format(instance.id.get_value()))
+			continue
 
 		elif instance.get_operation() == 'delete':
 			#This network function has to be removed from the universal node
@@ -379,12 +381,27 @@ def extractRules(content):
 	LOG.debug("Extracting the flowrules to be installed in the universal node")
 
 	try:
+		tree = ET.parse(constants.GRAPH_XML_FILE)
+	except ET.ParseError as e:
+		print('ParseError: %s' % e.message)
+		raise ServerError("ParseError: %s" % e.message)
+	
+	currentInfrastructure = Virtualizer.parse(root=tree.getroot())
+	
+	try:
 		tree = ET.ElementTree(ET.fromstring(content))
 	except ET.ParseError as e:
 		print('ParseError: %s' % e.message)
 		raise ClientError("ParseError: %s" % e.message)
 
 	infrastructure = Virtualizer.parse(root=tree.getroot())
+	# Added to bind refs to currently deployed VNFs and flowrules 
+	infrastructure.bind(reference=currentInfrastructure)
+	"""
+	tmpFile = open(constants.GRAPH_XML_FILE+"mergeRules", "w")
+	tmpFile.write(infrastructure.xml())
+	tmpFile.close()
+	"""
 	universal_node = infrastructure.nodes.node[constants.NODE_ID]
 	flowtable = universal_node.flowtable
 
@@ -395,12 +412,8 @@ def extractRules(content):
 	for flowentry in flowtable:		
 
 		if flowentry.get_operation() is None:
-			LOG.warning("Update of Flowrules is not supported by the UN! vnf: {0}".format(flowentry.id.get_value()))
-			LOG.warning("This Flowrule will be disregarded by the Orchestrator if it already exists or created if it doesn't exist")
-			#continue
-			#LOG.error("Update of flowentry is not supported by the UN! flowentry: " + flowentry.id.get_value())
-			#LOG.error("If you want to create a new flowentry please set \"operation=create\" to the flowentry element")
-			#raise ClientError("Update of flowentry is not supported by the UN! vnf: "+flowentry.id.get_value())
+			LOG.warning("Flowrule {0} has no operation set and will be ignored".format(flowentry.id.get_value()))
+			continue
 
 		elif flowentry.get_operation() == 'delete':
 			#This rule has to be removed from the universal node
@@ -1342,6 +1355,7 @@ api.add_route('/get-config',DoGetConfig())
 api.add_route('/edit-config',DoEditConfig())
 
 #in_file = open ("config/nffg_examples/passthrough_with_vnf_nffg_v5.xml")
+#in_file = open ("config/nffg_examples/simple_passthrough_nffg.xml")
 #in_file = open ("config/nffg_examples/nffg_delete_flow_vnf.xml")
 #in_file = open ("config/nffg_examples/er_nffg_virtualizer5.xml")
 #in_file = open ("config/nffg_examples/step1.xml")
