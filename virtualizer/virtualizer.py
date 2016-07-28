@@ -144,15 +144,17 @@ class DoEditConfig:
 
 			LOG.info("'edit-config' command properly handled")
 			
-		except ClientError:
-			resp.status = falcon.HTTP_400
-		except ServerError:
+		except ClientError as ex:
+			raise falcon.HTTPBadRequest("Client Error", ex.message)
+
+		except ServerError as ex:
 			LOG.error("Please, press 'ctrl+c' and restart the virtualizer.")
 			LOG.error("Please, also restart the universal node orchestrator.")
-			resp.status = falcon.HTTP_500
-		except Exception as err:
-			LOG.exception(err)
-			resp.status = falcon.HTTP_500
+			raise falcon.HTTPInternalServerError('Server Error', ex.message)
+
+		except Exception as ex:
+			LOG.exception(ex)
+			raise falcon.HTTPInternalServerError('Internal Server Error', str(ex))
 
 def checkCorrectness(newContent):
 	'''
@@ -267,7 +269,7 @@ def processVNFs(nffg, content):
 				#This network function has to be removed from the universal node
 				vnf_to_be_removed = nffg.getVNF(instance.id.get_value())
 				if vnf_to_be_removed is None:
-					LOG.debug("Trying to delete a VNF that is not currently deployed. Vnf id: " + instance.id.get_value())
+					LOG.error("Trying to delete a VNF that is not currently deployed. Vnf id: " + instance.id.get_value())
 					raise ClientError("Trying to delete a VNF that is not currently deployed. Vnf id: " + instance.id.get_value())
 				LOG.debug("Network function '%s' has to be removed",vnf_to_be_removed.id)
 				nffg.vnfs.remove(vnf_to_be_removed)
@@ -399,8 +401,14 @@ def processRules(nffg, content):
 		raise ClientError("ParseError: %s" % e.message)
 
 	infrastructure = Virtualizer.parse(root=tree.getroot())
-	# Added to bind refs to currently deployed VNFs and flowrules 
-	infrastructure.bind(reference=currentInfrastructure)
+	try:
+		# Added to bind refs to currently deployed VNFs and flowrules
+		infrastructure.bind(reference=currentInfrastructure)
+	except KeyError as ex:
+		LOG.exception(ex)
+		LOG.error("Bind operation failed due to inconsistent key. Please check that all IDs in your paths are coherent")
+		raise ClientError("Bind operation failed due to inconsistent key. Please check that all IDs in your paths are coherent")
+
 	universal_node = infrastructure.nodes.node[constants.NODE_ID]
 	flowtable = universal_node.flowtable
 
@@ -417,7 +425,7 @@ def processRules(nffg, content):
 				#This rule has to be removed from the universal node
 				flow_to_be_removed = nffg.getFlowRule(flowentry.id.get_value())
 				if flow_to_be_removed is None:
-					LOG.debug("Trying to delete a Flowrule that is not currently deployed. Flow id: " + flowentry.id.get_value())
+					LOG.error("Trying to delete a Flowrule that is not currently deployed. Flow id: " + flowentry.id.get_value())
 					raise ClientError("Trying to delete a Flowrule that is not currently deployed. Flow id: " + flowentry.id.get_value())
 				LOG.debug("Flowrule '%s' has to be removed", flow_to_be_removed.id)
 				nffg.flow_rules.remove(flow_to_be_removed)				
