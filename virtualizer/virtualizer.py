@@ -1164,7 +1164,7 @@ token = None
 headers = {'Content-Type': 'application/json'}
 
 # if debug_mode is True no interactions will be made with the UN
-debug_mode = True
+debug_mode = False
 
 if not virtualizerInit():
 	LOG.error("Failed to start up the virtualizer.")
