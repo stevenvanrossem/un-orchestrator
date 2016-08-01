@@ -87,5 +87,10 @@
 			<docker uri="gitlab.testbed.se:5000/ctrl"/>
 	</network-function>
 
+	<network-function name="ovs" num-ports="5" summary="openvswitch in userspace with 1 control port, 4 switch ports, and external ssh login enabled">
+			<!-- Only a docker implementation is available for this network function -->
+			<docker uri="gitlab.testbed.se:5000/ovs"/>
+	</network-function>
+
 
 </network-functions>
