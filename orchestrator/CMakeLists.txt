@@ -547,22 +547,24 @@ ExternalProject_Add(
 	CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=${CMAKE_BINARY_DIR}/externals
 )
 
-# libvirt - specific revision
-ExternalProject_Add( Libvirt
+IF(ENABLE_KVM)
+	# libvirt - specific revision
+	ExternalProject_Add( Libvirt
 
-	## this refers to the specific revision from README_COMPILE.md
-	# GIT_REPOSITORY git://libvirt.org/libvirt.git
-	# GIT_TAG f57842ecfda1ece8c59718e62464e17f75a27062
+		## this refers to the specific revision from README_COMPILE.md
+		# GIT_REPOSITORY git://libvirt.org/libvirt.git
+		# GIT_TAG f57842ecfda1ece8c59718e62464e17f75a27062
 
-	# try a regular release instead:
-	URL http://libvirt.org/sources/libvirt-1.2.17.tar.gz
-	URL_MD5 a1f49050223be3cbd7678c32b1ee2756
+		# try a regular release instead:
+		URL http://libvirt.org/sources/libvirt-1.2.17.tar.gz
+		URL_MD5 a1f49050223be3cbd7678c32b1ee2756
 
-	BUILD_IN_SOURCE 1
-	CONFIGURE_COMMAND ./autogen.sh --prefix=${CMAKE_BINARY_DIR}/externals
-	UPDATE_COMMAND ""
-	ALWAYS 0
-)
+		BUILD_IN_SOURCE 1
+		CONFIGURE_COMMAND ./autogen.sh --prefix=${CMAKE_BINARY_DIR}/externals
+		UPDATE_COMMAND ""
+		ALWAYS 0
+	)
+ENDIF(ENABLE_KVM)
 
 ENDIF(BUILD_ExternalProjects)
 
