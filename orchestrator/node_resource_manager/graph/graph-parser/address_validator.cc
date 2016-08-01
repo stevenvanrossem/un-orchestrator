@@ -70,3 +70,21 @@ bool AddressValidator::validateIpv4Netmask(const string &netmask)
 	return true;
 }
 
+/**
+*	According to https://en.wikipedia.org/wiki/Multicast_address#Ethernet, 
+*	"Ethernet frames with a value of 1 in the least-significant bit of the first
+*	octet of the destination address are treated as multicast frames"
+*
+*	This function assumes that the MAC address is correct
+*/
+bool AddressValidator::isUnicastMac(const char* mac)
+{
+	uint8_t octet = 0;
+	uint8_t aux = 0;
+
+	assert(validateMac(mac));
+
+	sscanf(mac,"%"SCNx8":%"SCNx8":%"SCNx8":%"SCNx8":%"SCNx8":%"SCNx8"",&octet,&aux,&aux,&aux,&aux,&aux);
+
+	return ((octet & 0x1) == 0);
+}

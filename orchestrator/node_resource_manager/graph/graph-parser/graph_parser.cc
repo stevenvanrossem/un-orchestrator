@@ -22,6 +22,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 		vector<Object> gre_array(256);
 		Object big_switch, ep_gre;
 	  	bool foundFlowGraph = false;
+	  	bool foundBigSwitch = false;
 
 		//Iterates on the json received
 		for(Object::const_iterator i = obj.begin(); i != obj.end(); ++i )
@@ -330,6 +331,16 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 												else if(p_name == PORT_MAC)
 												{
 													logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",VNF_PORTS,PORT_MAC,p_value.getString().c_str());
+													if(!AddressValidator::validateMac(p_value.getString().c_str()))
+													{
+														logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\". Please specify a correct MAC address.",PORT_MAC,p_value.getString().c_str());
+														return false;
+													}
+													if(!AddressValidator::isUnicastMac(p_value.getString().c_str()))
+													{
+														logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\". Multicast address cannot be assigned to VNF ports.",PORT_MAC,p_value.getString().c_str());
+														return false;
+													}
 													port_descr.configuration.mac_address = p_value.getString();
 												}
 												else if(p_name == PORT_IP)
@@ -720,6 +731,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 					//Identify the big-switch
 					else if(fg_name == BIG_SWITCH)
 					{
+						foundBigSwitch = true;
 						try{
 							fg_value.getObject();
 						} catch(exception& e)
@@ -742,7 +754,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 
 				/*******************************************/
 				// Iterate on the element of the big-switch
-				bool foundFlowRules = false;
+				bool foundFlowRules = false; //flow rules are mandatory if the big-switch is specified
 				for(Object::const_iterator bs = big_switch.begin(); bs != big_switch.end(); bs++)
 				{
 					const string& bs_name  = bs->first;
@@ -1254,9 +1266,9 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 					}
 				}//End iteration on the elements inside "big-switch"
 
-				if(!foundFlowRules)
+				if(foundBigSwitch && !foundFlowRules)
 				{
-					logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in \"%s\"",FLOW_RULES,FORWARDING_GRAPH);
+					logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in \"%s\"",FLOW_RULES,BIG_SWITCH);
 					return false;
 				}
 
