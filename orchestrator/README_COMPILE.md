@@ -30,12 +30,6 @@ In the following we list the steps required on an **Ubuntu 14.04**.
 
 	; Now install the above library according to the description provided
 	; in the cloned folder
-	
-	; Install inih (a nice library used to read the configuration file)
-	$ cd [un-orchestrator]/contrib
-	$ unzip inih.zip
-	$ cd inih
-	$ cp * ../../orchestrator/node_resource_manager/database_manager/SQLite
 
 The following libraries are required if you plan to enable the publisher/subscriber 
 mechanism, which is used by the un-orchestrator, for instance, to export the configuration
