@@ -57,7 +57,7 @@ extern "C" {
 */
 extern void logger(int LoggingLevel, const char *ModuleName, const char *File, int Line, const char *Format, ...);
 
-//IVANO: TODO: fare una sola funzione
+//IVANO: TODO: merge with the function above (if possible)
 extern void coloredLogger(char *color, int LoggingLevel, const char *ModuleName, const char *File, int Line, const char *Format, ...);
 
 #define UN_LOG(LEVEL, FORMAT, ...) 					 						\
