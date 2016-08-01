@@ -268,18 +268,20 @@ class ElasticRouter(app_manager.RyuApp):
 
         # new DP for each scaled port
         id_add = 0 # constant to make the correct vnf id
+        id = int(er_nffg.get_next_ovs_id(self.nffg, add=id_add))
         for port_list in scaling_ports:
             # we need to artificially pick the id, because UN does not allow
             # multiple instances of the same vnf type
 
             #id = len(self.DP_instances) + 1
-            id = int(er_nffg.get_next_vnf_id(self.nffg, add=id_add)) - 1 # control vnf id=1, so ovs id is one less...
-            id_nffg = er_nffg.get_next_vnf_id(self.nffg, add=id_add)
-            DPname = 'ovs{0}'.format(id)
-            #control_ip = '10.0.10.{0}/24'.format(id)
+            #id = int(er_nffg.get_next_vnf_id(self.nffg, add=id_add))-1  # control vnf id=1, so ovs id is one less...
+            #id_nffg = er_nffg.get_next_vnf_id(self.nffg, add=id_add)
+            ovs_id = id + id_add
+            DPname = 'ovs{0}'.format(ovs_id)
+
 
             # create new DP, ports will be added later
-            new_DP = DP(DPname, id_nffg, [])
+            new_DP = DP(DPname, ovs_id, [])
             self.DP_instances[new_DP.name] = new_DP
 
             # add external ports/links to new DP
@@ -342,8 +344,11 @@ class ElasticRouter(app_manager.RyuApp):
         nffg_intermediate = er_nffg.remove_measure_to_ovs_vnfs(nffg_intermediate)
 
         for new_DP in new_DP_list:
-            ovs_id = int(new_DP.id) - 1
-            nffg_intermediate = er_nffg.add_ovs_vnf(nffg_intermediate, new_DP.id, ovs_id, new_DP.name, new_DP.name, len(new_DP.ports))
+            ovs_id = int(new_DP.id) #- 1
+            nffg_id = new_DP.name
+            nffg_intermediate = er_nffg.add_ovs_vnf(nffg_intermediate, nffg_id, ovs_id, new_DP.name, vnftype='ovs',
+                                                    numports=len(new_DP.ports))
+            #nffg_intermediate = er_nffg.add_ovs_vnf(nffg_intermediate, new_DP.id, ovs_id, new_DP.name, new_DP.name, len(new_DP.ports))
 
 
         '''
@@ -444,7 +449,7 @@ class ElasticRouter(app_manager.RyuApp):
         # first delete external incoming flows for all old DPs (scaled out topo)
         ###self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
         for del_VNF in self.VNFs_to_be_deleted:
-            VNF_id = self.DP_instances[del_VNF].id
+            VNF_id = self.DP_instances[del_VNF].name
             self.nffg = er_nffg.delete_VNF_incoming_ext_flows(self.nffg, VNF_id)
 
 
@@ -453,7 +458,7 @@ class ElasticRouter(app_manager.RyuApp):
         # delete other flows and complete VNF
         # self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
         for del_VNF in self.VNFs_to_be_deleted:
-            VNF_id = self.DP_instances[del_VNF].id
+            VNF_id = self.DP_instances[del_VNF].name
             self.nffg = er_nffg.delete_VNF(self.nffg, VNF_id)
 
         #file = open('ER_scale_priorities2.xml', 'w')
