@@ -90,6 +90,11 @@ extern void coloredLogger(char *color, int LoggingLevel, const char *ModuleName,
 		logger(LEVEL, LOG_MODULE_NAME, __FILE__, __LINE__, ORCH_WARNING, ##__VA_ARGS__);\
 	} while(0)
 
+#define ULOG_ERR(FORMAT, ...) 					 						\
+	do {									 								\
+		logger(LEVEL, LOG_MODULE_NAME, __FILE__, __LINE__, ORCH_ERROR, ##__VA_ARGS__);\
+	} while(0)
+
 #define ULOG_INFO(FORMAT, ...) 					 						\
 	do {									 								\
 		logger(LEVEL, LOG_MODULE_NAME, __FILE__, __LINE__, ORCH_INFO, ##__VA_ARGS__);\
