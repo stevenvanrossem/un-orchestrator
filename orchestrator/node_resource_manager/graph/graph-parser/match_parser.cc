@@ -103,76 +103,6 @@ unsigned int MatchParser::epPort(string name_port)
 	return nfPort(name_port);
 }
 
-/**
-*	http://stackoverflow.com/questions/4792035/how-do-you-validate-that-a-string-is-a-valid-mac-address-in-c
-*/
-bool MatchParser::validateMac(const char* mac)
-{
-	int i = 0;
-	int s = 0;
-
-	while (*mac)
-	{
-		if (isxdigit(*mac))
-			i++;
-		else if (*mac == ':' || *mac == '-')
-		{
-			if (i == 0 || i / 2 - 1 != s)
-			break;
-
-			++s;
-		}
-		else
-			s = -1;
-
-		++mac;
-	}
-
-    return (i == 12 && (s == 5 || s == 0));
-}
-
-/**
-*	http://stackoverflow.com/questions/318236/how-do-you-validate-that-a-string-is-a-valid-ipv4-address-in-c
-*/
-bool MatchParser::validateIpv4(const string &ipAddress)
-{
-    struct sockaddr_in sa;
-    int result = inet_pton(AF_INET, ipAddress.c_str(), &(sa.sin_addr));
-    return result != 0;
-}
-
-bool MatchParser::validateIpv6(const string &ipAddress)
-{
-    struct sockaddr_in sa;
-    int result = inet_pton(AF_INET6, ipAddress.c_str(), &(sa.sin_addr));
-    return result != 0;
-}
-
-bool MatchParser::validateIpv4Netmask(const string &netmask)
-{
-	if(!validateIpv4(netmask))
-		return false;
-
-	bool zero = true;
-	unsigned int mask;
-
-	int first, second, third, fourth;
-	sscanf(netmask.c_str(),"%d.%d.%d.%d",&first,&second,&third,&fourth);
-	mask = (first << 24) + (second << 16) + (third << 8) + fourth;
-
-	for(int i = 0; i < 32; i++)
-	{
-		if(((mask & 0x1) == 0) && !zero)
-			return false;
-		if(((mask & 0x1) == 1) && zero)
-			zero = false;
-
-		mask = mask >> 1;
-	}
-
-	return true;
-}
-
 bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::Action &action, map<string,string > &iface_id, map<string,string> &internal_id, map<string,pair<string,string> > &vlan_id, map<string,string> &gre_id, highlevel::Graph &graph)
 {
 	bool foundOne = false;
@@ -410,7 +340,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		else if(name == ETH_SRC)
 		{
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,ETH_SRC,value.getString().c_str());
-			if(!validateMac(value.getString().c_str()))
+			if(!AddressValidator::validateMac(value.getString().c_str()))
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",ETH_SRC,value.getString().c_str());
 				return false;
@@ -421,7 +351,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		else if(name == ETH_SRC_MASK)
 		{
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,ETH_SRC_MASK,value.getString().c_str());
-			if(!validateMac(value.getString().c_str()))
+			if(!AddressValidator::validateMac(value.getString().c_str()))
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",ETH_SRC_MASK,value.getString().c_str());
 				return false;
@@ -432,7 +362,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		else if(name == ETH_DST)
 		{
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,ETH_DST,value.getString().c_str());
-			if(!validateMac(value.getString().c_str()))
+			if(!AddressValidator::validateMac(value.getString().c_str()))
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",ETH_DST,value.getString().c_str());
 				return false;
@@ -443,7 +373,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		else if(name == ETH_DST_MASK)
 		{
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,ETH_DST_MASK,value.getString().c_str());
-			if(!validateMac(value.getString().c_str()))
+			if(!AddressValidator::validateMac(value.getString().c_str()))
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",ETH_DST_MASK,value.getString().c_str());
 				return false;
@@ -494,7 +424,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 			if(found!=string::npos)
 			{
 				logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,IP_SRC,value.getString().c_str());
-				if(!validateIpv6(value.getString()))
+				if(!AddressValidator::validateIpv6(value.getString()))
 				{
 					logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",IP_SRC,value.getString().c_str());
 					return false;
@@ -504,7 +434,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 			//IPv4
 			} else {
 				logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,IP_SRC,value.getString().c_str());
-				if(!validateIpv4(value.getString()))
+				if(!AddressValidator::validateIpv4(value.getString()))
 				{
 					logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",IP_SRC,value.getString().c_str());
 					return false;
@@ -516,7 +446,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		else if(name == IPv4_SRC_MASK)
 		{
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,IPv4_SRC_MASK,value.getString().c_str());
-			if(!validateIpv4Netmask(value.getString()))
+			if(!AddressValidator::validateIpv4Netmask(value.getString()))
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",IPv4_SRC_MASK,value.getString().c_str());
 				return false;
@@ -531,7 +461,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 			if(found!=string::npos)
 			{
 				logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,IP_DST,value.getString().c_str());
-				if(!validateIpv6(value.getString()))
+				if(!AddressValidator::validateIpv6(value.getString()))
 				{
 					logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",IP_DST,value.getString().c_str());
 					return false;
@@ -540,7 +470,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 				foundProtocolField = true;
 			} else {
 				logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,IP_SRC,value.getString().c_str());
-				if(!validateIpv4(value.getString()))
+				if(!AddressValidator::validateIpv4(value.getString()))
 				{
 					logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",IP_SRC,value.getString().c_str());
 					return false;
@@ -552,7 +482,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		else if(name == IPv4_DST_MASK)
 		{
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,IPv4_DST_MASK,value.getString().c_str());
-			if(!validateIpv4Netmask(value.getString()))
+			if(!AddressValidator::validateIpv4Netmask(value.getString()))
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",IPv4_DST_MASK,value.getString().c_str());
 				return false;
@@ -686,7 +616,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		{
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,ARP_SPA,value.getString().c_str());
 			//This is an IPv4 adddress
-			if(!validateIpv4(value.getString()))
+			if(!AddressValidator::validateIpv4(value.getString()))
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",ARP_SPA,value.getString().c_str());
 				return false;
@@ -698,7 +628,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		{
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,ARP_SPA_MASK,value.getString().c_str());
 			//This is an IPv4 mask
-			if(!validateIpv4Netmask(value.getString()))
+			if(!AddressValidator::validateIpv4Netmask(value.getString()))
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",ARP_SPA_MASK,value.getString().c_str());
 				return false;
@@ -710,7 +640,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		{
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,ARP_TPA,value.getString().c_str());
 			//This is an IPv4 adddress
-			if(!validateIpv4(value.getString()))
+			if(!AddressValidator::validateIpv4(value.getString()))
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",ARP_TPA,value.getString().c_str());
 				return false;
@@ -722,7 +652,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		{
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,ARP_TPA_MASK,value.getString().c_str());
 			//This is an IPv4 mask
-			if(!validateIpv4Netmask(value.getString()))
+			if(!AddressValidator::validateIpv4Netmask(value.getString()))
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",ARP_TPA_MASK,value.getString().c_str());
 				return false;
@@ -734,7 +664,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		{
 			//This is an ethernet address
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,ARP_SHA,value.getString().c_str());
-			if(!validateMac(value.getString().c_str()))
+			if(!AddressValidator::validateMac(value.getString().c_str()))
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",ARP_SHA,value.getString().c_str());
 				return false;
@@ -746,7 +676,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		{
 			//This is an ethernet address
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,ARP_THA,value.getString().c_str());
-			if(!validateMac(value.getString().c_str()))
+			if(!AddressValidator::validateMac(value.getString().c_str()))
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",ARP_THA,value.getString().c_str());
 				return false;
@@ -757,7 +687,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		else if(name == IPv6_SRC_MASK)
 		{
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,IPv6_SRC_MASK,value.getString().c_str());
-			if(!validateIpv6(value.getString()))
+			if(!AddressValidator::validateIpv6(value.getString()))
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",IPv6_SRC_MASK,value.getString().c_str());
 				return false;
@@ -768,7 +698,7 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		else if(name == IPv6_DST_MASK)
 		{
 			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",MATCH,IPv6_DST_MASK,value.getString().c_str());
-			if(!validateIpv6(value.getString()))
+			if(!AddressValidator::validateIpv6(value.getString()))
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",IPv6_DST_MASK,value.getString().c_str());
 				return false;

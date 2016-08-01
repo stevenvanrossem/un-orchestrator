@@ -246,6 +246,8 @@ SET(SOURCES1
 	node_resource_manager/graph/graph-parser/graph_parser.cc
 	node_resource_manager/graph/graph-parser/match_parser.h
 	node_resource_manager/graph/graph-parser/match_parser.cc
+	node_resource_manager/graph/graph-parser/address_validator.h
+	node_resource_manager/graph/graph-parser/address_validator.cc
 
 	node_resource_manager/graph/low_level_graph/output_action.h
 	node_resource_manager/graph/low_level_graph/output_action.cc
