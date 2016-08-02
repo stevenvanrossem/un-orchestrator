@@ -460,7 +460,9 @@ ADD_EXECUTABLE(
 
 ADD_DEPENDENCIES(node-orchestrator JSON_Spirit)
 ADD_DEPENDENCIES(node-orchestrator ROFL_Common)
+IF(ENABLE_KVM)
 ADD_DEPENDENCIES(node-orchestrator Libvirt)
+ENDIF(ENABLE_KVM)
 ADD_DEPENDENCIES(node-orchestrator Inih)
 
 TARGET_LINK_LIBRARIES( node-orchestrator
