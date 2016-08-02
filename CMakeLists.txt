@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-OPTION(BUILD_ExternalProjects "Build external projects (json-spirit, rofl, ...)" ON)
+OPTION(BUILD_ExternalProjects "Build external projects (json-spirit, rofl, ...)" OFF)
 OPTION(BUILD_Orchestrator "Build orchestrator" ON)
 OPTION(BUILD_NameResolver "Build name-resolver" ON)
 
