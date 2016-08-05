@@ -1,10 +1,10 @@
 # Debugging a UN service
 
 This document provides some suggestions for debugging the UN when the 
-deployed service (that comes as NF-FG) does not working as expected.
+deployed service (that comes as NF-FG) does not work as expected.
 
 In this case, the problem may be that the UN translates the NF-FG with
-the wrong set of commands, and the following commands help you to
+the wrong set of directives, and the following commands help you to
 understand what is going on.
 
 
