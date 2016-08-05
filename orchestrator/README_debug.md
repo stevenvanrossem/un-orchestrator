@@ -27,21 +27,21 @@ The following commands are useful to check the status of OvS.
 
 The following commands are useful to check the status of the Docker environment
 
-   ; Show the running containers
-   $ sudo docker ps
+    ; Show the running containers
+    $ sudo docker ps
 
-   ; Show the containers that are no longer running but that have not been removed
-   $ sudo docker ps -a
+    ; Show the containers that are no longer running but that have not been removed
+    $ sudo docker ps -a
 
-   ; Execute a command in a runnin container
-   $ sudo docker container_id command
-   ; The container ID can be retrieved through the first command above
+    ; Execute a command in a runnin container
+    $ sudo docker container_id command
+    ; The container ID can be retrieved through the first command above
 
-   ; Kill a container (it will not be shown anymore with `docker ps`)
-   $ sudo docker kill container_id
+    ; Kill a container (it will not be shown anymore with `docker ps`)
+    $ sudo docker kill container_id
 
-   ; Remove a container
-   $ sudo docker rm container_id
+    ; Remove a container
+    $ sudo docker rm container_id
 
 ## Debug KVM
 
