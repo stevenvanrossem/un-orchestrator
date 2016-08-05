@@ -21,18 +21,19 @@ The following commands are useful to check the status of OvS.
 
 ## Debug OpenFlow
 
-The following commands show how to setup wireshark to debug openflow messages
+The following commands show how to setup wireshark to debug OpenFlow messages
 
 	; install wireshark
 	$ sudo apt-get install wireshark
 
-	; move to wireshark plugin directory
+	; move into wireshark plugin directory
 	$ cd /usr/lib/x86_64-linux-gnu/wireshark/libwireshark3/plugins
 
-	; download openflow dissector plugin
+	; download the OpenFlow dissector plugin
 	$ wget http://www.projectfloodlight.org/openflow.lua
 
-Openflow messages are now recognized from packet sniffer, just run Wireshark and listen to loopback interface.
+Now wireshark recognizes Openflow messages.
+Run it and capture traffic on the loopback interface (the UN orchestrator and the vSwitch are executed on the same machine).
 
 ## Debug Docker
 
