@@ -1,6 +1,6 @@
 # Debugging a UN service
 
-This document provides some suggestions for debugging the UN when the 
+This document provides some suggestions for debugging the UN when the
 deployed service (that comes as NF-FG) does not work as expected.
 
 In this case, the problem may be that the UN translates the NF-FG with
@@ -24,7 +24,7 @@ The following commands are useful to check the status of OvS.
     ; Delete a bridge
     $ sudo ovs-vsctl del-br <bridge_name>
 
-Please remember that the UN usually creates serveral Logical 
+Please remember that the UN usually creates serveral Logical
 Switching Instances (LSI), which are shown by OVS as different
 bridges. Hence you may need to debug several bridges to see what
 is going on.
@@ -76,4 +76,16 @@ The following commands are useful to check the status of the Docker environment
 
 ## Debug KVM
 
-**TODO**
+The UN orchestrator manages the virtual machines using libvirt, it means that you can access all the information related to the running instances using the `virsh` tool.
+The version of `virsh` to be used in the one in `/usr/local/bin`.
+
+The following are examples of the most important commands, for the full list please visit the [Virsh Command Reference](http://libvirt.org/sources/virshcmdref/html/)
+
+    ; Show the running VMs
+    $ sudo /usr/local/bin/virsh list
+
+    ; Show the xml template of a running vm
+    $ sudo /usr/local/bin/virsh dumpxml <domain>
+
+    ; Destroy a domain
+    $ sudo /usr/local/bin/virsh destroy <domain>
