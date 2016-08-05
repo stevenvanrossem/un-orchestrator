@@ -1,7 +1,12 @@
-# Debug the NF-FG
+# Debugging a UN service
 
-This document is intended to provide some suggestions to debug the UN in case 
-the deployed NF-FG does not work.
+This document provides some suggestions for debugging the UN when the 
+deployed service (that comes as NF-FG) does not working as expected.
+
+In this case, the problem may be that the UN translates the NF-FG with
+the wrong set of commands, and the following commands help you to
+understand what is going on.
+
 
 ## Debug OvS
 
@@ -11,29 +16,36 @@ The following commands are useful to check the status of OvS.
     $ sudo ovs-vsctl show
 
     ; Show the OpenFlow identifiers for the ports of a bridge
-    $ sudo ovs-ofctl show bridge_name --protocol=Openflow12
+    $ sudo ovs-ofctl show <bridge_name> --protocol=Openflow12
 
     ; Show the forwarding table of a bridge
-    $ sudo ovs-ofctl dump-flows bridge_name --protocol=Openflow12
+    $ sudo ovs-ofctl dump-flows <bridge_name> --protocol=Openflow12
 
     ; Delete a bridge
-    $ sudo ovs-vsctl del-br bridge_name
+    $ sudo ovs-vsctl del-br >bridge_name>
 
-## Debug OpenFlow
+Please remember that the UN usually creates serveral Logical 
+Switching Instances (LSI), which are shown by OVS as different
+bridges. Hence you may need to debug several bridges to see what
+is going on.
 
-The following commands show how to setup wireshark to debug OpenFlow messages
 
-	; install wireshark
+## Debug OpenFlow messages
+
+The following commands show how to setup Wireshark to debug OpenFlow messages
+
+	; Install Wireshark
 	$ sudo apt-get install wireshark
 
-	; move into wireshark plugin directory
+	; Move in the Wireshark plugin directory
 	$ cd /usr/lib/x86_64-linux-gnu/wireshark/libwireshark3/plugins
 
-	; download the OpenFlow dissector plugin
+	; Download the OpenFlow dissector plugin
 	$ wget http://www.projectfloodlight.org/openflow.lua
 
-Now wireshark recognizes Openflow messages.
+Now Wireshark recognizes Openflow messages.
 Run it and capture traffic on the loopback interface (the UN orchestrator and the vSwitch are executed on the same machine).
+
 
 ## Debug Docker
 
@@ -46,14 +58,15 @@ The following commands are useful to check the status of the Docker environment
     $ sudo docker ps -a
 
     ; Execute a command in a runnin container
-    $ sudo docker container_id command
+    $ sudo docker <container_id> command
     ; The container ID can be retrieved through the first command above
 
     ; Kill a container (it will not be shown anymore with `docker ps`)
-    $ sudo docker kill container_id
+    $ sudo docker kill <container_id>
 
     ; Remove a container
-    $ sudo docker rm container_id
+    $ sudo docker rm <container_id>
+
 
 ## Debug KVM
 
