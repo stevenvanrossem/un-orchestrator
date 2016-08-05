@@ -22,7 +22,7 @@ The following commands are useful to check the status of OvS.
     $ sudo ovs-ofctl dump-flows <bridge_name> --protocol=Openflow12
 
     ; Delete a bridge
-    $ sudo ovs-vsctl del-br >bridge_name>
+    $ sudo ovs-vsctl del-br <bridge_name>
 
 Please remember that the UN usually creates serveral Logical 
 Switching Instances (LSI), which are shown by OVS as different
@@ -63,7 +63,7 @@ The following commands are useful to check the status of the Docker environment
     ; Show the containers that are no longer running but that have not been removed
     $ sudo docker ps -a
 
-    ; Execute a command in a runnin container
+    ; Execute a command in a running container
     $ sudo docker <container_id> command
     ; The container ID can be retrieved through the first command above
 
