@@ -448,6 +448,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 							ULOG_DBG("\"%s\"",END_POINTS);
 
 							//Iterate on the end-points
+							set<string> usedID;
 							for( unsigned int ep = 0; ep < end_points_array.size(); ++ep )
 							{
 								try{
@@ -469,8 +470,14 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 
 									if(ep_name == _ID)
 									{
-										ULOG_DBG("\"%s\"->\"%s\": \"%s\"",END_POINTS,_ID,ep_value.getString().c_str());
 										id = ep_value.getString();
+										//Two endpoints cannot have the same ID
+										if(usedID.count(id) != 0)
+										{
+											ULOG_WARN("Found two endpoints with the same ID: \"%s\". This is not valid.",id.c_str());
+											return false;
+										}
+										usedID.insert(id);
 									}
 									else if(ep_name == _NAME)
 									{
@@ -490,7 +497,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 											ep_value.getObject();
 										} catch(exception& e)
 										{
-											ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" should be an Object", EP_IFACE);
+											ULOG_WARN("The content does not respect the JSON syntax: \"%s\" should be an Object", EP_IFACE);
 											return false;
 										}
 
