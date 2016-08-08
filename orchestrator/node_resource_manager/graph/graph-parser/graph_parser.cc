@@ -93,8 +93,9 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 							//*	update of a graph that only adds new flows
 							//However, when there are no VNFs, we provide a warning
 
-					    	//Itearate on the VNFs
-					    	for( unsigned int vnf = 0; vnf < vnfs_array.size(); ++vnf )
+							//Itearate on the VNFs
+							set<string> usedVNFID;
+							for( unsigned int vnf = 0; vnf < vnfs_array.size(); ++vnf )
 							{
 								try
 								{
@@ -157,6 +158,13 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 									else if(nf_name == _ID)
 									{
 										ULOG_DBG("\"%s\"->\"%s\": \"%s\"",VNFS,_ID,nf_value.getString().c_str());
+
+										if(usedVNFID.count(nf_value.getString()) != 0)
+										{
+											ULOG_WARN("Found two VNFs with the same ID: \"%s\". This is not valid.",(nf_value.getString()).c_str());
+											return false;
+										}
+										usedVNFID.insert(nf_value.getString());
 										//store value of VNF id
 										id.assign(nf_value.getString().c_str());
 									}
@@ -448,7 +456,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 							ULOG_DBG("\"%s\"",END_POINTS);
 
 							//Iterate on the end-points
-							set<string> usedID;
+							set<string> usedEndpointID;
 							for( unsigned int ep = 0; ep < end_points_array.size(); ++ep )
 							{
 								try{
@@ -472,12 +480,12 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 									{
 										id = ep_value.getString();
 										//Two endpoints cannot have the same ID
-										if(usedID.count(id) != 0)
+										if(usedEndpointID.count(id) != 0)
 										{
 											ULOG_WARN("Found two endpoints with the same ID: \"%s\". This is not valid.",id.c_str());
 											return false;
 										}
-										usedID.insert(id);
+										usedEndpointID.insert(id);
 									}
 									else if(ep_name == _NAME)
 									{
