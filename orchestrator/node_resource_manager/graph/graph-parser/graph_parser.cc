@@ -23,13 +23,13 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 		Object obj = value.getObject();
 		vector<Object> gre_array(256);
 		Object big_switch, ep_gre;
-	  	bool foundFlowGraph = false;
-	  	bool foundBigSwitch = false;
+		bool foundFlowGraph = false;
+		bool foundBigSwitch = false;
 
 		//Iterates on the json received
 		for(Object::const_iterator i = obj.begin(); i != obj.end(); ++i )
 		{
-	 		const string& name  = i->first;
+			const string& name  = i->first;
 			const Value&  value = i->second;
 
 			//Identify the forwarding graph
@@ -45,7 +45,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 					forwarding_graph = value.getObject();
 				} catch(exception& e)
 				{
-					ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" should be an Object", FORWARDING_GRAPH);
+					ULOG_WARN("The content does not respect the JSON syntax: \"%s\" should be an Object", FORWARDING_GRAPH);
 					return false;
 				}
 				for(Object::const_iterator fg = forwarding_graph.begin(); fg != forwarding_graph.end(); fg++)
@@ -82,7 +82,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 								fg_value.getArray();
 							} catch(exception& e)
 							{
-								ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" should be an Array", VNFS);
+								ULOG_WARN("The content does not respect the JSON syntax: \"%s\" should be an Array", VNFS);
 								return false;
 							}
 
@@ -102,7 +102,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 									vnfs_array[vnf].getObject();
 								} catch(exception& e)
 								{
-									ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" element should be an Object", VNFS);
+									ULOG_WARN("The content does not respect the JSON syntax: \"%s\" element should be an Object", VNFS);
 									return false;
 								}
 
@@ -178,7 +178,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 											nf_value.getArray();
 										} catch(exception& e)
 										{
-											ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" should be an Array", UNIFY_CONTROL);
+											ULOG_WARN("The content does not respect the JSON syntax: \"%s\" should be an Array", UNIFY_CONTROL);
 											return false;
 										}
 
@@ -191,7 +191,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 												control_array[ctrl].getObject();
 											} catch(exception& e)
 											{
-												ULOG_DBG_INFO("The content does not respect the JSON syntax: element of \"%s\" should be an Object", UNIFY_CONTROL);
+												ULOG_WARN("The content does not respect the JSON syntax: element of \"%s\" should be an Object", UNIFY_CONTROL);
 												return false;
 											}
 
@@ -245,7 +245,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 											nf_value.getArray();
 										} catch(exception& e)
 										{
-											ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" should be an Array", UNIFY_CONTROL);
+											ULOG_WARN("The content does not respect the JSON syntax: \"%s\" should be an Array", UNIFY_CONTROL);
 											return false;
 										}
 
@@ -258,7 +258,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 												env_variables_array[env_var].getObject();
 											} catch(exception& e)
 											{
-												ULOG_DBG_INFO("The content does not respect the JSON syntax: element of \"%s\" should be an Object", UNIFY_CONTROL);
+												ULOG_WARN("The content does not respect the JSON syntax: element of \"%s\" should be an Object", UNIFY_CONTROL);
 												return false;
 											}
 
@@ -295,7 +295,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 											nf_value.getArray();
 										} catch(exception& e)
 										{
-											ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" should be an Array", VNF_PORTS);
+											ULOG_WARN("The content does not respect the JSON syntax: \"%s\" should be an Array", VNF_PORTS);
 											return false;
 										}
 
@@ -308,7 +308,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 												ports_array[ports].getObject();
 											} catch(exception& e)
 											{
-												ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" element should be an Object", VNF_PORTS);
+												ULOG_WARN("The content does not respect the JSON syntax: \"%s\" element should be an Object", VNF_PORTS);
 												return false;
 											}
 
@@ -382,7 +382,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 											nf_value.getArray();
 										} catch(exception& e)
 										{
-											ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" element should be an Object", VNFS);
+											ULOG_WARN("The content does not respect the JSON syntax: \"%s\" element should be an Object", VNFS);
 											return false;
 										}
 										const Array& myGroups_Array = nf_value.getArray();
@@ -424,10 +424,10 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 							ULOG_DBG_INFO("The \"%s\" element does not respect the JSON syntax: \"%s\"", VNFS, e.what());
 							return false;
 						}
-			    	}
+					}
 					//Identify the end-points
 					else if(fg_name == END_POINTS)
-				    {
+					{
 						try
 						{
 							try
@@ -435,7 +435,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 								fg_value.getArray();
 							} catch(exception& e)
 							{
-								ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" should be an Array", END_POINTS);
+								ULOG_WARN("The content does not respect the JSON syntax: \"%s\" should be an Array", END_POINTS);
 								return false;
 							}
 
@@ -463,7 +463,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 									end_points_array[ep].getObject();
 								} catch(exception& e)
 								{
-									ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" element should be an Object", END_POINTS);
+									ULOG_WARN("The content does not respect the JSON syntax: \"%s\" element should be an Object", END_POINTS);
 									return false;
 								}
 
@@ -545,7 +545,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 											ep_value.getObject();
 										} catch(exception& e)
 										{
-											ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" should be an Object", VLAN);
+											ULOG_WARN("The content does not respect the JSON syntax: \"%s\" should be an Object", VLAN);
 											return false;
 										}
 
@@ -580,7 +580,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 											ep_value.getObject();
 										} catch(exception& e)
 										{
-											ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" should be an Object", VLAN);
+											ULOG_WARN("The content does not respect the JSON syntax: \"%s\" should be an Object", VLAN);
 											return false;
 										}
 
@@ -620,7 +620,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 											ep_value.getObject();
 										} catch(exception& e)
 										{
-											ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" should be an Object", EP_GRE);
+											ULOG_WARN("The content does not respect the JSON syntax: \"%s\" should be an Object", EP_GRE);
 											return false;
 										}
 
@@ -753,7 +753,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 							fg_value.getObject();
 						} catch(exception& e)
 						{
-							ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" should be an Object", BIG_SWITCH);
+							ULOG_WARN("The content does not respect the JSON syntax: \"%s\" should be an Object", BIG_SWITCH);
 							return false;
 						}
 
@@ -787,7 +787,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 								bs_value.getArray();
 							} catch(exception& e)
 							{
-								ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" should be an Array", FLOW_RULES);
+								ULOG_WARN("The content does not respect the JSON syntax: \"%s\" should be an Array", FLOW_RULES);
 								return false;
 							}
 
@@ -840,7 +840,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 											}
 										} catch(exception& e)
 										{
-											ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\"", MATCH);
+											ULOG_WARN("The content does not respect the JSON syntax: \"%s\"", MATCH);
 											return false;
 										}
 									}
@@ -853,7 +853,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 												fr_value.getArray();
 											} catch(exception& e)
 											{
-												ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" should be an Array", ACTIONS);
+												ULOG_WARN("The content does not respect the JSON syntax: \"%s\" should be an Array", ACTIONS);
 												return false;
 											}
 
@@ -872,7 +872,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 													actions_array[ac].getObject();
 												} catch(exception& e)
 												{
-													ULOG_DBG_INFO("The content does not respect the JSON syntax: \"%s\" element should be an Object", ACTIONS);
+													ULOG_WARN("The content does not respect the JSON syntax: \"%s\" element should be an Object", ACTIONS);
 													return false;
 												}
 
@@ -1304,7 +1304,7 @@ bool GraphParser::parseGraph(Value value, highlevel::Graph &graph, bool newGraph
 		}
 	}catch(exception& e)
 	{
-		ULOG_DBG_INFO("The content does not respect the JSON syntax: %s",e.what());
+		ULOG_WARN("The content does not respect the JSON syntax: %s",e.what());
 		return false;
 	}
 
