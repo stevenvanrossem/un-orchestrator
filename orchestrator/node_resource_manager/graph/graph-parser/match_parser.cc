@@ -109,7 +109,6 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 {
 	bool foundOne = false;
 	bool foundEndPointID = false, foundProtocolField = false, definedInCurrentGraph = false;
-	bool is_tcp = false;
 	enum port_type { VNF_PORT_TYPE, EP_PORT_TYPE, EP_INTERNAL_TYPE };
 
 	for(Object::const_iterator i = object.begin(); i != object.end(); i++)
@@ -500,82 +499,28 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 
 			//XXX: currently, this information is ignored
 		}
-		else if(name == PORT_SRC)
+		else if(name == PORT_SRC || name == SCTP_SRC)
 		{
-			//TCP
-			if(is_tcp)
+			ULOG_DBG("\"%s\"->\"%s\": \"%s\"",MATCH,PORT_SRC,value.getString().c_str());
+			uint32_t transportSrcPort;
+			if((sscanf(value.getString().c_str(),"%"SCNd32,&transportSrcPort) != 1) || (transportSrcPort > 65535))
 			{
-				ULOG_DBG("\"%s\"->\"%s\": \"%s\"",MATCH,PORT_SRC,value.getString().c_str());
-				uint32_t tcpSrc;
-				if((sscanf(value.getString().c_str(),"%"SCNd32,&tcpSrc) != 1) || (tcpSrc > 65535))
-				{
-					ULOG_DBG_INFO("Key \"%s\" with wrong value \"%s\"",PORT_SRC,value.getString().c_str());
-					return false;
-				}
-				match.setTcpSrc(tcpSrc & 0xFFFF);
-				foundProtocolField = true;
-			//UDP
-			} else {
-				ULOG_DBG("\"%s\"->\"%s\": \"%s\"",MATCH,PORT_SRC,value.getString().c_str());
-				uint32_t udpSrc;
-				if((sscanf(value.getString().c_str(),"%"SCNd32,&udpSrc) != 1)  || (udpSrc > 65535))
-				{
-					ULOG_DBG_INFO("Key \"%s\" with wrong value \"%s\"",PORT_SRC,value.getString().c_str());
-					return false;
-				}
-				match.setUdpSrc(udpSrc & 0xFFFF);
-				foundProtocolField = true;
-			}
-		}
-		else if(name == PORT_DST)
-		{
-			//TCP
-			if(is_tcp)
-			{
-				ULOG_DBG("\"%s\"->\"%s\": \"%s\"",MATCH,PORT_DST,value.getString().c_str());
-				uint32_t tcpDst;
-				if((sscanf(value.getString().c_str(),"%"SCNd32,&tcpDst) != 1)  || (tcpDst > 65535))
-				{
-					ULOG_DBG_INFO("Key \"%s\" with wrong value \"%s\"",PORT_DST,value.getString().c_str());
-					return false;
-				}
-				match.setTcpDst(tcpDst & 0xFFFF);
-				foundProtocolField = true;
-			//UDP
-			} else {
-				ULOG_DBG("\"%s\"->\"%s\": \"%s\"",MATCH,PORT_DST,value.getString().c_str());
-				uint32_t udpDst;
-				if((sscanf(value.getString().c_str(),"%"SCNd32,&udpDst) != 1)  || (udpDst > 65535))
-				{
-					ULOG_DBG_INFO("Key \"%s\" with wrong value \"%s\"",PORT_DST,value.getString().c_str());
-					return false;
-				}
-				match.setUdpDst(udpDst & 0xFFFF);
-				foundProtocolField = true;
-			}
-		}
-		else if(name == SCTP_SRC)
-		{
-			ULOG_DBG("\"%s\"->\"%s\": \"%s\"",MATCH,SCTP_SRC,value.getString().c_str());
-			uint32_t sctpSrc;
-			if((sscanf(value.getString().c_str(),"%"SCNd32,&sctpSrc) != 1)  || (sctpSrc > 65535))
-			{
-				ULOG_DBG_INFO("Key \"%s\" with wrong value \"%s\"",SCTP_SRC,value.getString().c_str());
+				ULOG_DBG_INFO("Key \"%s\" with wrong value \"%s\"",PORT_SRC,value.getString().c_str());
 				return false;
 			}
-			match.setSctpSrc(sctpSrc & 0xFFFF);
+			match.setTransportSrcPort(transportSrcPort & 0xFFFF);
 			foundProtocolField = true;
 		}
-		else if(name == SCTP_DST)
+		else if(name == PORT_DST || name == SCTP_DST)
 		{
-			ULOG_DBG("\"%s\"->\"%s\": \"%s\"",MATCH,SCTP_DST,value.getString().c_str());
-			uint32_t sctpDst;
-			if((sscanf(value.getString().c_str(),"%"SCNd32,&sctpDst) != 1)  || (sctpDst > 65535))
+			ULOG_DBG("\"%s\"->\"%s\": \"%s\"",MATCH,PORT_DST,value.getString().c_str());
+			uint32_t transportDstPort;
+			if((sscanf(value.getString().c_str(),"%"SCNd32,&transportDstPort) != 1)  || (transportDstPort > 65535))
 			{
-				ULOG_DBG_INFO("Key \"%s\" with wrong value \"%s\"",SCTP_DST,value.getString().c_str());
+				ULOG_DBG_INFO("Key \"%s\" with wrong value \"%s\"",PORT_DST,value.getString().c_str());
 				return false;
 			}
-			match.setSctpDst(sctpDst & 0xFFFF);
+			match.setTransportDstPort(transportDstPort & 0xFFFF);
 			foundProtocolField = true;
 		}
 		else if(name == ICMPv4_TYPE)
@@ -793,11 +738,6 @@ bool MatchParser::parseMatch(Object object, highlevel::Match &match, highlevel::
 		{
 			ULOG_DBG("\"%s\"->\"%s\": \"%s\"",MATCH,PROTOCOL,value.getString().c_str());
 			uint16_t ipProto;
-
-			if(value.getString().compare("0x06") == 0)
-				is_tcp = true;
-			else
-				is_tcp = false;
 
 			if((sscanf(value.getString().c_str(),"%"SCNd16,&ipProto) != 1) || (ipProto > 255) )
 			{
