@@ -73,6 +73,11 @@ The following commands are useful to check the status of the Docker environment
     ; Remove a container
     $ sudo docker rm <container_id>
 
+	; Read the log of a VNF
+	$ cd [un-orchestrator]/orchestrator
+	$ cat <container_name>.log
+	; The container name can be retrieved through `sudo docker ps` 
+
 
 ## Debug KVM
 
