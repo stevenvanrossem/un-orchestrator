@@ -3,10 +3,10 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(db_initializer)
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
-        ADD_DEFINITIONS(-Wall -Werror -Wno-write-strings -mvect8-ret-in-mem -march=corei7-avx -O3)# -fbranch-probabilities)
+        ADD_DEFINITIONS(-Wall -Werror -Wno-write-strings)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 IF(CMAKE_COMPILER_IS_GNUCC)
-        ADD_DEFINITIONS(-Wall -Werror -Wno-write-strings -mvect8-ret-in-mem -march=corei7-avx -O3)# -fbranch-probabilities)
+        ADD_DEFINITIONS(-Wall -Werror -Wno-write-strings)
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
 
@@ -58,8 +58,14 @@ SET(SOURCES
 )
 
 INCLUDE_DIRECTORIES (
-	/usr/include/libxml2
+	${CMAKE_BINARY_DIR}/externals/include/
+	/usr/include/boost
 )
+
+SET(CMAKE_SKIP_RPATH TRUE)
+LINK_DIRECTORIES(
+	${CMAKE_BINARY_DIR}/externals/lib/
+	)
 
 # Create the executable
 ADD_EXECUTABLE(
@@ -67,24 +73,34 @@ ADD_EXECUTABLE(
 	${SOURCES}
 )
 
-
-
-LINK_DIRECTORIES(
-	/usr/lib/
-	/usr/local/lib/
-	/usr/x86_64-linux-gnu/
-	/usr/lib/x86_64-linux-gnu/
-)
+ADD_DEPENDENCIES(db_initializer Inih)
 
 
 TARGET_LINK_LIBRARIES( db_initializer
-	libpthread.so
-	libxml2.so
-	libjson_spirit.so
-	libmicrohttpd.so
-	-lrt
-	-lsqlite3
-	-lssl
-	-lcrypto
-	-lboost_system
+	inih
+	rt
+	sqlite3
+	ssl
+	crypto
+	boost_system
+)
+
+# inih - https://github.com/benhoyt/inih
+ExternalProject_Add(
+	Inih
+	# GIT_REPOSITORY https://github.com/benhoyt/inih
+	# GIT_TAG r35
+	# URL https://github.com/benhoyt/inih/archive/r35.zip
+	URL ${CMAKE_SOURCE_DIR}/contrib/inih-r35.zip
+	URL_MD5 e131365d1ca20cfa687e3d9284e59d39
+	BUILD_IN_SOURCE 1
+	PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/contrib/inih.patch
+	CONFIGURE_COMMAND ""
+	BUILD_COMMAND cd extra && make -f Makefile.static
+	INSTALL_COMMAND
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/externals/lib/
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/externals/include/
+	COMMAND ${CMAKE_COMMAND} -E copy extra/libinih.a ${CMAKE_BINARY_DIR}/externals/lib/
+	COMMAND ${CMAKE_COMMAND} -E copy ini.h ${CMAKE_BINARY_DIR}/externals/include/
+	COMMAND ${CMAKE_COMMAND} -E copy cpp/INIReader.h ${CMAKE_BINARY_DIR}/externals/include/
 )
