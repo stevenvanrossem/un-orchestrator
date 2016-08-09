@@ -42,6 +42,7 @@ ExternalProject_Add(
 	# unfortunately json-spirit lacks a top-level cmakelists.txt:
 	PATCH_COMMAND printf "CMAKE_MINIMUM_REQUIRED(VERSION 2.8)\\nADD_SUBDIRECTORY(build)\\n" > CMakeLists.txt
 )
+ENDIF(BUILD_ExternalProjects)
 
 IF(BUILD_Orchestrator OR BUILD_DBInitializer)
 # inih - https://github.com/benhoyt/inih
@@ -65,7 +66,6 @@ ExternalProject_Add(
 )
 ENDIF(BUILD_Orchestrator OR BUILD_DBInitializer)
 
-ENDIF(BUILD_ExternalProjects)
 
 IF(BUILD_Orchestrator)
 	ADD_SUBDIRECTORY(orchestrator)
