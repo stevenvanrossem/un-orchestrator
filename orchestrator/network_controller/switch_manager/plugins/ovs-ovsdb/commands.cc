@@ -654,7 +654,7 @@ string find_free_dpdkr()
 string commands::add_port(string p, uint64_t dnumber, bool is_nf_port, int s, PortType port_type)
 {
 	int r = 0;
-    	ssize_t nwritten;
+	ssize_t nwritten;
 
 	char ifac[BUF_SIZE];
 	char read_buf[BUFFER_SIZE];
