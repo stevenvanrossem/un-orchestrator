@@ -1,18 +1,40 @@
 {
-	"flow-graph":
-	{
-		"flow-rules": [
-		{
-			"id": "00000001",  
-			"match":  
-			{
-				"port" : "ge0"  
-			},
-			"action":  
-			{
-				"port": "ge1"  
-			}  
-		}  
-		]  
-	}
+  "forwarding-graph": {
+    "id": "00000001",
+    "name": "Forwarding graph",
+    "end-points": [
+      {
+        "id": "00000001",
+        "name": "ingress",
+        "type": "interface",
+        "interface": {
+          "if-name": "eth0"
+        }
+      },
+      {
+        "id": "00000002",
+        "name": "egress",
+        "type": "interface",
+        "interface": {
+          "if-name": "eth1"
+        }
+      }
+    ],
+    "big-switch": {
+      "flow-rules": [
+        {
+          "id": "000000001",
+          "priority": 1,
+          "match": {
+            "port_in": "endpoint:00000001"
+          },
+          "actions": [
+            {
+              "output_to_port": "endpoint:00000002"
+            }
+          ]
+        }
+      ]
+    }
+  }
 }

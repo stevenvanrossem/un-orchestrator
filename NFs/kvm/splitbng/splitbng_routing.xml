@@ -1,0 +1,50 @@
+<domain type="kvm" xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
+	<name>splitbng_routing</name>
+	<memory>3145728</memory>
+	<vcpu placement="static">3</vcpu>
+	<cpu mode='host-passthrough'>
+		<topology sockets='1' cores='3' threads='1'/>
+		<numa>
+			<!--cell id='0' cpus='0-5' memory='4194304' memAccess='shared'/--> 
+			<cell id='0' cpus='0-2' memory='3145728' memAccess='shared'/> 
+		</numa>
+	</cpu>
+	<os>
+		<type arch="x86_64" machine="pc-i440fx-2.2">hvm</type>
+		<boot dev="hd"/>
+	</os>
+	<features>
+		<acpi/><apic/>
+		<pae/>
+	</features>
+
+	<memoryBacking>
+		<hugepages>
+			<page size="1" unit="G"/>
+		</hugepages>
+	</memoryBacking>
+<!-- page size="1" unit="G" nodeset="0"/ -->
+
+
+	<devices>
+		<emulator>/home/dverbeir/qemu/qemu_git/x86_64-softmmu/qemu-system-x86_64</emulator>
+		<disk type="file" device="disk">
+			<source file="/home/nf_repository/kvm/splitbng/splitbng_routing.qcow2"/>
+			<driver name="qemu" type="qcow2"/>
+			<target dev="vda" bus="virtio"/>
+		</disk>
+		<interface type='bridge'> <!-- Management interface -->
+			<mac address='52:54:00:fb:22:04'/>
+			<source bridge='br-mgt'/>
+		</interface>
+		<serial type="pty">
+			<target port="0"/>
+		</serial>
+		<console type="pty">
+			<target type="serial" port="0"/>
+		</console>
+		<input type="mouse" bus="ps2"/>
+		<input type="keyboard" bus="ps2"/>
+		<graphics type="vnc" port="-1" autoport="yes" listen="0.0.0.0"/>
+	</devices>
+</domain>

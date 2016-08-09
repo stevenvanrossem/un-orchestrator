@@ -1,47 +1,92 @@
-{  
-   "flow-graph":{  
-      "VNFs":[  
-         {  
-            "id":"example"
-         }
-      ],
-      "flow-rules":[  
-         {  
-            "id":"00000001",
-            "match":{  
-              "port":"eth2"
-            },
-            "action":{  
-               "VNF_id":"example:1"
+{
+  "forwarding-graph": {
+    "id": "00000001",
+    "name": "Forwarding graph",
+    "VNFs": [
+      {
+        "id": "00000001",
+        "name": "example",
+        "ports": [
+          {
+            "id": "inout:0",
+            "name": "data-port"
+          },
+          {
+            "id": "inout:1",
+            "name": "data-port"
+          }
+        ]
+      }
+    ],
+    "end-points": [
+      {
+        "id": "00000002",
+        "name": "ingress",
+        "type": "interface",
+        "interface": {
+          "if-name": "eth0"
+        }
+      },
+      {
+        "id": "00000003",
+        "name": "egress",
+        "type": "interface",
+        "interface": {
+          "if-name": "eth1"
+        }
+      }
+    ],
+    "big-switch": {
+      "flow-rules": [
+        {
+          "id": "000000001",
+          "priority": 1,
+          "match": {
+            "port_in": "endpoint:00000002"
+          },
+          "actions": [
+            {
+              "output_to_port": "vnf:00000001:inout:0"
             }
-         },
-         {  
-            "id":"00000002",
-            "match":{  
-               "VNF_id":"example:2"
-            },
-            "action":{  
-              "port":"eth1"
+          ]
+        },
+        {
+          "id": "000000002",
+          "priority": 1,
+          "match": {
+            "port_in": "vnf:00000001:inout:1"
+          },
+          "actions": [
+            {
+              "output_to_port": "endpoint:00000003"
             }
-         },
-         {  
-            "id":"00000003",
-            "match":{  
-              "port":"eth1"
-            },
-            "action":{  
-               "VNF_id":"example:2"
+          ]
+        },
+        {
+          "id": "000000003",
+          "priority": 1,
+          "match": {
+            "port_in": "vnf:00000001:inout:0"
+          },
+          "actions": [
+            {
+              "output_to_port": "endpoint:00000002"
             }
-         },
-         {  
-            "id":"00000004",
-            "match":{  
-               "VNF_id":"example:1"
-            },
-            "action":{  
-              "port":"eth2"
+          ]
+        },
+        {
+          "id": "000000004",
+          "priority": 1,
+          "match": {
+            "port_in": "endpoint:00000003"
+          },
+          "actions": [
+            {
+              "output_to_port": "vnf:00000001:inout:1"
             }
-         }
+          ]
+        }
       ]
-   }
+    }
+  }
 }

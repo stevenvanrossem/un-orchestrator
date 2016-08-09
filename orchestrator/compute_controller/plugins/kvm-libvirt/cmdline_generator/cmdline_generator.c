@@ -22,12 +22,16 @@
 #define XDPD_TX_FORMAT "%s-to-nf"
 #define XDPD_RX_FORMAT "%s-to-xdpd"
 
+/* These are the names as seen from within the VM, through DPDK aliases (note rx<->tx) */
+#define ALIAS_TX_FORMAT "%s_rx"
+#define ALIAS_RX_FORMAT "%s_tx"
+
 #define MEMPOOL_METADATA_NAME "OVSMEMPOOL"
 
 int init_dpdk(void);
 int setup_metadata(const char* metadata);
 int expose_mempool_cmdline(const char * metadata);
-int expose_port_cmdline(const char * port_name, const char * metadata);
+int expose_port_cmdline(const char * port_name, const char * alias, const char * metadata);
 int write_to_pipe(const char * name, char * buf, size_t lenght);
 int write_to_file(const char * name, char * buf, size_t lenght);
 
@@ -129,50 +133,80 @@ error:
 	return -1;
 }
 
-int expose_port_cmdline(const char * port_name, const char * metadata)
+int expose_port_cmdline(const char * port_name, const char * port_alias, const char * metadata)
 {
-	const int RING_NAME_MAXLEN = 60;
-	char ring_name[RING_NAME_MAXLEN + 1];
+	char ring_name[RTE_RING_NAMESIZE];
 
 	struct rte_ring * rx;
 	struct rte_ring * tx;
 
+	if (port_alias && (*port_alias == '\0'))
+		port_alias = NULL; // Treat empty port_alias string as no alias
+
+	printf("Adding port '%s' (alias '%s') to metadata '%s'\n", port_name, port_alias ? port_alias : "N/A", metadata);
+
 	/* look for the transmission ring (OVS variant, then xDPd variant) */
-	snprintf(ring_name, RING_NAME_MAXLEN, DPDKR_TX_FORMAT, port_name);
+	snprintf(ring_name, RTE_RING_NAMESIZE, DPDKR_TX_FORMAT, port_name);
 	tx = rte_ring_lookup(ring_name);
 	if(tx == NULL)
 	{
 		/* Try xDPd variant */
-		snprintf(ring_name, RING_NAME_MAXLEN, XDPD_TX_FORMAT, port_name);
+		snprintf(ring_name, RTE_RING_NAMESIZE, XDPD_TX_FORMAT, port_name);
 		tx = rte_ring_lookup(ring_name);
 		if(tx == NULL)
 		{
+			printf("TX ring not found for port '%s'!\n", port_name);
 			return -1;
 		}
 	}
+	if(rte_ivshmem_metadata_add_ring(tx, metadata) < 0)
+	{
+		printf("Failed adding ring '%s' to metadata '%s'!\n", ring_name, metadata);
+		return -1;
+	}
+
 
 	/* look for the reception ring (OVS variant, then xDPd variant) */
-	snprintf(ring_name, RING_NAME_MAXLEN, DPDKR_RX_FORMAT, port_name);
+	snprintf(ring_name, RTE_RING_NAMESIZE, DPDKR_RX_FORMAT, port_name);
 	rx = rte_ring_lookup(ring_name);
 	if(rx == NULL)
 	{
 		/* Try xDPd variant */
-		snprintf(ring_name, RING_NAME_MAXLEN, XDPD_RX_FORMAT, port_name);
+		snprintf(ring_name, RTE_RING_NAMESIZE, XDPD_RX_FORMAT, port_name);
 		rx = rte_ring_lookup(ring_name);
 		if(rx == NULL)
 		{
+			printf("RX ring not found for port '%s'!\n", port_name);
 			return -1;
 		}
 	}
-
-	if(rte_ivshmem_metadata_add_ring(tx, metadata) < 0)
+	if(rte_ivshmem_metadata_add_ring(rx, metadata) < 0)
 	{
+		printf("Failed adding ring '%s' to metadata '%s'!\n", ring_name, metadata);
 		return -1;
 	}
 
-	if(rte_ivshmem_metadata_add_ring(rx, metadata) < 0)
+	if (port_alias)
 	{
-		return -1;
+#ifdef IVSHMEM_RING_ALIAS
+		char ring_alias[RTE_RING_NAMESIZE];
+
+		snprintf(ring_alias, RTE_RING_NAMESIZE, ALIAS_TX_FORMAT, port_alias);
+		if(rte_ivshmem_add_ring_alias(tx, ring_alias, metadata) < 0)
+		{
+			printf("Failed adding ring alias '%s' to metadata '%s'!\n", ring_alias, metadata);
+			return -1;
+		}
+
+		snprintf(ring_alias, RTE_RING_NAMESIZE, ALIAS_RX_FORMAT, port_alias);
+		if(rte_ivshmem_add_ring_alias(rx, ring_alias, metadata) < 0)
+		{
+			printf("Failed adding ring alias '%s' to metadata '%s'!\n", ring_alias, metadata);
+			return -1;
+		}
+#else
+		printf("WARNING: Ring aliases not supported by this build (check IVSHMEM_RING_ALIAS)\n");
+#endif
 	}
 
 	return 0;
@@ -264,18 +298,18 @@ int main(int argc, char * argv[])
 		}
 		else if(!strcmp("-p", argv[i]))
 		{
-			if((i+1) >= argc) {
-				printf("Missing port_name argument value\n");
+			if((i+2) >= argc) {
+				printf("Missing port_name or port_alias argument value\n");
 				return -1;
 			}
 
 			setup_metadata(argv[i+1]);   // Default if not specified by -n
-			if(expose_port_cmdline(argv[i+1], metadata_name) < 0)
+			if(expose_port_cmdline(argv[i+1], argv[i+2], metadata_name) < 0)
 			{
 				printf("Failed to IVSHMEM expose port %s\n", argv[i+1]);
 				return -1;
 			}
-			i++;
+			i += 2;
 		}
 		else {
 			printf("Unknown option: %s", argv[i]);

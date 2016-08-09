@@ -3,6 +3,7 @@
 
 #pragma once
 
+#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
 #include <rofl/platform/unix/cunixenv.h>
@@ -34,7 +35,7 @@ class Match
 {
 
 protected:
-	
+
 	/*
 	*	Ethernet
 	*/
@@ -44,23 +45,18 @@ protected:
 	char *eth_dst_mask;
 	bool isEthType;
 	uint16_t ethType;
-	
+
 	/*
 	*	VLAN
 	*/
-	//Only one of
-	//	isVlanID
-	// isNoVlan
-	// isAnyVlan
-	//can be set at the same time
-	
 	bool isVlanID;
 	uint16_t vlanID;
 	bool isNoVlan;
 	bool isAnyVlan;
 	bool isVlanPCP;
 	uint8_t vlanPCP;
-	
+	bool isEndpointVlanID;
+
 	/*
 	*	IPv4
 	*/
@@ -74,31 +70,28 @@ protected:
 	char *ipv4_src_mask;
 	char *ipv4_dst;
 	char *ipv4_dst_mask;
-	
+
 	/*
 	*	TCP
 	*/
-	bool isTcpSrc;
-	uint16_t tcp_src;
-	bool isTcpDst;
-	uint16_t tcp_dst;
+	bool isTcpProtocol;
 
 	/*
 	*	UDP
 	*/
-	bool isUdpSrc;
-	uint16_t udp_src;
-	bool isUdpDst;
-	uint16_t udp_dst;
-	
+	bool isUdpProtocol;
+
 	/*
 	*	SCTP
 	*/
-	bool isSctpSrc;
-	uint16_t sctp_src;
-	bool isSctpDst;
-	uint16_t sctp_dst;
-	
+	bool isSctpProtocol;
+
+	/*
+	*	SCTP/TCP/UDP src and dest port
+	*/
+	uint16_t transport_src_port;
+	uint16_t transport_dst_port;
+
 	/*
 	*	ICMPv4
 	*/
@@ -106,7 +99,7 @@ protected:
 	uint8_t icmpv4Type;
 	bool isIcmpv4Code;
 	uint8_t icmpv4Code;
-	
+
 	/*
 	*	ARP
 	*/
@@ -118,7 +111,7 @@ protected:
 	char *arp_tpa_mask;
 	char *arp_sha;
 	char *arp_tha;
-	
+
 	/*
 	*	IPv6
 	*/
@@ -131,7 +124,7 @@ protected:
 	char *ipv6_nd_target;
 	char *ipv6_nd_sll;
 	char *ipv6_nd_tll;
-	
+
 	/*
 	*	ICMPv6
 	*/
@@ -139,7 +132,7 @@ protected:
 	uint8_t icmpv6Type;
 	bool isIcmpv6Code;
 	uint8_t icmpv6Code;
-	
+
 	/*
 	*	MPLS
 	*/
@@ -147,7 +140,12 @@ protected:
 	uint32_t mplsLabel;
 	bool isMplsTC;
 	uint8_t mplsTC;
-	
+
+	/*
+	*	GRE
+	*/
+	char *gre_key;
+
 	Match();
 
 	bool isEqual(const Match &other) const;
@@ -170,12 +168,11 @@ public:
 	void setIpv4SrcMask(char *ipv4_src_mask);
 	void setIpv4Dst(char *ipv4_dst);
 	void setIpv4DstMask(char *ipv4_dst_mask);
-	void setTcpSrc(uint16_t tcp_src);
-	void setTcpDst(uint16_t tcp_dst);
-	void setUdpSrc(uint16_t udp_src);
-	void setUdpDst(uint16_t udp_dst);
-	void setSctpSrc(uint16_t sctp_src);
-	void setSctpDst(uint16_t sctp_dst);
+	void setTransportSrcPort(uint16_t tcp_src);
+	void setTransportDstPort(uint16_t tcp_dst);
+	void setTcpProtocol();
+	void setUdpProtocol();
+	void setSctpProtocol();
 	void setIcmpv4Type(uint8_t icmpv4Type);
 	void setIcmpv4Code(uint8_t icmpv4Code);
 	void setArpOpCode(uint16_t arpOpcode);
@@ -197,10 +194,11 @@ public:
 	void setIcmpv6Code(uint8_t icmpv6Code);
 	void setMplsLabel(uint32_t mplsLabel);
 	void setMplsTC(uint8_t mplsTC);
-	
+	void setEndpointVlanID(uint16_t vlanID);
+	void setGreKey(char *gre_key);
+
 	virtual void setAllCommonFields(Match match);
-	
-	virtual void print();
+
 	virtual string prettyPrint();
 	virtual void toJSON(Object &match);
 };

@@ -5,18 +5,16 @@ namespace graph
 
 Match::Match() :
 	eth_src(NULL), eth_src_mask(NULL), eth_dst(NULL), eth_dst_mask(NULL), isEthType(false),
-	isVlanID(false),isNoVlan(false),isAnyVlan(false),isVlanPCP(false),
+	isVlanID(false),isNoVlan(false),isAnyVlan(false),isVlanPCP(false),isEndpointVlanID(false),
 	isIpDSCP(false),isIpECN(false),isIpProto(false), ipv4_src(NULL), ipv4_src_mask(NULL),
-		ipv4_dst(NULL), ipv4_dst_mask(NULL),
-	isTcpSrc(false), isTcpDst(false),
-	isUdpSrc(false), isUdpDst(false),
-	isSctpSrc(false), isSctpDst(false),
-	isIcmpv4Type(false), isIcmpv4Code(false),
+	ipv4_dst(NULL), ipv4_dst_mask(NULL), isTcpProtocol(false), isUdpProtocol(false),
+	isSctpProtocol(false), isIcmpv4Type(false), isIcmpv4Code(false),
 	isArpOpcode(false), arp_spa(NULL),arp_spa_mask(NULL), arp_tpa(NULL), arp_tpa_mask(NULL), arp_sha(NULL), arp_tha(NULL),
 	ipv6_src(NULL), ipv6_src_mask(NULL), ipv6_dst(NULL), ipv6_dst_mask(NULL), isIpv6Flabel(false),
-		ipv6_flabel(false),ipv6_nd_target(NULL), ipv6_nd_sll(NULL), ipv6_nd_tll(NULL),
+	ipv6_flabel(false),ipv6_nd_target(NULL), ipv6_nd_sll(NULL), ipv6_nd_tll(NULL),
 	isIcmpv6Type(false), isIcmpv6Code(false),
-	isMplsLabel(false), mplsLabel(false), isMplsTC(false), mplsTC(false)
+	isMplsLabel(false), mplsLabel(false), isMplsTC(false), mplsTC(false),
+	gre_key(NULL)
 {
 
 }
@@ -29,7 +27,7 @@ bool Match::isEqual(const Match &other) const
 	if((eth_src == NULL && other.eth_src != NULL) ||
 		(eth_src != NULL && other.eth_src == NULL))
 		return false;
-		
+
 	if(eth_src != NULL && other.eth_src != NULL)
 	{
 		if(strcmp(eth_src,other.eth_src) != 0)
@@ -39,17 +37,17 @@ bool Match::isEqual(const Match &other) const
 	if((eth_src_mask == NULL && other.eth_src_mask != NULL) ||
 		(eth_src_mask != NULL && other.eth_src_mask == NULL))
 		return false;
-		
+
 	if(eth_src_mask != NULL && other.eth_src_mask != NULL)
 	{
 		if(strcmp(eth_src_mask,other.eth_src_mask) != 0)
 			return false;
 	}
-	
+
 	if((eth_dst == NULL && other.eth_dst != NULL) ||
 		(eth_dst != NULL && other.eth_dst == NULL))
 		return false;
-		
+
 	if(eth_dst != NULL && other.eth_dst != NULL)
 	{
 		if(strcmp(eth_dst,other.eth_dst) != 0)
@@ -59,18 +57,18 @@ bool Match::isEqual(const Match &other) const
 	if((eth_dst_mask == NULL && other.eth_dst_mask != NULL) ||
 		(eth_dst_mask != NULL && other.eth_dst_mask == NULL))
 		return false;
-		
+
 	if(eth_dst_mask != NULL && other.eth_dst_mask != NULL)
 	{
 		if(strcmp(eth_dst_mask,other.eth_dst_mask) != 0)
 			return false;
 	}
-	
+
 	if((isEthType && !other.isEthType) || (!isEthType && other.isEthType))
 		return false;
 	if(isEthType && ethType != other.ethType)
 		return false;
-	
+
 	/*
 	*	VLAN
 	*/
@@ -78,18 +76,18 @@ bool Match::isEqual(const Match &other) const
 		return false;
 	if(isVlanID && vlanID != other.vlanID)
 		return false;
-		
+
 	if((isNoVlan && !other.isNoVlan) || (!isNoVlan && other.isNoVlan))
 		return false;
-		
+
 	if((isAnyVlan && !other.isAnyVlan) || (!isAnyVlan && other.isAnyVlan))
 		return false;
-		
+
 	if((isVlanPCP && !other.isVlanPCP) || (!isVlanPCP && other.isVlanPCP))
 		return false;
 	if(isVlanPCP && vlanPCP != other.vlanPCP)
 		return false;
-		
+
 	/*
 	*	IPv4
 	*/
@@ -97,21 +95,21 @@ bool Match::isEqual(const Match &other) const
 		return false;
 	if(isIpDSCP && ipDSCP != other.ipDSCP)
 		return false;
-		
+
 	if((isIpECN && !other.isIpECN) || (!isIpECN && other.isIpECN))
 		return false;
 	if(isIpECN && ipECN != other.ipECN)
 		return false;
-	
+
 	if((isIpProto && !other.isIpProto) || (!isIpProto && other.isIpProto))
 		return false;
 	if(isIpProto && ipProto != other.ipProto)
 		return false;
-		
+
 	if((ipv4_src == NULL && other.ipv4_src != NULL) ||
 		(ipv4_src != NULL && other.ipv4_src == NULL))
 		return false;
-		
+
 	if(ipv4_src != NULL && other.ipv4_src != NULL)
 	{
 		if(strcmp(ipv4_src,other.ipv4_src) != 0)
@@ -121,17 +119,17 @@ bool Match::isEqual(const Match &other) const
 	if((ipv4_src_mask == NULL && other.ipv4_src_mask != NULL) ||
 		(ipv4_src_mask != NULL && other.ipv4_src_mask == NULL))
 		return false;
-		
+
 	if(ipv4_src_mask != NULL && other.ipv4_src_mask != NULL)
 	{
 		if(strcmp(ipv4_src_mask,other.ipv4_src_mask) != 0)
 			return false;
 	}
-	
+
 	if((ipv4_dst == NULL && other.ipv4_dst != NULL) ||
 		(ipv4_dst != NULL && other.ipv4_dst == NULL))
 		return false;
-		
+
 	if(ipv4_dst != NULL && other.ipv4_dst != NULL)
 	{
 		if(strcmp(ipv4_dst,other.ipv4_dst) != 0)
@@ -141,52 +139,38 @@ bool Match::isEqual(const Match &other) const
 	if((ipv4_dst_mask == NULL && other.ipv4_dst_mask != NULL) ||
 		(ipv4_dst_mask != NULL && other.ipv4_dst_mask == NULL))
 		return false;
-		
+
 	if(ipv4_dst_mask != NULL && other.ipv4_dst_mask != NULL)
 	{
 		if(strcmp(ipv4_dst_mask,other.ipv4_dst_mask) != 0)
 			return false;
 	}
-	
+
 	/*
 	*	TCP
 	*/
-	if((isTcpSrc && !other.isTcpSrc) || (!isTcpSrc && other.isTcpSrc))
+	if((isTcpProtocol != other.isTcpProtocol))
 		return false;
-	if(isTcpSrc && tcp_src != other.tcp_src)
+	if(isTcpProtocol && (transport_src_port != other.transport_src_port || transport_dst_port != other.transport_dst_port))
 		return false;
-	
-	if((isTcpDst && !other.isTcpDst) || (!isTcpDst && other.isTcpDst))
-		return false;
-	if(isTcpDst && tcp_dst != other.tcp_dst)
-		return false;
+
 
 	/*
 	*	UDP
 	*/
-	if((isUdpSrc && !other.isUdpSrc) || (!isUdpSrc && other.isUdpSrc))
+	if(isUdpProtocol != other.isUdpProtocol)
 		return false;
-	if(isUdpSrc && udp_src != other.udp_src)
+	if(isUdpProtocol && (transport_src_port != other.transport_src_port || transport_dst_port != other.transport_dst_port))
 		return false;
-	
-	if((isUdpDst && !other.isUdpDst) || (!isUdpDst && other.isUdpDst))
-		return false;
-	if(isUdpDst && udp_dst != other.udp_dst)
-		return false;
-	
+
 	/*
 	*	SCTP
 	*/
-	if((isSctpSrc && !other.isSctpSrc) || (!isSctpSrc && other.isSctpSrc))
+	if(isSctpProtocol != other.isSctpProtocol)
+	return false;
+	if(isSctpProtocol && (transport_src_port != other.transport_src_port || transport_dst_port != other.transport_dst_port))
 		return false;
-	if(isSctpSrc && sctp_src != other.sctp_src)
-		return false;
-	
-	if((isSctpDst && !other.isSctpDst) || (!isSctpDst && other.isSctpDst))
-		return false;
-	if(isSctpDst && sctp_dst != other.sctp_dst)
-		return false;
-	
+
 	/*
 	*	ICMPv4
 	*/
@@ -199,7 +183,7 @@ bool Match::isEqual(const Match &other) const
 		return false;
 	if(isIcmpv4Code && icmpv4Code != other.icmpv4Code)
 		return false;
-	
+
 	/*
 	*	ARP
 	*/
@@ -211,17 +195,17 @@ bool Match::isEqual(const Match &other) const
 	if((arp_spa == NULL && other.arp_spa != NULL) ||
 		(arp_spa != NULL && other.arp_spa == NULL))
 		return false;
-		
+
 	if(arp_spa != NULL && other.arp_spa != NULL)
 	{
 		if(strcmp(arp_spa,other.arp_spa) != 0)
 			return false;
 	}
-	
+
 	if((arp_spa_mask == NULL && other.arp_spa_mask != NULL) ||
 		(arp_spa_mask != NULL && other.arp_spa_mask == NULL))
 		return false;
-		
+
 	if(arp_spa_mask != NULL && other.arp_spa_mask != NULL)
 	{
 		if(strcmp(arp_spa_mask,other.arp_spa_mask) != 0)
@@ -231,17 +215,17 @@ bool Match::isEqual(const Match &other) const
 	if((arp_tpa == NULL && other.arp_tpa != NULL) ||
 		(arp_tpa != NULL && other.arp_tpa == NULL))
 		return false;
-		
+
 	if(arp_tpa != NULL && other.arp_tpa != NULL)
 	{
 		if(strcmp(arp_tpa,other.arp_tpa) != 0)
 			return false;
 	}
-	
+
 	if((arp_tpa_mask == NULL && other.arp_tpa_mask != NULL) ||
 		(arp_tpa_mask != NULL && other.arp_tpa_mask == NULL))
 		return false;
-		
+
 	if(arp_tpa_mask != NULL && other.arp_tpa_mask != NULL)
 	{
 		if(strcmp(arp_tpa_mask,other.arp_tpa_mask) != 0)
@@ -251,7 +235,7 @@ bool Match::isEqual(const Match &other) const
 	if((arp_sha == NULL && other.arp_sha != NULL) ||
 		(arp_sha != NULL && other.arp_sha == NULL))
 		return false;
-		
+
 	if(arp_sha != NULL && other.arp_sha != NULL)
 	{
 		if(strcmp(arp_sha,other.arp_sha) != 0)
@@ -261,7 +245,7 @@ bool Match::isEqual(const Match &other) const
 	if((arp_tha == NULL && other.arp_tha != NULL) ||
 		(arp_tha != NULL && other.arp_tha == NULL))
 		return false;
-		
+
 	if(arp_tha != NULL && other.arp_tha != NULL)
 	{
 		if(strcmp(arp_tha,other.arp_tha) != 0)
@@ -275,7 +259,7 @@ bool Match::isEqual(const Match &other) const
 	if((ipv6_src == NULL && other.ipv6_src != NULL) ||
 		(ipv6_src != NULL && other.ipv6_src == NULL))
 		return false;
-		
+
 	if(ipv6_src != NULL && other.ipv6_src != NULL)
 	{
 		if(strcmp(ipv6_src,other.ipv6_src) != 0)
@@ -285,18 +269,18 @@ bool Match::isEqual(const Match &other) const
 	if((ipv6_src_mask == NULL && other.ipv6_src_mask != NULL) ||
 		(ipv6_src_mask != NULL && other.ipv6_src_mask == NULL))
 		return false;
-		
+
 	if(ipv6_src_mask != NULL && other.ipv6_src_mask != NULL)
 	{
 		if(strcmp(ipv6_src_mask,other.ipv6_src_mask) != 0)
 			return false;
 	}
 
-	
+
 	if((ipv6_dst == NULL && other.ipv6_dst != NULL) ||
 		(ipv6_dst != NULL && other.ipv6_dst == NULL))
 		return false;
-		
+
 	if(ipv6_dst != NULL && other.ipv6_dst != NULL)
 	{
 		if(strcmp(ipv6_dst,other.ipv6_dst) != 0)
@@ -306,7 +290,7 @@ bool Match::isEqual(const Match &other) const
 	if((ipv6_dst_mask == NULL && other.ipv6_dst_mask != NULL) ||
 		(ipv6_dst_mask != NULL && other.ipv6_dst_mask == NULL))
 		return false;
-		
+
 	if(ipv6_dst_mask != NULL && other.ipv6_dst_mask != NULL)
 	{
 		if(strcmp(ipv6_dst_mask,other.ipv6_dst_mask) != 0)
@@ -321,7 +305,7 @@ bool Match::isEqual(const Match &other) const
 	if((ipv6_nd_target == NULL && other.ipv6_nd_target != NULL) ||
 		(ipv6_nd_target != NULL && other.ipv6_nd_target == NULL))
 		return false;
-		
+
 	if(ipv6_nd_target != NULL && other.ipv6_nd_target != NULL)
 	{
 		if(strcmp(ipv6_nd_target,other.ipv6_nd_target) != 0)
@@ -331,7 +315,7 @@ bool Match::isEqual(const Match &other) const
 	if((ipv6_nd_sll == NULL && other.ipv6_nd_sll != NULL) ||
 		(ipv6_nd_sll != NULL && other.ipv6_nd_sll == NULL))
 		return false;
-		
+
 	if(ipv6_nd_sll != NULL && other.ipv6_nd_sll != NULL)
 	{
 		if(strcmp(ipv6_nd_sll,other.ipv6_nd_sll) != 0)
@@ -341,13 +325,13 @@ bool Match::isEqual(const Match &other) const
 	if((ipv6_nd_tll == NULL && other.ipv6_nd_tll != NULL) ||
 		(ipv6_nd_tll != NULL && other.ipv6_nd_tll == NULL))
 		return false;
-		
+
 	if(ipv6_nd_tll != NULL && other.ipv6_nd_tll != NULL)
 	{
 		if(strcmp(ipv6_nd_tll,other.ipv6_nd_tll) != 0)
 			return false;
 	}
-	
+
 	/*
 	*	ICMPv6
 	*/
@@ -360,7 +344,7 @@ bool Match::isEqual(const Match &other) const
 		return false;
 	if(isIcmpv6Code && icmpv6Code != other.icmpv6Code)
 		return false;
-	
+
 	/*
 	*	MPLS
 	*/
@@ -373,6 +357,19 @@ bool Match::isEqual(const Match &other) const
 		return false;
 	if(isMplsTC && mplsTC != other.mplsTC)
 		return false;
+
+	/*
+	*	GRE
+	*/
+	if((gre_key == NULL && other.gre_key != NULL) ||
+		(gre_key != NULL && other.gre_key == NULL))
+		return false;
+
+	if(gre_key != NULL && other.gre_key != NULL)
+	{
+		if(strcmp(gre_key,other.gre_key) != 0)
+			return false;
+	}
 
 	return true;
 }
@@ -393,16 +390,16 @@ void Match::setAllCommonFields(Match match)
 		setEthDstMask(match.eth_dst_mask);
 	if(match.isEthType)
 		setEthType(match.ethType);
-	
+
 	/*
 	*	VLAN
 	*/
-	if(match.isVlanID)
+	if(match.isVlanID || match.isEndpointVlanID)
 		setVlanID(match.vlanID);
 	else if(match.isAnyVlan)
 		setVlanIDAnyVlan();
 	else if(match.isNoVlan)
-		setVlanIDNoVlan();	
+		setVlanIDNoVlan();
 	if(match.isVlanPCP)
 		setVlanPCP(match.vlanPCP);
 
@@ -423,31 +420,16 @@ void Match::setAllCommonFields(Match match)
 		setIpv4Dst(match.ipv4_dst);
 	if(match.ipv4_dst_mask)
 		setIpv4DstMask(match.ipv4_dst_mask);
-	
-	/*
-	*	TCP
-	*/
-	if(match.isTcpSrc)
-		setTcpSrc(match.tcp_src);
-	if(match.isTcpDst)
-		setTcpDst(match.tcp_dst);
 
 	/*
-	*	UDP
+	*	TCP, UDP, SCTP
 	*/
-	if(match.isUdpSrc)
-		setUdpSrc(match.udp_src);
-	if(match.isUdpDst)
-		setUdpDst(match.udp_dst);
-	
-	/*
-	*	SCTP
-	*/
-	if(match.isSctpSrc)
-		setSctpSrc(match.sctp_src);
-	if(match.isSctpDst)
-		setSctpDst(match.sctp_dst);
-	
+	if(match.isTcpProtocol || match.isUdpProtocol || match.isSctpProtocol)
+	{
+		setTransportSrcPort(match.transport_src_port);
+		setTransportDstPort(match.transport_dst_port);
+	}
+
 	/*
 	*	ICMPv4
 	*/
@@ -455,7 +437,7 @@ void Match::setAllCommonFields(Match match)
 		setIcmpv4Type(match.icmpv4Type);
 	if(match.isIcmpv4Code)
 		setIcmpv4Code(match.icmpv4Code);
-	
+
 	/*
 	*	ARP
 	*/
@@ -473,7 +455,7 @@ void Match::setAllCommonFields(Match match)
 		setArpSha(match.arp_sha);
 	if(match.arp_tha)
 		setArpTha(match.arp_tha);
-	
+
 	/*
 	*	IPv6
 	*/
@@ -493,7 +475,7 @@ void Match::setAllCommonFields(Match match)
 		setIpv6NdSll(match.ipv6_nd_sll);
 	if(match.ipv6_nd_tll)
 		setIpv6NdTll(match.ipv6_nd_tll);
-	
+
 	/*
 	*	ICMPv6
 	*/
@@ -501,7 +483,7 @@ void Match::setAllCommonFields(Match match)
 		setIcmpv6Type(match.icmpv6Type);
 	if(match.isIcmpv6Code)
 		setIcmpv6Code(match.icmpv6Code);
-	
+
 	/*
 	*	MPLS
 	*/
@@ -509,6 +491,14 @@ void Match::setAllCommonFields(Match match)
 		setMplsLabel(match.mplsLabel);
 	if(match.isMplsTC)
 		setMplsTC(match.mplsTC);
+
+	/*
+	*	GRE
+	*/
+	if(match.gre_key)
+		setGreKey(match.gre_key);
+	if(match.ipv6_dst)
+		setGreKey(match.gre_key);
 }
 
 void Match::setEthSrc(char *eth_src)
@@ -551,15 +541,15 @@ void Match::setVlanIDNoVlan()
 {
 	isVlanID = false;
 	isAnyVlan = false;
-	
+
 	isNoVlan = true;
 }
-	
+
 void Match::setVlanIDAnyVlan()
 {
-	isVlanID = false;	
+	isVlanID = false;
 	isNoVlan = false;
-	
+
 	isAnyVlan = true;
 }
 
@@ -585,6 +575,15 @@ void Match::setIpProto(uint8_t ipProto)
 {
 	this->ipProto = ipProto;
 	isIpProto = true;
+	switch (ipProto)
+	{
+		case 6: isTcpProtocol=true;
+			break;
+		case 17: isUdpProtocol=true;
+			break;
+		case 132: isSctpProtocol=true;
+			break;
+	}
 }
 
 void Match::setIpv4Src(char *ipv4_src)
@@ -611,40 +610,29 @@ void Match::setIpv4DstMask(char *ipv4_dst_mask)
 	strcpy(this->ipv4_dst_mask,ipv4_dst_mask);
 }
 
-void Match::setTcpSrc(uint16_t tcp_src)
+void Match::setTransportSrcPort(uint16_t tcp_src)
 {
-	this->tcp_src = tcp_src;
-	isTcpSrc = true;
+	this->transport_src_port = tcp_src;
 }
 
-void Match::setTcpDst(uint16_t tcp_dst)
+void Match::setTransportDstPort(uint16_t tcp_dst)
 {
-	this->tcp_dst = tcp_dst;
-	isTcpDst = true;
+	this->transport_dst_port = tcp_dst;
 }
 
-void Match::setUdpSrc(uint16_t udp_src)
+void Match::setTcpProtocol()
 {
-	this->udp_src = udp_src;
-	isUdpSrc = true;
+	isTcpProtocol = true;
 }
 
-void Match::setUdpDst(uint16_t udp_dst)
+void Match::setUdpProtocol()
 {
-	this->udp_dst = udp_dst;
-	isUdpDst = true;
+	isUdpProtocol = true;
 }
 
-void Match::setSctpSrc(uint16_t sctp_src)
+void Match::setSctpProtocol()
 {
-	this->sctp_src = sctp_src;
-	isSctpSrc = true;
-}
-
-void Match::setSctpDst(uint16_t sctp_dst)
-{
-	this->sctp_dst = sctp_dst;
-	isSctpDst = true;
+	isSctpProtocol = true;
 }
 
 void Match::setIcmpv4Type(uint8_t icmpv4Type)
@@ -773,357 +761,224 @@ void Match::setMplsTC(uint8_t mplsTC)
 	isMplsTC = true;
 }
 
-void Match::print()
+void Match::setEndpointVlanID(uint16_t vlanID)
 {
-	if(LOGGING_LEVEL <= ORCH_DEBUG_INFO)
-	{
-		/*
-		*	Ethernet
-		*/
-		if(eth_src != NULL)
-			cout << "\t\t\tethernet src: " << eth_src << endl;
-		if(eth_src_mask)
-			cout << "\t\t\tethernet src mask: " << eth_src_mask << endl;
-		if(eth_dst != NULL)
-			cout << "\t\t\tethernet dst: " << eth_dst << endl;
-		if(eth_dst_mask)
-			cout << "\t\t\tethernet dst mask: " << eth_dst_mask << endl;
-		if(isEthType)
-			cout << "\t\t\tethertype: " <<  "0x" << hex << ethType << endl;
-	
-		/*
-		*	VLAN
-		*/
-		if(isVlanID)
-			cout << "\t\t\tVLAN ID: " << hex << "0x" << vlanID << endl;
-		else if(isAnyVlan)
-			cout << "\t\t\tVLAN ID: ANY" << endl;
-		else if(isNoVlan)
-			cout << "\t\t\tNO VLAN" << endl;
-			
-		if(isVlanPCP)
-		{
-			cout << "\t\t\tVLAN PCP: " << int(vlanPCP) << endl;
-		}
-	
-		/*
-		*	IPv4
-		*/
-		if(isIpDSCP)
-			cout << "\t\t\tIPv4 dscp: " << int(ipDSCP) << endl;
-		if(isIpECN)
-			cout << "\t\t\tIPv4 ecn: " << int(ipECN) << endl;
-		if(isIpProto)
-			cout << "\t\t\tIPv4 proto: " << (ipProto & 0xF) << endl;
-		if(ipv4_src)
-			cout << "\t\t\tIPv4 src: " << ipv4_src << endl;
-		if(ipv4_src_mask)
-			cout << "\t\t\tIPv4 src mask: " << ipv4_src_mask << endl;
-		if(ipv4_dst)
-			cout << "\t\t\tIPv4 dst: " << ipv4_dst << endl;
-		if(ipv4_dst_mask)
-			cout << "\t\t\tIPv4 dst mask: " << ipv4_dst_mask << endl;
+	this->vlanID = vlanID;
+	isEndpointVlanID = true;
+}
 
-		/*
-		*	TCP
-		*/
-		if(isTcpSrc)
-			cout << "\t\t\tTCP src port: " << tcp_src << endl;
-		if(isTcpDst)
-			cout << "\t\t\tTCP dst port: " << tcp_dst << endl;
-
-		/*
-		*	UDP
-		*/
-		if(isUdpSrc)
-			cout << "\t\t\tUDP src port: " << udp_src << endl;
-		if(isUdpDst)
-			cout << "\t\t\tUDP dst port: " << udp_dst << endl;
-	
-		/*
-		*	SCTP
-		*/
-		if(isSctpSrc)
-			cout << "\t\t\tSCTP src port: " << sctp_src << endl;
-		if(isSctpDst)
-			cout << "\t\t\tSCTP dst port: " << sctp_dst << endl;
-	
-		/*
-		*	ICMPv4
-		*/
-		if(isIcmpv4Type)
-			cout << "\t\t\tICMPv4 type: " << int(icmpv4Type) << endl;
-		if(isIcmpv4Code)
-			cout << "\t\t\tICMPv4 code: " << int(icmpv4Code) << endl;
-	
-		/*
-		*	ARP
-		*/
-		if(isArpOpcode)
-			cout << "\t\t\tARP opcode: " << arpOpcode << endl;
-		if(arp_spa)
-			cout << "\t\t\tARP spa: " << arp_spa << endl;
-		if(arp_spa_mask)
-		 	cout << "\t\t\tARP spa mask: " << arp_spa_mask << endl;
-		if(arp_tpa)
-			cout << "\t\t\tARP tpa: " << arp_tpa << endl;
-		if(arp_tpa_mask)
-			cout << "\t\t\tARP tpa mask: " << arp_tpa_mask << endl;
-		if(arp_sha)
-			cout << "\t\t\tARP sha: " << arp_sha << endl;
-		if(arp_tha)
-			cout << "\t\t\tARP tha: " << arp_tha << endl;
-	
-		/*
-		*	IPv6
-		*/
-		if(ipv6_src)
-			cout << "\t\t\tIPv6 src: " << ipv6_src << endl;
-		if(ipv6_src_mask)
-			cout << "\t\t\tIPv6 src mask: " << ipv6_src_mask << endl;
-		if(ipv6_dst)
-			cout << "\t\t\tIPv6 dst: " << ipv6_dst << endl;
-		if(ipv6_dst_mask)
-			cout << "\t\t\tIPv6 dst mask: " << ipv6_dst_mask << endl;
-		if(isIpv6Flabel)
-			cout << "\t\t\tIPv6 flabel: " << ipv6_flabel << endl;
-		if(ipv6_nd_target)
-			 cout << "\t\t\tIPv6 nd target: " << ipv6_nd_target << endl;
-		if(ipv6_nd_sll)
-			 cout << "\t\t\tIPv6 nd sll: " << ipv6_nd_sll << endl;
-		if(ipv6_nd_tll)
-			cout << "\t\t\tIPv6 nd tll: " << ipv6_nd_tll << endl;
-	
-		/*
-		*	ICMPv6
-		*/
-		if(isIcmpv6Type)
-			cout << "\t\t\tICMPv6 type: "<<  int(icmpv6Type) << endl;
-		if(isIcmpv6Code)
-			cout << "\t\t\tICMPv6 code: " << int(icmpv6Code) << endl;
-	
-		/*
-		*	MPLS
-		*/
-		if(isMplsLabel)
-			cout << "\t\t\tMPLS label: " << mplsLabel << endl;
-		if(isMplsTC)
-			cout << "\t\t\tMPLS tc: " << int(mplsTC) << endl;
-	}
+void Match::setGreKey(char *gre_key)
+{
+	this->gre_key = (char*)malloc(sizeof(char)*(strlen(gre_key)+1));
+	strcpy(this->gre_key,gre_key);
 }
 
 void Match::toJSON(Object &match)
 {
-		/*
-		*	Ethernet
-		*/
-		if(eth_src != NULL)
-			match[ETH_SRC] = eth_src;
-		if(eth_src_mask != NULL)
-			match[ETH_SRC_MASK] = eth_src_mask;
-		if(eth_dst)
-			match[ETH_DST] = eth_dst;
-		if(eth_dst_mask)
-			match[ETH_DST_MASK] = eth_dst_mask;
-		if(isEthType)
-		{
-			stringstream ethtype;
-			ethtype << hex << ethType;
-			match[ETH_TYPE] = ethtype.str().c_str();
-		}
-		
-		/*
-		*	VLAN
-		*/
-		if(isVlanID)
-		{
-			stringstream vlanid;
-			vlanid << dec << vlanID;
-			match[VLAN_ID] = vlanid.str().c_str();
-		}
-		else if(isAnyVlan)
-			match[VLAN_ID] = ANY_VLAN;
-		else if(isNoVlan)
-			match[VLAN_ID] = NO_VLAN;
-			
-		if(isVlanPCP)
-		{
-			stringstream vlanpcp;
-			vlanpcp << vlanPCP;
-			match[VLAN_PCP] = vlanpcp.str().c_str();
-		}
-	
-		/*
-		*	IPv4
-		*/
-		if(isIpDSCP)
-		{
-			stringstream ipdscp;
-			ipdscp << ipDSCP;
-			match[IP_DSCP] = ipdscp.str().c_str();
-		}
-		if(isIpECN)
-		{
-			stringstream ipecn;
-			ipecn << ipECN;
-			match[IP_ECN] = ipecn.str().c_str();
-		}
-		if(isIpProto)
-		{
-			stringstream ipproto;
-			ipproto << (ipProto & 0xFF);
-			match[IP_PROTO] = ipproto.str().c_str();
-		}
-		if(ipv4_src)
-			match[IPv4_SRC] =  ipv4_src;
-		if(ipv4_src_mask)
-			match[IPv4_SRC_MASK] =  ipv4_src_mask;
-		if(ipv4_dst)
-			match[IPv4_DST] =  ipv4_dst;
-		if(ipv4_dst_mask)
-			match[IPv4_DST_MASK] =  ipv4_dst_mask;
+	/*
+	*	Ethernet
+	*/
+	if(eth_src != NULL)
+		match[ETH_SRC] = eth_src;
+	if(eth_src_mask != NULL)
+		match[ETH_SRC_MASK] = eth_src_mask;
+	if(eth_dst)
+		match[ETH_DST] = eth_dst;
+	if(eth_dst_mask)
+		match[ETH_DST_MASK] = eth_dst_mask;
+	if(isEthType)
+	{
+		stringstream ethtype;
+		ethtype << hex << ethType;
+		match[ETH_TYPE] = ethtype.str().c_str();
+	}
 
-		/*
-		*	TCP
-		*/
-		if(isTcpSrc)
-		{
-			stringstream tcpsrc;
-			tcpsrc << tcp_src;
-			match[TCP_SRC] = tcpsrc.str().c_str();
-		}
-		if(isTcpDst)
-		{
-			stringstream tcpdst;
-			tcpdst << tcp_dst;
-			match[TCP_DST] = tcpdst.str().c_str();
-		}
+	/*
+	*	VLAN
+	*/
+	if(isVlanID)
+	{
+		stringstream vlanid;
+		vlanid << dec << vlanID;
+		match[VLAN_ID] = vlanid.str().c_str();
+	}
+	else if(isAnyVlan)
+		match[VLAN_ID] = ANY_VLAN;
+	else if(isNoVlan)
+		match[VLAN_ID] = NO_VLAN;
 
-		/*
-		*	UDP
-		*/
-		if(isUdpSrc)
+	if(isVlanPCP)
+	{
+		stringstream vlanpcp;
+		vlanpcp << vlanPCP;
+		match[VLAN_PCP] = vlanpcp.str().c_str();
+	}
+
+	/*
+	*	IPv4
+	*/
+	if(isIpDSCP)
+	{
+		stringstream ipdscp;
+		ipdscp << ipDSCP;
+		match[IP_DSCP] = ipdscp.str().c_str();
+	}
+	if(isIpECN)
+	{
+		stringstream ipecn;
+		ipecn << ipECN;
+		match[IP_ECN] = ipecn.str().c_str();
+	}
+	if(isIpProto)
+	{
+		stringstream ipproto;
+		ipproto << (ipProto & 0xFF);
+		match[IP_PROTO] = ipproto.str().c_str();
+	}
+	if(ipv4_src)
+		match[IP_SRC] =  ipv4_src;
+	if(ipv4_src_mask)
+		match[IPv4_SRC_MASK] =  ipv4_src_mask;
+	if(ipv4_dst)
+		match[IP_DST] =  ipv4_dst;
+	if(ipv4_dst_mask)
+		match[IPv4_DST_MASK] =  ipv4_dst_mask;
+
+	/*
+	*	TCP, UDP
+	*/
+	if(isTcpProtocol || isUdpProtocol)
+	{
+		stringstream tcpUdpProto;
+		if(transport_src_port)
 		{
-			stringstream udpsrc;
-			udpsrc << udp_src;
-			match[UDP_SRC] = udpsrc.str().c_str();
+			tcpUdpProto << transport_src_port;
+			match[PORT_SRC] = tcpUdpProto.str().c_str();
 		}
-		if(isUdpDst)
+		else if(transport_dst_port)
 		{
-			stringstream udpdst;
-			udpdst << udp_dst;
-			match[UDP_DST] = udpdst.str().c_str();
+			tcpUdpProto << transport_dst_port;
+			match[PORT_DST] = tcpUdpProto.str().c_str();
 		}
-	
-		/*
-		*	SCTP
-		*/
-		if(isSctpSrc)
+	}
+
+	/*
+	*	SCTP
+	*/
+	if(isSctpProtocol)
+	{
+		stringstream scptProto;
+		if(transport_src_port)
 		{
-			stringstream sctpsrc;
-			sctpsrc << sctp_src;
-			match[SCTP_SRC] = sctpsrc.str().c_str();
+			scptProto << transport_src_port;
+			match[SCTP_SRC] = scptProto.str().c_str();
 		}
-		if(isSctpDst)
+		else if(transport_dst_port)
 		{
-			stringstream sctpdst;
-			sctpdst << sctp_dst;
-			match[SCTP_DST] = sctpdst.str().c_str();
+			scptProto << transport_dst_port;
+			match[SCTP_DST] = scptProto.str().c_str();
 		}
-	
-		/*
-		*	ICMPv4
-		*/
-		if(isIcmpv4Type)
-		{
-			stringstream icmpv4type;
-			icmpv4type << icmpv4Type;
-			match[ICMPv4_TYPE] = icmpv4type.str().c_str();
-		}
-		if(isIcmpv4Code)
-		{
-			stringstream icmpv4code;
-			icmpv4code << icmpv4Code;
-			match[ICMPv4_CODE] = icmpv4code.str().c_str();
-		}
-	
-		/*
-		*	ARP
-		*/
-		if(isArpOpcode)
-		{
-			stringstream arpopcode;
-			arpopcode << arpOpcode;
-			match[ARP_OPCODE] = arpopcode.str().c_str();
-		}
-		if(arp_spa)
-			match[ARP_SPA] = arp_spa;
-		if(arp_spa_mask)
-		 	match[ARP_SPA_MASK] = arp_spa_mask;
-		if(arp_tpa)
-			match[ARP_TPA] = arp_tpa;
-		if(arp_tpa_mask)
-			match[ARP_TPA_MASK] = arp_tpa_mask;
-		if(arp_sha)
-			match[ARP_SHA] = arp_sha;
-		if(arp_tha)
-			match[ARP_THA] = arp_tha;
-	
-		/*
-		*	IPv6
-		*/
-		if(ipv6_src)
-			match[IPv6_SRC] = ipv6_src;
-		if(ipv6_src_mask)
-			match[IPv6_SRC_MASK] = ipv6_src_mask;
-		if(ipv6_dst)
-			match[IPv6_DST] = ipv6_dst;
-		if(ipv6_dst_mask)
-			match[IPv6_DST_MASK] = ipv6_dst_mask;
-		if(isIpv6Flabel)
-		{
-			stringstream ipv6flabel;
-			ipv6flabel << ipv6_flabel;
-			match[IPv6_FLABEL] = ipv6flabel.str().c_str();
-		}
-		if(ipv6_nd_target)
-			 match[IPv6_ND_TARGET] = ipv6_nd_target;
-		if(ipv6_nd_sll)
-			  match[IPv6_ND_SLL] = ipv6_nd_sll;
-		if(ipv6_nd_tll)
-			 match[IPv6_ND_TLL] = ipv6_nd_tll;
-	
-		/*
-		*	ICMPv6
-		*/
-		if(isIcmpv6Type)
-		{
-			stringstream icmpv6type;
-			icmpv6type << icmpv6Type;
-			match[ICMPv6_TYPE] = icmpv6type.str().c_str();
-		}
-		if(isIcmpv6Code)
-		{
-			stringstream icmpv6code;
-			icmpv6code << icmpv6Code;
-			match[ICMPv6_CODE] = icmpv6code.str().c_str();
-		}
-	
-		/*
-		*	MPLS
-		*/
-		if(isMplsLabel)
-		{
-			stringstream mplslabel;
-			mplslabel << mplsLabel;
-			match[MPLS_LABEL] = mplslabel.str().c_str();
-		}
-		if(isMplsTC)
-		{
-			stringstream mplstc;
-			mplstc << mplsTC;
-			match[MPLS_TC] = mplstc.str().c_str();
-		}
+	}
+
+	/*
+	*	ICMPv4
+	*/
+	if(isIcmpv4Type)
+	{
+		stringstream icmpv4type;
+		icmpv4type << icmpv4Type;
+		match[ICMPv4_TYPE] = icmpv4type.str().c_str();
+	}
+	if(isIcmpv4Code)
+	{
+		stringstream icmpv4code;
+		icmpv4code << icmpv4Code;
+		match[ICMPv4_CODE] = icmpv4code.str().c_str();
+	}
+
+	/*
+	*	ARP
+	*/
+	if(isArpOpcode)
+	{
+		stringstream arpopcode;
+		arpopcode << arpOpcode;
+		match[ARP_OPCODE] = arpopcode.str().c_str();
+	}
+	if(arp_spa)
+		match[ARP_SPA] = arp_spa;
+	if(arp_spa_mask)
+	 	match[ARP_SPA_MASK] = arp_spa_mask;
+	if(arp_tpa)
+		match[ARP_TPA] = arp_tpa;
+	if(arp_tpa_mask)
+		match[ARP_TPA_MASK] = arp_tpa_mask;
+	if(arp_sha)
+		match[ARP_SHA] = arp_sha;
+	if(arp_tha)
+		match[ARP_THA] = arp_tha;
+
+	/*
+	*	IPv6
+	*/
+	if(ipv6_src)
+		match[IP_SRC] = ipv6_src;
+	if(ipv6_src_mask)
+		match[IPv6_SRC_MASK] = ipv6_src_mask;
+	if(ipv6_dst)
+		match[IP_DST] = ipv6_dst;
+	if(ipv6_dst_mask)
+		match[IPv6_DST_MASK] = ipv6_dst_mask;
+	if(isIpv6Flabel)
+	{
+		stringstream ipv6flabel;
+		ipv6flabel << ipv6_flabel;
+		match[IPv6_FLABEL] = ipv6flabel.str().c_str();
+	}
+	if(ipv6_nd_target)
+		 match[IPv6_ND_TARGET] = ipv6_nd_target;
+	if(ipv6_nd_sll)
+		  match[IPv6_ND_SLL] = ipv6_nd_sll;
+	if(ipv6_nd_tll)
+		 match[IPv6_ND_TLL] = ipv6_nd_tll;
+
+	/*
+	*	ICMPv6
+	*/
+	if(isIcmpv6Type)
+	{
+		stringstream icmpv6type;
+		icmpv6type << icmpv6Type;
+		match[ICMPv6_TYPE] = icmpv6type.str().c_str();
+	}
+	if(isIcmpv6Code)
+	{
+		stringstream icmpv6code;
+		icmpv6code << icmpv6Code;
+		match[ICMPv6_CODE] = icmpv6code.str().c_str();
+	}
+
+	/*
+	*	MPLS
+	*/
+	if(isMplsLabel)
+	{
+		stringstream mplslabel;
+		mplslabel << mplsLabel;
+		match[MPLS_LABEL] = mplslabel.str().c_str();
+	}
+	if(isMplsTC)
+	{
+		stringstream mplstc;
+		mplstc << mplsTC;
+		match[MPLS_TC] = mplstc.str().c_str();
+	}
+
+	/*
+	*	GRE
+	*/
+	if(gre_key)
+		match[GRE_KEY] = gre_key;
 }
 
 
@@ -1134,7 +989,7 @@ string Match::prettyPrint()
 
 	/*
 	*	Ethernet
-	*/	
+	*/
 	if(eth_src != NULL)
 		ss << " # ethernet src: " << eth_src;
 	if(eth_dst != NULL)
@@ -1155,7 +1010,7 @@ string Match::prettyPrint()
 		ss << " # VLAN ID: ANY";
 	else if(isNoVlan)
 		ss << " # NO VLAN";
-		
+
 	if(isVlanPCP)
 		ss << " # VLAN PCP: " << int(vlanPCP);
 
@@ -1167,7 +1022,7 @@ string Match::prettyPrint()
 	if(isIpECN)
 		ss << " # IPv4 ecn: " << int(ipECN);
 	if(isIpProto)
-		ss << " # IPv4 proto: " << (ipProto & 0xF);
+		ss << " # IPv4 proto: " << (ipProto & 0xFF);
 	if(ipv4_src)
 		ss << " # IPv4 src: " << ipv4_src;
 	if(ipv4_src_mask)
@@ -1180,26 +1035,26 @@ string Match::prettyPrint()
 	/*
 	*	TCP
 	*/
-	if(isTcpSrc)
-		ss << " # TCP src port: " << tcp_src;
-	if(isTcpDst)
-		ss << " # TCP dst port: " << tcp_dst;
+	if(isTcpProtocol && transport_src_port)
+		ss << " # TCP src port: " << transport_src_port;
+	if(isTcpProtocol && transport_dst_port)
+		ss << " # TCP dst port: " << transport_dst_port;
 
 	/*
 	*	UDP
 	*/
-	if(isUdpSrc)
-		ss << " # UDP src port: " << udp_src;
-	if(isUdpDst)
-		ss << " # UDP dst port: " << udp_dst;
+	if(isUdpProtocol && transport_src_port)
+		ss << " # UDP src port: " << transport_src_port;
+	if(isUdpProtocol && transport_dst_port)
+		ss << " # UDP dst port: " << transport_dst_port;
 
 	/*
 	*	SCTP
 	*/
-	if(isSctpSrc)
-		ss << " # SCTP src port: " << sctp_src;
-	if(isSctpDst)
-		ss << " # SCTP dst port: " << sctp_dst;
+	if(isSctpProtocol && transport_src_port)
+		ss << " # SCTP src port: " << transport_src_port;
+	if(isSctpProtocol && transport_dst_port)
+		ss << " # SCTP dst port: " << transport_dst_port;
 
 	/*
 	*	ICMPv4
@@ -1262,6 +1117,12 @@ string Match::prettyPrint()
 		ss << " # MPLS label: " << mplsLabel;
 	if(isMplsTC)
 		ss << " # MPLS tc: " << int(mplsTC);
+
+	/*
+	*	GRE
+	*/
+	if(gre_key)
+		ss << " # GRE key: " << gre_key;
 
 	return ss.str();
 }

@@ -1,0 +1,94 @@
+#!/bin/bash
+
+#Author: Sergio Nuccio
+#Date: January 20th 2015
+#Brief: start script for VNF type 5 implemented with openvswitch
+
+#command line: 
+#	sudo ./start $1 $2 $3 [$4 $5 ...]
+
+#dependencies: openvswitch
+
+#$1 LSI ID								(e.g. 2)
+#$2 NF name								(e.g. OFbridge)
+#$3 number_of_ports							(e.g. 3)
+#The next $3 parameters are the names of the ports of the NF		(e.g. vEth0 vEth1 vEth2)
+#The first of them is connected to the controller
+
+#debug
+set -x
+
+if (( $EUID != 0 )) 
+then
+    echo "[$0] This script must be executed with ROOT privileges"
+    exit 1
+fi
+
+if [ $# -le 3 ]
+then
+	echo "[$0] This script needs at least 4 arguments"
+	echo -e "\nUsage:\n$0 <LSI_ID> <NF_name> <n_ports> <ctrlport_name> [port names...] \n"
+	exit 1
+fi
+
+#start openvswitch (if not started yet)
+#/usr/share/openvswitch/scripts/ovs-ctl start
+
+#bridge name: <lsi_ID>_<NFname>_ofb
+br_name=$1_$2_ofb
+
+#db_name: <lsi_ID>_<NFname>.db
+db_name=$1_$2.db
+
+ifconfig lo up	#really needed?
+
+temp_dir="$1_$1_$2_tmp_$2"
+
+ovsdb-tool create $temp_dir/$db_name $temp_dir/vswitch.ovsschema
+
+ovsdb-server $temp_dir/$db_name --remote=ptcp:2001:127.0.0.1 \
+		--remote=db:Open_vSwitch,Open_vSwitch,manager_options \
+		--log-file=$temp_dir/ovsdb-server_$db_name.log \
+		--pidfile=/var/run/openvswitch/$db_name.pid --detach
+		
+ovs-vsctl --db=tcp:127.0.0.1:2001 --no-wait init
+
+ovs-vswitchd tcp:127.0.0.1:2001 --pidfile=/var/run/openvswitch/vswitchd$db_name.pid \
+		--log-file=$temp_dir/ovs-vswitchd_$db_name.log --detach
+
+#control interface
+ifconfig $4 10.0.0.2/24 up
+
+#create bridge
+ovs-vsctl --db=tcp:127.0.0.1:2001 add-br $br_name
+
+ovs-vsctl --db=tcp:127.0.0.1:2001 set-controller $br_name tcp:10.0.0.1:6633
+
+#create virtual links between this bridge and the LSI
+#current=4 -> attach control port to the switch too -> in-band!
+#current=5 -> control port is detached from the switch -> out-of-band! 
+current=5
+for (( c=1; c < $3; c++ ))
+do
+	
+	ovs-vsctl --db=tcp:127.0.0.1:2001 add-port $br_name ${!current}
+
+	current=`expr $current + 1`
+done
+
+#delete normal flows on the bridge
+ovs-ofctl --db=tcp:127.0.0.1:2001 del-flows $br_name
+
+#enable hidden flows
+ovs-vsctl --db=tcp:127.0.0.1:2001 set bridge $br_name other_config:disable-in-band=true
+
+#set out-of-band controller
+ovs-vsctl --db=tcp:127.0.0.1:2001 set controller $br_name connection_mode=out-of-band
+
+#set local ip address and netmask on the bridge
+ovs-vsctl --db=tcp:127.0.0.1:2001 set controller $br_name local_ip=10.0.0.2
+ovs-vsctl --db=tcp:127.0.0.1:2001 set controller $br_name local_netmask=255.0.0.0
+
+echo "[$0] openflow_bridge started"
+
+exit 0

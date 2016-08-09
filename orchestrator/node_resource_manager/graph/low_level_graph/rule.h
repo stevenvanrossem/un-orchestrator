@@ -27,14 +27,14 @@ private:
 	uint64_t priority;
 	Match match;
 	Action action;
-	
+
 	string flowID;
-	
+
 public:
 	Rule(Match match, Action action, string flowID, uint64_t priority);
-	
+
 	bool operator==(const Rule &other) const;
-	
+
 	/**
 	*	@brief: translate the rule into a flowmod message
 	*

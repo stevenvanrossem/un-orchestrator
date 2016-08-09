@@ -27,34 +27,47 @@ private:
 	*	@brief: the match of this rule
 	*/
 	Match match;
-	
+
 	/**
 	*	@brief: the action of this rule
 	*/
 	Action *action;
-	
+
 	/**
 	*	@brief: the priority of this rule
 	*/
 	uint64_t priority;
 
 	/**
-	*	@brief: identifier of the flow. Can be useful in case
-	*		a flow must be removed from the graph
+	*	@brief: identifier of the rule. 
 	*/
-	string flowID;
+	string ruleID;
 
 public:
-	Rule(Match match, Action *action,string flowID, uint64_t priority);
-	
-	void print();
+	Rule(Match match, Action *action,string ruleID, uint64_t priority);
+
 	Object toJSON();
 
-	string getFlowID();
+	/**
+	*	@brief: return the identifier of the rule
+	*/
+	string getRuleID();
+
+	/**
+	*	@brief: return the priority of the rule
+	*/
 	uint64_t getPriority();
+
+	/**
+	*	@brief: return the match that is part of this rule
+	*/
 	Match getMatch();
+
+	/**
+	*	@brief: return the action that is part of this rule
+	*/
 	Action *getAction();
-	
+
 	/**
 	*	@brief: two rules are equal if they have the same flow ID
 	*/

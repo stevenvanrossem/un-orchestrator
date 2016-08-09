@@ -1,6 +1,5 @@
 #include "ovsdb_manager.h"
 
-char *host = NULL, *user = NULL;	
 int s = 0;
 
 commands *c = NULL;
@@ -13,7 +12,7 @@ OVSDBManager::OVSDBManager()
 
 //Destroyer
 OVSDBManager::~OVSDBManager()
-{	
+{
 }
 
 //implementation of createLsi
@@ -31,9 +30,19 @@ AddNFportsOut *OVSDBManager::addNFPorts(AddNFportsIn anpi){
 	return c->cmd_editconfig_NFPorts(anpi, s);
 }
 
+//implementation of addEndpoint
+AddEndpointOut *OVSDBManager::addEndpoint(AddEndpointIn aepi){
+	return c->cmd_editconfig_endpoint(aepi, s);
+}
+
 //implementation of destroyNFPorts
 void OVSDBManager::destroyNFPorts(DestroyNFportsIn dnpi){
 	c->cmd_editconfig_NFPorts_delete(dnpi, s);
+}
+
+//implementation of destroyEndpoint
+void OVSDBManager::destroyEndpoint(DestroyEndpointIn depi){
+	c->cmd_editconfig_endpoint_delete(depi, s);
 }
 
 //implementation of destroyVirtualLink

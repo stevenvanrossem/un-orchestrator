@@ -1,5 +1,7 @@
 #include "native.h"
 
+static const char LOG_MODULE_NAME[] = "Native-Manager";
+
 std::map<std::string, Capability> *Native::capabilities;
 
 Native::Native(){
@@ -11,7 +13,7 @@ Native::Native(){
 				call a script that checks some available functions in the system (e.g. iptables) and fills the structure
 		*/
 
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Reading capabilities from file %s", CAPABILITIES_FILE);
+		ULOG_DBG_INFO("Reading capabilities from file %s", CAPABILITIES_FILE);
 
 		std::set<std::string>::iterator it;
 		xmlDocPtr schema_doc=NULL;
@@ -21,9 +23,11 @@ Native::Native(){
 		xmlDocPtr doc=NULL;
 
 		//Validate the configuration file with the schema
-		schema_doc = xmlReadFile(CAPABILITIES_XSD, NULL, XML_PARSE_NONET);
+		std::stringstream ss_xsd;
+                ss_xsd << getenv("un_script_path") <<  CAPABILITIES_XSD;
+		schema_doc = xmlReadFile(ss_xsd.str().c_str(), NULL, XML_PARSE_NONET);
 		if (schema_doc == NULL){
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "The schema cannot be loaded or is not well-formed.");
+			ULOG_ERR("The schema cannot be loaded or is not well-formed.");
 			/*Free the allocated resources*/
 			freeXMLResources(parser_ctxt, valid_ctxt, schema_doc, schema, doc);
 			throw new NativeException();
@@ -31,7 +35,7 @@ Native::Native(){
 
 		parser_ctxt = xmlSchemaNewDocParserCtxt(schema_doc);
 		if (parser_ctxt == NULL){
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Unable to create a parser context for the schema \"%s\".",CAPABILITIES_XSD);
+			ULOG_ERR("Unable to create a parser context for the schema \"%s\".",CAPABILITIES_XSD);
 			/*Free the allocated resources*/
 			freeXMLResources(parser_ctxt, valid_ctxt, schema_doc, schema, doc);
 			throw new NativeException();
@@ -39,7 +43,7 @@ Native::Native(){
 
 		schema = xmlSchemaParse(parser_ctxt);
 		if (schema == NULL){
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "The XML \"%s\" schema is not valid.",CAPABILITIES_XSD);
+			ULOG_ERR("The XML \"%s\" schema is not valid.",CAPABILITIES_XSD);
 			/*Free the allocated resources*/
 			freeXMLResources(parser_ctxt, valid_ctxt, schema_doc, schema, doc);
 			throw new NativeException();
@@ -47,22 +51,25 @@ Native::Native(){
 
 		valid_ctxt = xmlSchemaNewValidCtxt(schema);
 		if (valid_ctxt == NULL){
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Unable to create a validation context for the XML schema \"%s\".",CAPABILITIES_XSD);
+			ULOG_ERR("Unable to create a validation context for the XML schema \"%s\".",CAPABILITIES_XSD);
 			/*Free the allocated resources*/
 			freeXMLResources(parser_ctxt, valid_ctxt, schema_doc, schema, doc);
 			throw new NativeException();
 		}
 
-		doc = xmlParseFile(CAPABILITIES_FILE); /*Parse the XML file*/
+		std::stringstream ss;
+		ss << getenv("un_script_path") <<  CAPABILITIES_FILE;
+
+		doc = xmlParseFile(ss.str().c_str()); /*Parse the XML file*/
 		if (doc==NULL){
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "XML file '%s' parsing failed.", CAPABILITIES_FILE);
+			ULOG_ERR("XML file '%s' parsing failed.", CAPABILITIES_FILE);
 			/*Free the allocated resources*/
 			freeXMLResources(parser_ctxt, valid_ctxt, schema_doc, schema, doc);
 			throw new NativeException();
 		}
 
 		if(xmlSchemaValidateDoc(valid_ctxt, doc) != 0){
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Configuration file '%s' is not valid", CAPABILITIES_FILE);
+			ULOG_ERR("Configuration file '%s' is not valid", CAPABILITIES_FILE);
 			/*Free the allocated resources*/
 			freeXMLResources(parser_ctxt, valid_ctxt, schema_doc, schema, doc);
 			throw new NativeException();
@@ -85,11 +92,11 @@ Native::Native(){
 				captype_t type = (typeString == TYPE_SCRIPT) ? EXECUTABLE : SCRIPT;
 
 				capabilities->insert(std::pair<std::string, Capability>(name, Capability(name, path, type)));
-				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Read %s capability.", name.c_str());
+				ULOG_DBG_INFO("Read %s capability.", name.c_str());
 			}
 		}
 		if(capabilities->empty()) {
-			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Native functions are not supported.");
+			ULOG_DBG_INFO("Native functions are not supported.");
 		}
 	}
 }
@@ -102,24 +109,24 @@ bool Native::isSupported(Description& descr) {
 
 			if(capabilities->find(*i) == capabilities->end()){
 				//not found
-				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Capability %s required by native function is not supported", i->c_str());
+				ULOG_DBG_INFO("Capability %s required by native function is not supported", i->c_str());
 				return false;
 			}
 		}
 	} catch(exception& exc) {
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "exception %s", exc.what());
+		ULOG_DBG_INFO("exception %s", exc.what());
 		return false;
 	}
 	return true;
 }
+bool Native::updateNF(UpdateNFIn uni)
+{
+	uint64_t lsiID = uni.getLsiID();
+	std::string nf_name = uni.getNfId();
+	map<unsigned int, string> namesOfPortsOnTheSwitch = uni.getNamesOfPortsOnTheSwitch();
+	list<unsigned int> newPorts = uni.getNewPortsToAdd();
+	unsigned int n_ports = newPorts.size();
 
-bool Native::startNF(StartNFIn sni) {
-
-	uint64_t lsiID = sni.getLsiID();
-	std::string nf_name = sni.getNfName();
-	map<unsigned int, string> namesOfPortsOnTheSwitch = sni.getNamesOfPortsOnTheSwitch();
-	unsigned int n_ports = namesOfPortsOnTheSwitch.size();
-	
 	std::stringstream uri;
 
 	try {
@@ -127,40 +134,82 @@ bool Native::startNF(StartNFIn sni) {
 		if(nativeDescr.getLocation() == "local")
 			uri << "file://";
 	} catch (exception& e) {
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "exception %s", e.what());
+		ULOG_DBG_INFO("exception %s", e.what());
 		return false;
 	}
 
 	std::string uri_script = description->getURI();
 	uri << uri_script;
-	
+
 	std::stringstream command;
-	command << PULL_AND_RUN_NATIVE_NF << " " << lsiID << " " << nf_name << " " << uri.str() << " " << n_ports;
-	
+	command << getenv("un_script_path") << UPDATE_NATIVE_NF << " " << lsiID << " " << nf_name << " " << uri.str() << " " << n_ports;
+
+	//create the names of the ports
+	for(list<unsigned int>::iterator pn = newPorts.begin(); pn != newPorts.end(); pn++)
+	{
+		assert(namesOfPortsOnTheSwitch.find(*pn)!=namesOfPortsOnTheSwitch.end());
+		command << " " << namesOfPortsOnTheSwitch[(*pn)];
+	}
+
+	ULOG_DBG_INFO("Executing command \"%s\"",command.str().c_str());
+
+	int retVal = system(command.str().c_str());
+	retVal = retVal >> 8;
+
+	if(retVal == 0)
+		return false;
+
+	return true;
+}
+
+bool Native::startNF(StartNFIn sni) {
+
+	uint64_t lsiID = sni.getLsiID();
+	std::string nf_name = sni.getNfId();
+	map<unsigned int, string> namesOfPortsOnTheSwitch = sni.getNamesOfPortsOnTheSwitch();
+	unsigned int n_ports = namesOfPortsOnTheSwitch.size();
+
+	std::stringstream uri;
+
+	try {
+		NativeDescription& nativeDescr = dynamic_cast<NativeDescription&>(*description);
+		if(nativeDescr.getLocation() == "local")
+			uri << "file://";
+	} catch (exception& e) {
+		ULOG_DBG_INFO("exception %s", e.what());
+		return false;
+	}
+
+	std::string uri_script = description->getURI();
+	uri << uri_script;
+
+	std::stringstream command;
+	command << getenv("un_script_path") << PULL_AND_RUN_NATIVE_NF << " " << lsiID << " " << nf_name << " " << uri.str() << " " << n_ports;
+
 	//create the names of the ports
 	for(std::map<unsigned int, std::string>::iterator pn = namesOfPortsOnTheSwitch.begin(); pn != namesOfPortsOnTheSwitch.end(); pn++)
 		command << " " << pn->second;
 
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Executing command \"%s\"",command.str().c_str());
+	ULOG_DBG_INFO("Executing command \"%s\"",command.str().c_str());
 
 	int retVal = system(command.str().c_str());
 	retVal = retVal >> 8;
-	
+
 	if(retVal == 0)
 		return false;
-		
+
 	return true;
 }
 
 bool Native::stopNF(StopNFIn sni) {
 
 	uint64_t lsiID = sni.getLsiID();
-	std::string nf_name = sni.getNfName();
+	std::string nf_name = sni.getNfId();
 
 	std::stringstream command;
-	command << STOP_NATIVE_NF << " " << lsiID << " " << nf_name;
-	
-	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Executing command \"%s\"",command.str().c_str());
+	command << getenv("un_script_path") << STOP_NATIVE_NF << " " << lsiID << " " << nf_name;
+
+	ULOG_DBG_INFO("Executing command \"%s\"",command.str().c_str());
 	int retVal = system(command.str().c_str());
 	retVal = retVal >> 8;
 
@@ -174,18 +223,18 @@ unsigned int Native::convertNetmask(string netmask) {
 
 	unsigned int slash = 0;
 	unsigned int mask;
-	
+
 	int first, second, third, fourth;
 	sscanf(netmask.c_str(),"%d.%d.%d.%d",&first,&second,&third,&fourth);
 	mask = (first << 24) + (second << 16) + (third << 8) + fourth;
-	
+
 	for(int i = 0; i < 32; i++)
 	{
 		if((mask & 0x1) == 1)
 			slash++;
 		mask = mask >> 1;
 	}
-	
+
 	return slash;
 }
 

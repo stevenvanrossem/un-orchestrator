@@ -20,7 +20,7 @@
 
 int main(int argc, char *argv[])
 {
-	
+
 	//This gives time to the UN to configure the network namespace of the container
 	sleep(3);
 
@@ -37,24 +37,24 @@ int main(int argc, char *argv[])
 	//Check for root privileges
 	if(geteuid() != 0)
 	{
-		fprintf(stderr,"[%s] Root permissions are required to run %s\n",NAME,argv[0]);	
-		exit(EXIT_FAILURE);	
+		fprintf(stderr,"[%s] Root permissions are required to run %s\n",NAME,argv[0]);
+		exit(EXIT_FAILURE);
 	}
-	
+
 	printf("[%s] I'm going to start\n",NAME);
 
 	from = pcap_open_live(FROM, BUFSIZ, 1, 1000, errbuf);
 	if(from == NULL)
 	{
 		fprintf(stderr,"[%s] %s\n", NAME, errbuf);
-		exit(EXIT_FAILURE);	
+		exit(EXIT_FAILURE);
 	}
 
 	to = pcap_open_live(TO, BUFSIZ, 1, 1000, errbuf);
 	if(to == NULL)
 	{
 		fprintf(stderr,"[%s] %s\n", NAME, errbuf);
-		exit(EXIT_FAILURE);	
+		exit(EXIT_FAILURE);
 	}
 
 	printf("[%s] Devices open!\n",NAME);
@@ -67,8 +67,8 @@ int main(int argc, char *argv[])
 			fprintf(stdout,"[%s] Packet received:\n",NAME);
 			fprintf(stdout,"[%s] \tlength: %d bytes\n",NAME,header->caplen);
 			fprintf(stdout,"[%s] \t%x:%x:%x:%x:%x:%x -> %x:%x:%x:%x:%x:%x\n",NAME,pkt_data[6],pkt_data[7],pkt_data[8],pkt_data[9],pkt_data[10],pkt_data[11],pkt_data[0],pkt_data[1],pkt_data[2],pkt_data[3],pkt_data[4],pkt_data[5]);
-#endif			
-		
+#endif
+
 			new_pkt = (unsigned char*)pkt_data;
 			new_pkt[0] = new_pkt[1] = new_pkt[2] = new_pkt[3] = new_pkt[4] = new_pkt[5] = 0xa;
 

@@ -8,6 +8,9 @@
 
 #include "commands.h"
 
+//TODO: remove this class. It is in fact quite useless, as it only contains wrappers to functions
+//in commands.h
+
 using namespace std;
 
 class LSI;
@@ -25,11 +28,15 @@ public:
 
 	AddNFportsOut *addNFPorts(AddNFportsIn anpi);
 
+	AddEndpointOut *addEndpoint(AddEndpointIn aepi);
+
 	AddVirtualLinkOut *addVirtualLink(AddVirtualLinkIn avli);
 
 	void destroyLsi(uint64_t dpid);
 
 	void destroyNFPorts(DestroyNFportsIn dnpi);
+
+    void destroyEndpoint(DestroyEndpointIn depi);
 
 	void destroyVirtualLink(DestroyVirtualLinkIn dvli);
 

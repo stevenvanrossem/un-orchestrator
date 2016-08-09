@@ -6,6 +6,10 @@
 #include "logger.h"
 #include "constants.h"
 
+#ifdef DETAILED_LOGS
+	#define _DEBUG 1
+#endif
+
 extern void logger(int LoggingLevel, const char *ModuleName, const char *File, int Line, const char *Format, ...)
 {
 	char Buffer[BUFFER_SIZE];
@@ -46,7 +50,7 @@ extern void logger(int LoggingLevel, const char *ModuleName, const char *File, i
 	vsnprintf(Buffer, BufSize, Format, Args);
 
 	// Get current time and format it appropriately
-	gettimeofday(&tv, NULL); 
+	gettimeofday(&tv, NULL);
 	CurrentTime=tv.tv_sec;
 	strftime(CurrentTimeBuffer,sizeof(CurrentTimeBuffer),"%F-%T",localtime(&CurrentTime));
 
@@ -101,7 +105,7 @@ extern void coloredLogger(char *color, int LoggingLevel, const char *ModuleName,
 	vsnprintf(Buffer, BufSize, Format, Args);
 
 	// Get current time and format it appropriately
-	gettimeofday(&tv, NULL); 
+	gettimeofday(&tv, NULL);
 	CurrentTime=tv.tv_sec;
 	strftime(CurrentTimeBuffer,sizeof(CurrentTimeBuffer),"%F-%T",localtime(&CurrentTime));
 

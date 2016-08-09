@@ -3,6 +3,7 @@
 
 #pragma once
 
+#define __STDC_FORMAT_MACROS
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -23,10 +24,6 @@
 
 #include "ivshmem_cmdline_generator.h"
 
-#ifdef DIRECT_KVM_IVSHMEM
-	#include "../../../utils/sockutils.h"
-#endif
-
 #include <libxml/encoding.h>
 #include <libxml/xmlwriter.h>
 #include <libxml/xmlreader.h>
@@ -42,59 +39,36 @@ class Libvirt : public NFsManager
 {
 private:
 
-#ifndef DIRECT_KVM_IVSHMEM
-	
 	/**
 	*	@bfief: Connection towards Libvirt
 	*/
-	static virConnectPtr connection;
-#else
+	virConnectPtr connection;
 
-	/**
-	*	@brief: mutex to protect the selection of the TCP port for the monitor
-	*/
-	static pthread_mutex_t Libvirt_mutex;
-
-	/**
-	*	@brief: TCP port to be assigned to the VM monitor to
-	*		the next VM to be executed
-	*/
-	static unsigned int next_tcp_port;
-	
-	/**
-	*	@brief: The map associates each VNF with the TCP port to
-	*		be used to connect to it
-	*/
-	static map<string,string> monitor;
-#endif
-
-
-#ifndef DIRECT_KVM_IVSHMEM
 	/**
 	*	@brief:	Open a connection with QEMU/KVM
 	*/
 	void connect();
-	
+
 	/**
 	*	@brief: Disconnect from QEMU/KVM
 	*/
 	void disconnect();
-	
+
 	/**
 	*	@brief: Custom error handler
 	*/
 	static void customErrorFunc(void *userdata, virErrorPtr err);
-#endif
 
 public:
 
 	Libvirt();
 	~Libvirt();
-	
+
 	bool isSupported(Description&);
-	
+
 	bool startNF(StartNFIn sni);
 	bool stopNF(StopNFIn sni);
+	bool updateNF(UpdateNFIn uni);
 };
 
 #endif //LIBVIRT_H_

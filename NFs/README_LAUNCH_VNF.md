@@ -1,12 +1,12 @@
-# How to launch a virtual network function on the Universal Node
+# How to launch a Virtual Network Function (VNF) on the Universal Node
 
-This file details how to deploy and run a virtual network function (VNF) on the Universal Node (UN). This requires the execution of the following main steps (detailed in the remainder of the document):
+This document details how to deploy and run a Virtual Network Function (VNF) on the Universal Node (UN). This requires the execution of the following main steps (detailed in the remainder of the document):
 *	create the desired VNF image;
 *	register such a VNF in the name-resolver database;
 *	send to the un-orchestrator a Network Functions-Forwarding Graph (NF-FG) including the VNF that has to be instantiated.
 
 ### Create the VNF image
-The universal node currently supports three types of VNFs: VNFs executed as Docker containers, VNFs executed inside KVM-based virtual machines, and VNFs based on the DPDK library (i.e., DPDK processes).
+The Universal Node currently supports four types of VNFs: VNFs executed as Docker containers, VNFs executed inside KVM-based virtual machines, VNFs based on the DPDK library (i.e., DPDK processes), and the native functions.
 In order to create your own VNF image, please check individual README's in each sub-package.
 
 ### Register the VNF in the name-resolver
@@ -17,13 +17,11 @@ This operation requires to edit the configuration file of the name-resolver and 
 In order to deploy your VNF on the UN, you must provide to the un-orchestration a NF-FG including such a VNF (to compile and then execute the un-orchestrator, please check the files [orchestrator/README_COMPILE.md](../orchestrator/README_COMPILE.md) and [orchestrator/README_RUN.md](../orchestrator/README_RUN.md)).
 
 The un-orchestrator supports two NF-FG versions:
-  * the initial JSON-based format defined in WP5;
-  * the new XML-based format defined in WP3 that includes both top-down
+  * the JSON-based format, which is supported natively (more information is available in       [orchestrator/README_NF-FG.md](../orchestrator/README_NF-FG.md) and in [orchestrator/README_RESTAPI.md](../orchestrator/README_RESTAPI.md));
+  * the  XML-based format defined in WP3 that includes both top-down
     communication (for the actual forwarding graph) and bottom-up primitives
-    (for resources and capabilities).
-
-The former format is supported natively and it is described in [orchestrator/README_RESTAPI.md](../orchestrator/README_RESTAPI.md), while the other requires setting up an additional library as described in [orchestrator/README_COMPILE.md](../orchestrator/README_COMPILE.md#nf-fg-library).
-
+    (for resources and capabilities). This version of the NF-FG requires the
+    usage of the [`virtualizer`](../virtualizer/README.md).
 
 ## An example
 
@@ -42,75 +40,112 @@ Then, register the new VNF in the name-resolver by adding the following piece of
 		<docker uri="dummy"/>
 	</network-function>
 
-At this point, prepare a NF-FG and pass it to the un-orchestator, which will take care of executing all the operations required to implement the graph. The graph shown in the picture above can be described in the JSON syntax defined in WP5 as follow:
-
+At this point, prepare a NF-FG and pass it to the un-orchestator, which will take care of executing all the operations required to implement the graph. The graph shown in the picture above can be described in the native JSON syntax as follow:
 
 	{
-		"flow-graph": {
+		"forwarding-graph": 
+		{
+			"id": "00000001",
+			"name": "Forwarding graph",
 			"VNFs": [
-			{
-				"id": "dummy"
-			}
+		  	{
+		    	"id": "00000001",
+		    	"name": "dummy",
+        		"ports": [
+          		{
+            		"id": "inout:0",
+            		"name": "data-port"
+          		},
+          		{
+            		"id": "inout:1",
+            		"name": "data-port"
+          		}
+        		]
+		  	}
 			],
-			"flow-rules": [
-			{
-				"id": "00000001",
-				"match":
-				{
-					"port": "eth0"
-				},
-					"action":
-				{
-					"VNF_id": "dummy:1"
-				}
-			},
-			{
-				"id": "00000002",
-				"match":
-				{
-					"VNF_id": "dummy:2"
-				},
-				"action":
-				{
-					"port": "eth1"
-				}
-			},
-			{
-				"id": "00000003",
-				"match":
-				{
-					"port": "eth1"
-				},
-				"action":
-				{
-					"VNF_id": "dummy:2"
-				}
-			},
-			{
-				"id": "00000004",
-				"match":
-				{
-					"VNF_id": "dummy:1"
-				},
-				"action":
-				{
-					"port": "eth0"
-				}
+			"end-points": [
+		  	{
+		    	"id": "00000001",
+		    	"name": "ingress",
+		    	"type": "interface",
+		    	"interface": {
+		      		"interface": "eth0"
+		    	}
+		  	},
+		  	{
+		    	"id": "00000002",
+		    	"name": "egress",
+		    	"type": "interface",
+		    	"interface": {
+		      		"interface": "eth1"
+		    	}
+		  	}
+			],
+			"big-switch": {
+		  		"flow-rules": [
+		    	{
+		      		"id": "000000001",
+		      		"priority": 100,
+		      		"match": {
+		        		"port_in": "endpoint:00000001"
+		      		},
+		      		"actions": [
+		        	{
+		        		"output_to_port": "vnf:00000001:inout:0"
+		        	}
+		      		]
+		    	},
+		    	{
+		      		"id": "000000002",
+		      		"priority": 100,
+		      		"match": {
+		        		"port_in": "vnf:00000001:inout:1"
+		      		},
+		      		"actions": [
+		        	{
+		          		"output_to_port": "endpoint:00000002"
+		        	}
+		      		]
+		    	},
+		    	{
+		      		"id": "000000003",
+		      		"priority": 100,
+		      		"match": {
+		        		"port_in": "endpoint:00000002"
+		      		},
+		      		"actions": [
+		        	{
+		        		"output_to_port": "vnf:00000001:inout:1"
+		        	}
+		      		]
+		    	},
+		    	{
+		      		"id": "000000004",
+		      		"priority": 100,
+		      		"match": {
+		        		"port_in": "vnf:00000001:inout:0"
+		      		},
+		      		"actions": [
+		        	{
+		          		"output_to_port": "endpoint:00000001"
+		        	}
+		      		]
+		    	}
+		  		]
 			}
-			]
-		}
+	  	}
 	}
 
 This json can be stored in a file (e.g., `nffg.json`) and provided to the un-orchestrator either through the command line at the boot of the un-orchestrator, or through its REST API. In the latter case, the command to be used is the following:
 
 	curl -i -H "Content-Type: application/json" -d "@nffg.json" \
-		-X PUT  http://un-orchestrator-address:port/graph/graphid
+		-X PUT  http://un-orchestrator-address:port/NF-FG/graphid
 
-where the `graphid` is an alphanumeric string that will uniquely identify your graph in the orchestrator.
+where the `graphid` is an alphanumeric string that will uniquely identify your graph in the un-orchestrator.
 
 At this point the un-orchestrator
-*	through the *network controller*: it creates a new LSI, inserts the proper Openflow rules in such an LSI in order to steer the traffic among the VNFs of the graph, and inserts the proper Openflow rules in the LSI-0 (which is the only LSI connected to the physical interfaces) in order to inject the proper traffic in the graph, and properly handle the network packets exiting from such a graph;
-*	through the *compute controller*: it starts the Docker image implementing the VNF with name *dummy* (the image associated with the name of the VNF is obtained through the name-resolver).
+*	creates a new LSI through the *network controller*, inserts the proper Openflow rules in such an LSI in order to steer the traffic among the VNFs of the graph, and inserts the proper Openflow rules in the LSI-0 (which is the only LSI connected to the physical interfaces) in order to inject the proper traffic in the graph, and properly handle the network packets exiting from such a graph;
+*	starts the Docker image implementing the VNF with name *dummy* (the image associated with the name of the VNF is obtained through the name-resolver) through the *compute controller*.
 
 The following picture shows how the NF-FG of the example is actually implemented on the UN; in particular, it depicts the connections among LSIs and the VNF, and the rules in the flow tables of the involved LSIs.
 

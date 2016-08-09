@@ -16,12 +16,15 @@ then
 fi
 
 file="$1_$2"
+PID=`docker inspect --format '{{ .State.Pid }}' $file`
 
 echo "[$0] Executing command: '"sudo docker kill `cat $file`"'"
 sudo docker kill `cat $file`
 
 echo "[$0] Executing command: '"sudo docker rm `cat $file`"'"
 sudo docker rm `cat $file`
+
+rm -f /var/run/netns/$PID
 
 #docker kill returns 0 in case of success
 retVal=`echo $?`
@@ -34,6 +37,6 @@ else
 	exit 0
 fi
 
-rm $file
+rm $file $file.log
 
 exit 1

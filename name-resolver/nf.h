@@ -25,28 +25,28 @@ private:
 	*	@brief: name of the NF
 	*/
 	string name;
-	
+
 	/**
 	*	@brief: number of ports of the NF
 	*/
 	int nports;
-	
+
 	/**
 	*	@brief: text describing the network function
 	*/
 	string summary;
-		
+
 	/**
 	*	@brief: list of possible implementations for the network function
 	*/
 	list<Implementation*> implementations;
-	
+
 public:
 	NF(string name, int nports, string description);
 	void addImplementation(Implementation *implementation);
-	
+
 	string getName();
-	
+
 	Object toJSON();
 };
 

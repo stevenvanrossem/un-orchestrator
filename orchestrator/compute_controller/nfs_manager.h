@@ -4,6 +4,7 @@
 #pragma once
 
 #include "startNF_in.h"
+#include "updateNF_in.h"
 #include "stopNF_in.h"
 #include "description.h"
 //#include "plugins/dpdk/dpdk_description.h"
@@ -42,19 +43,26 @@ public:
 	*	@param: cli	Description of the network function to be started
 	*/
 	virtual bool startNF(StartNFIn sni) = 0;
-	
+
+	/**
+	*	@brief:	Retrieve and update the network function
+	*
+	*	@param: cli	Description of the network function to be updated
+	*/
+	virtual bool updateNF(UpdateNFIn uni) = 0;
+
 	/**
 	*	@brief: stop the network function
 	*
 	*	@param: cli	Description of the network function to be stopped
 	*/
 	virtual bool stopNF(StopNFIn sni) = 0;
-		
+
 	/**
 	*	@brief: set the description of the network function to be handled by the manager
 	*/
 	void setDescription(Description *description);
-	
+
 	/**
 	*	@brief: set the description of the network function to be handled by the manager
 	*/
@@ -64,7 +72,7 @@ public:
 	*	@brief: provide the type of the network function handled by the manager
 	*/
 	nf_t getNFType();
-	
+
 	/**
 	*	@brief: returns the number of cores to be associated with the network function
 	*			handled by the manager. "" means that no core has to be bound to the

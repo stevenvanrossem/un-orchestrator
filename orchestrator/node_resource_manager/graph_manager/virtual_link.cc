@@ -8,7 +8,7 @@ VLink::VLink(uint64_t remote_dpid) :
 	ID = nextID;
 	nextID++;
 }
-	
+
 uint64_t VLink::getRemoteDpid()
 {
 	return remote_dpid;

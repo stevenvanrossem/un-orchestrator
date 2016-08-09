@@ -3,23 +3,23 @@
 namespace highlevel
 {
 
-ActionNetworkFunction::ActionNetworkFunction(string nf, unsigned int port) :
-	Action(ACTION_ON_NETWORK_FUNCTION), nf(nf), port(port)
+ActionNetworkFunction::ActionNetworkFunction(string nfId, string endpointPortName, unsigned int port) :
+	Action(ACTION_ON_NETWORK_FUNCTION), nfId(nfId), endpointPortName(endpointPortName), port(port)
 {
 
-}	
+}
 
 bool ActionNetworkFunction::operator==(const ActionNetworkFunction &other) const
 {
-	if((nf == other.nf) && (port == other.port))
+	if((nfId == other.nfId) && (port == other.port) && (endpointPortName == other.endpointPortName))
 		return true;
-		
+
 	return false;
 }
 
 string ActionNetworkFunction::getInfo()
 {
-	return nf;
+	return nfId;
 }
 
 unsigned int ActionNetworkFunction::getPort()
@@ -30,30 +30,18 @@ unsigned int ActionNetworkFunction::getPort()
 string ActionNetworkFunction::toString()
 {
 	stringstream ss;
-	ss << nf << ":" << port;
-	
-	return ss.str();
-}
+	ss << nfId << ":" << port;
 
-void ActionNetworkFunction::print()
-{
-	if(LOGGING_LEVEL <= ORCH_DEBUG_INFO)
-	{
-		cout << "\t\tAction:" << endl << "\t\t{" << endl;
-		cout << "\t\t\tNF port: " <<nf << ":" << port << endl;
-		for(list<GenericAction*>::iterator ga = genericActions.begin(); ga != genericActions.end(); ga++)
-			(*ga)->print();		
-		cout << "\t\t}" << endl;
-	}
+	return ss.str();
 }
 
 Object ActionNetworkFunction::toJSON()
 {
 	Object action;
 	stringstream network_function;
-	network_function << nf << ":" << port;
-	action[VNF_ID] = network_function.str().c_str();
-	
+	network_function << nfId << ":" << port;
+	action[OUTPUT] = endpointPortName.c_str();
+
 	for(list<GenericAction*>::iterator ga = genericActions.begin(); ga != genericActions.end(); ga++)
 		(*ga)->toJSON(action);
 

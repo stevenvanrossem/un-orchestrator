@@ -37,55 +37,55 @@ private:
 	*	@brief: keeps the addrinfo chain; required to open a new socket
 	*/
 	struct addrinfo *AddrInfo;
-	
-	
+
+
 	/**
 	*	@brief: set of ethernet interfaces available
 	*/
 	set<string> ethernetInterfaces;
-	
+
 	/**
 	*	@brief: set of wireless interfaces available
 	*/
 	set<string> wirelessInterfaces;
-	
+
 	/**
 	*	@brief: map of dpid, list of wireless interfaces commected
 	*/
 	map<uint16_t,list<string> > dpdiWirelessInterfaces;
-	
+
 	/**
 	*	@brief: Send a message to xDPd
 	*
 	*	@param: message	Message to be sent
 	*/
 	string sendMessage(string message);
-	
+
 	/**
 	*	@brief: the following methods are used to interact with xDPd
 	*/
-	
-	string prepareCreateLSIrequest(CreateLsiIn cli);
-	CreateLsiOut *parseCreateLSIresponse(CreateLsiIn cli, Object message);
-	
+
+	string prepareCreateLSIrequest(CreateLsiIn cli, map<string,unsigned int> &port_name_id_in_graph);
+	CreateLsiOut *parseCreateLSIresponse(CreateLsiIn cli, Object message, map<string,unsigned int> port_name_id_in_graph);
+
 	string prepareDestroyLSIrequest(uint64_t dpid);
 	void parseDestroyLSIresponse(Object message);
-	
+
 	string prepareCreateVirtualLinkRequest(AddVirtualLinkIn avli);
 	AddVirtualLinkOut *parseCreateVirtualLinkResponse(AddVirtualLinkIn avli, Object message);
-	
+
 	string prepareDestroyVirtualLinkRequest(DestroyVirtualLinkIn dvli);
 	void parseDestroyVirtualLinkResponse(Object message);
-	
+
 	string prepareCreateNFPortsRequest(AddNFportsIn anpi);
-	AddNFportsOut *parseCreateNFPortsResponse(AddNFportsIn anpi, Object message);
-	
+	AddNFportsOut *parseCreateNFPortsResponse(AddNFportsIn anpi, Object message, map<string, unsigned int> port_name_id_in_graph);
+
 	string prepareDestroyNFPortsRequest(DestroyNFportsIn dnpi);
 	void parseDestroyNFPortsResponse(Object message);
-	
+
 	bool findCommand(Object message, string expected);
 	bool findStatus(Object message);
-	
+
 	/**
 	*	@brief: attach the wireless interface of an lsi to a physical wireless port, by means of a Linux bridge.
 	*		The bridge is created by this function.
@@ -93,14 +93,14 @@ private:
 	*	@param: lsi	LSI with the port to manage
 	*/
 	bool attachWirelessPort(uint64_t dpid, string wirelessInterfaceName);
-	
+
 	/**
 	*	@brief: detach the wireless interface of an lsi from a physical wireless port, by destroyng the Linux bridge
 	*
 	*	@param: lsi	LSI with the port to manage
 	*/
 	void detachWirelessPort(uint64_t dpid, string wirelessInterfaceName);
-	
+
 	/**
 	*	@brief: check the command line provided to the xDPd module
 	*/
@@ -110,7 +110,7 @@ public:
 	XDPDManager();
 
 	~XDPDManager();
-	
+
 	CreateLsiOut *createLsi(CreateLsiIn cli);
 
 	AddNFportsOut *addNFPorts(AddNFportsIn anpi);

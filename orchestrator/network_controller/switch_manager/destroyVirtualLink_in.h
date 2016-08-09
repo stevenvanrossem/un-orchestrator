@@ -3,6 +3,7 @@
 
 #pragma once
 
+#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
 /**
@@ -24,18 +25,18 @@ private:
 	*	@brief: identifier of the first lsi connected through the virtual link
 	*/
 	uint64_t dpid_a;
-	
+
 	/**
 	*	@brief: identifier of the virtual link on the lsi A
 	*/
 	uint64_t idA;
 
-	
+
 	/**
 	*	@brief: identifier of the second lsi connected through the virtual link
 	*/
-	uint64_t dpid_b;	
-		
+	uint64_t dpid_b;
+
 	/**
 	*	@brief: identifier of the virtual link on the lsi B
 	*/
@@ -46,29 +47,29 @@ protected:
 		: dpid_a(dpid_a), idA(idA), dpid_b(dpid_b), idB(idB)
 	{
 	}
-	
+
 public:
-	
+
 	uint64_t getDpidA()
 	{
 		return dpid_a;
 	}
-	
+
 	uint64_t getIdA()
 	{
 		return idA;
 	}
-	
+
 	uint64_t getDpidB()
 	{
 		return dpid_b;
 	}
-	
+
 	uint64_t getIdB()
 	{
 		return idB;
 	}
-	
+
 };
 
 

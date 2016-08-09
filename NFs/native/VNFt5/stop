@@ -1,0 +1,61 @@
+#!/bin/bash
+
+#Author: Sergio Nuccio
+#Date: January 20th 2015
+#Brief: stop script for a VNF type 5 implemented with openvswitch
+
+
+#dependencies: openvswitch
+
+#command line: 
+#	sudo ./start $1 $2
+
+#$1 LSI ID								(e.g. 2)
+#$2 NF name								(e.g. OFbridge)
+
+if (( $EUID != 0 )) 
+then
+	echo "[$0] This script must be executed with ROOT privileges"
+	exit 1
+fi
+
+if [ $# -le 2 ]
+then
+	echo "[$0] This script needs at least 2 arguments"
+	echo -e "\nUsage:\n$0 <LSI_ID> <NF_name>\n"
+	exit 1
+fi
+
+
+#debug
+set -x
+
+temp_dir="$1_$1_$2_tmp_$2"
+
+#bridge name: <lsi_ID>_<NFname>_ofb
+br_name=$1_$2_ofb
+
+#db_name: <lsi_ID>_<NFname>.db
+db_name=$1_$2.db
+
+#kill ovsdb process
+pid1=`cat /var/run/openvswitch/$db_name.pid`
+pid2=`cat /var/run/openvswitch/vswitchd$db_name.pid`
+
+kill $pid1
+kill $pid2
+
+#remove ovs database
+rm $temp_dir/$db_name
+
+#remove log files
+rm $temp_dir/ovs-vswitchd_$db_name.log
+rm $temp_dir/ovsdb-server_$db_name.log
+
+#remove pid files (automatically performed)
+#rm /var/run/openvswitch/$db_name.pid
+#rm /var/run/openvswitch/vswitchd$db_name.pid
+
+echo "[$0] openflow_bridge stopped"
+
+exit 0

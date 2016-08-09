@@ -1,17 +1,16 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(node-orchestrator)
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
-        ADD_DEFINITIONS(-Wall -Werror -Wno-write-strings )
+        ADD_DEFINITIONS(-Wall -Werror -Wno-write-strings)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 IF(CMAKE_COMPILER_IS_GNUCC)
-        ADD_DEFINITIONS(-Wall -Werror -Wno-write-strings )
+        ADD_DEFINITIONS(-Wall -Werror -Wno-write-strings)
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
-
 # Rather complicated CMake code for setting the logging level
-SET(LOGGING_LEVEL "ORCH_WARNING" CACHE STRING "Orchestrator logging levels: ORCH_DEBUG, ORCH_DEBUG_INFO, ORCH_WARNING, ORCH_ERROR, ORCH_INFO")
+SET(LOGGING_LEVEL "ORCH_WARNING" CACHE STRING "Orchestrator logging levels: ORCH_DEBUG, ORCH_DEBUG_INFO (recommended), ORCH_WARNING, ORCH_ERROR, ORCH_INFO")
 SET(LOGGING_LEVEL_VALUES "ORCH_DEBUG" "ORCH_DEBUG_INFO" "ORCH_WARNING" "ORCH_ERROR" "ORCH_INFO")
 SET_PROPERTY(CACHE LOGGING_LEVEL PROPERTY STRINGS ${LOGGING_LEVEL_VALUES})
 LIST(FIND LOGGING_LEVEL_VALUES ${LOGGING_LEVEL} LOGGING_LEVEL_INDEX)
@@ -36,9 +35,19 @@ IF(${LOGGING_LEVEL_INDEX} EQUAL 4)
 ENDIF()
 # End of the rather complicated CMake code for setting the logging level
 
+OPTION(
+	DETAILED_LOGS
+	"Turn on to have a detailed logs"
+	OFF
+)
+
+IF(DETAILED_LOGS)
+	ADD_DEFINITIONS(-DDETAILED_LOGS)
+ENDIF(DETAILED_LOGS)
+
 # Rather complicated CMake code for selecting the virtual switch implementation
-SET(VSWITCH_IMPLEMENTATION "OVS-OVSDB" CACHE STRING "vSwitch implementation: XDPD, OVS-OFCONFIG, OVS-DPDK, OVS-OVSDB, ERFS")
-SET(VSWITCH_IMPLEMENTATION_VALUES "XDPD" "OVS-OFCONFIG" "OVS-DPDK" "OVS-OVSDB" "ERFS") #Add here other implementations
+SET(VSWITCH_IMPLEMENTATION "OVS-OVSDB" CACHE STRING "vSwitch implementation: XDPD, OVS-DPDK, OVS-OVSDB, ERFS")
+SET(VSWITCH_IMPLEMENTATION_VALUES "XDPD" "OVS-DPDK" "OVS-OVSDB" "ERFS") #Add here other implementations
 SET_PROPERTY(CACHE VSWITCH_IMPLEMENTATION PROPERTY STRINGS ${VSWITCH_IMPLEMENTATION_VALUES})
 LIST(FIND VSWITCH_IMPLEMENTATION_VALUES ${VSWITCH_IMPLEMENTATION} VSWITCH_IMPLEMENTATION_INDEX)
 
@@ -49,17 +58,57 @@ IF(${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 0)
 	ADD_DEFINITIONS(-DVSWITCH_IMPLEMENTATION_XDPD)
 ENDIF()
 IF(${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 1)
-	ADD_DEFINITIONS(-DVSWITCH_IMPLEMENTATION_OFCONFIG)
+	#OVS-DPDK uses the OVSDB plugin with some specific code needed by DPDK
+	ADD_DEFINITIONS(-DVSWITCH_IMPLEMENTATION_OVSDB)
+	ADD_DEFINITIONS(-DENABLE_OVSDB_DPDK)
 ENDIF()
 IF(${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 2)
-	ADD_DEFINITIONS(-DVSWITCH_IMPLEMENTATION_OVSDPDK)
-ENDIF()
-IF(${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 3)
 	ADD_DEFINITIONS(-DVSWITCH_IMPLEMENTATION_OVSDB)
 ENDIF()
-IF(${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 4)
+IF(${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 3)
         ADD_DEFINITIONS(-DVSWITCH_IMPLEMENTATION_ERFS)
 ENDIF()
+
+OPTION(
+	STARTVNF_SINGLE_THREAD
+	"Turn on to start the VNF sequentially"
+	OFF
+)
+
+IF(STARTVNF_SINGLE_THREAD)
+	ADD_DEFINITIONS(-DSTARTVNF_SINGLE_THREAD)
+ENDIF(STARTVNF_SINGLE_THREAD)
+
+OPTION(
+	ENABLE_UNIFY_PORTS_CONFIGURATION
+	"Turn on to enable the possibility to configure VNFs ports (used in the Unify project)"
+	OFF
+)
+
+IF(ENABLE_UNIFY_PORTS_CONFIGURATION)
+	ADD_DEFINITIONS(-DENABLE_UNIFY_PORTS_CONFIGURATION)
+ENDIF(ENABLE_UNIFY_PORTS_CONFIGURATION)
+
+OPTION(
+	ENABLE_DOUBLE_DECKER_CONNECTION
+	"Turn on to connect the orchestrator to the Double Decker network (message bus)"
+	OFF
+)
+
+IF(ENABLE_DOUBLE_DECKER_CONNECTION)
+	ADD_DEFINITIONS(-DENABLE_DOUBLE_DECKER_CONNECTION)
+ENDIF(ENABLE_DOUBLE_DECKER_CONNECTION)
+
+OPTION(
+	ENABLE_RESOURCE_MANAGER
+	"Turn on to activate the 'resource manager')"
+	OFF
+)
+
+IF(ENABLE_RESOURCE_MANAGER)
+	ADD_DEFINITIONS(-DENABLE_RESOURCE_MANAGER)
+ENDIF(ENABLE_RESOURCE_MANAGER)
+
 
 OPTION(
 	ENABLE_KVM
@@ -76,14 +125,6 @@ OPTION(
 	OFF
 )
 
-OPTION(
-	ENABLE_OVSDB_DPDK
-	"Turn on to support OVS with DPDK netdev using the OVS-OVSDB netwrok controller plugin"
-	OFF
-)
-IF(ENABLE_OVSDB_DPDK)
-	ADD_DEFINITIONS(-DENABLE_OVSDB_DPDK)
-ENDIF(ENABLE_OVSDB_DPDK)
 #################################################################################################################
 
 OPTION(
@@ -133,15 +174,6 @@ IF(DEBUG_KVM)
 ENDIF(DEBUG_KVM)
 
 OPTION(
-	POLITO_MESSAGE
-	"Turn on to support a slightly different JSON message describing the graph"
-	OFF
-)
-IF(POLITO_MESSAGE)
-	ADD_DEFINITIONS(-DPOLITO_MESSAGE)
-ENDIF(POLITO_MESSAGE)
-
-OPTION(
 	LOG_1024X768
 	"Turn on to print the log for a monitor of 1024 X 768"
 	OFF
@@ -161,15 +193,6 @@ ENDIF(DEBUG_OPENFLOW)
 
 
 OPTION(
-	VIRTUALIZER_NFFG
-	"Turn on to support the virtualizer NF-FG model defined in WP3"
-	OFF
-)
-IF(VIRTUALIZER_NFFG)
-	ADD_DEFINITIONS(-DUNIFY_NFFG)
-ENDIF(VIRTUALIZER_NFFG)
-
-OPTION(
 	LOG_ON_FILE
 	"Turn on to print log messages on the file 'node-orchestrator.log'. If disabled, stdout is used for the log."
 	OFF
@@ -178,13 +201,26 @@ IF(LOG_ON_FILE)
 	ADD_DEFINITIONS(-DLOG_ON_FILE)
 ENDIF(LOG_ON_FILE)
 
+OPTION(
+	IVSHMEM_RING_ALIAS
+	"Use IVSHMEM Ring Aliases to expose localized ring names to VMs (requires DPDK patch)"
+	OFF
+)
+IF(IVSHMEM_RING_ALIAS)
+	ADD_DEFINITIONS(-DIVSHMEM_RING_ALIAS)
+ENDIF(IVSHMEM_RING_ALIAS)
+
 
 MARK_AS_ADVANCED(
-	DEBUG_KVM DEBUG_OPENFLOW POLITO_MESSAGE LOG_1024X768 RUN_NFS
+	DEBUG_KVM DEBUG_OPENFLOW LOG_1024X768 RUN_NFS STARTVNF_SINGLE_THREAD IVSHMEM_RING_ALIAS
 )
 
+# relax warning-level (unfortunately):
+# some json-spirit header files have unused typedefs
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
+
 # Set source files
-SET(SOURCES
+SET(SOURCES1
 	node_orchestrator.cc
 
 	node_resource_manager/graph_manager/graph_manager.h
@@ -198,15 +234,20 @@ SET(SOURCES
 	node_resource_manager/graph_manager/lsi.cc
 	node_resource_manager/graph_manager/virtual_link.h
 	node_resource_manager/graph_manager/virtual_link.cc
-	node_resource_manager/graph_manager/fileParser.h
-	node_resource_manager/graph_manager/fileParser.cc
 
 	node_resource_manager/graph/match.h
 	node_resource_manager/graph/match.cc
-	node_resource_manager/graph/generic_action.h
-	node_resource_manager/graph/generic_action.cc
-	node_resource_manager/graph/vlan_action.h
-	node_resource_manager/graph/vlan_action.cc
+	node_resource_manager/graph/generic_actions/generic_action.h
+	node_resource_manager/graph/generic_actions/generic_action.cc
+	node_resource_manager/graph/generic_actions/vlan_action.h
+	node_resource_manager/graph/generic_actions/vlan_action.cc
+
+	node_resource_manager/graph/graph-parser/graph_parser.h
+	node_resource_manager/graph/graph-parser/graph_parser.cc
+	node_resource_manager/graph/graph-parser/match_parser.h
+	node_resource_manager/graph/graph-parser/match_parser.cc
+	node_resource_manager/graph/graph-parser/address_validator.h
+	node_resource_manager/graph/graph-parser/address_validator.cc
 
 	node_resource_manager/graph/low_level_graph/output_action.h
 	node_resource_manager/graph/low_level_graph/output_action.cc
@@ -223,10 +264,22 @@ SET(SOURCES
 	node_resource_manager/graph/high_level_graph/high_level_output_action_nf.cc
 	node_resource_manager/graph/high_level_graph/high_level_output_action_port.h
 	node_resource_manager/graph/high_level_graph/high_level_output_action_port.cc
-	node_resource_manager/graph/high_level_graph/high_level_output_action_endpoint.h
-	node_resource_manager/graph/high_level_graph/high_level_output_action_endpoint.cc
+	node_resource_manager/graph/high_level_graph/high_level_output_action_endpoint_gre.h
+	node_resource_manager/graph/high_level_graph/high_level_output_action_endpoint_gre.cc
+	node_resource_manager/graph/high_level_graph/high_level_output_action_endpoint_internal.h
+	node_resource_manager/graph/high_level_graph/high_level_output_action_endpoint_internal.cc
 	node_resource_manager/graph/high_level_graph/high_level_rule.h
 	node_resource_manager/graph/high_level_graph/high_level_rule.cc
+	node_resource_manager/graph/high_level_graph/high_level_graph_endpoint_interface.cc
+	node_resource_manager/graph/high_level_graph/high_level_graph_endpoint_interface.h
+	node_resource_manager/graph/high_level_graph/high_level_graph_endpoint_gre.cc
+	node_resource_manager/graph/high_level_graph/high_level_graph_endpoint_gre.h
+	node_resource_manager/graph/high_level_graph/high_level_graph_endpoint_internal.cc
+	node_resource_manager/graph/high_level_graph/high_level_graph_endpoint_internal.h
+	node_resource_manager/graph/high_level_graph/high_level_graph_endpoint_vlan.cc
+	node_resource_manager/graph/high_level_graph/high_level_graph_endpoint_vlan.h
+	node_resource_manager/graph/high_level_graph/high_level_graph_vnf.cc
+	node_resource_manager/graph/high_level_graph/high_level_graph_vnf.h
 	node_resource_manager/graph/high_level_graph/high_level_graph.h
 	node_resource_manager/graph/high_level_graph/high_level_graph.cc
 	node_resource_manager/graph/high_level_graph/high_level_match.h
@@ -259,8 +312,13 @@ SET(SOURCES
 
 	node_resource_manager/rest_server/rest_server.h
 	node_resource_manager/rest_server/rest_server.cc
-	node_resource_manager/rest_server/match_parser.h
-	node_resource_manager/rest_server/match_parser.cc
+
+	node_resource_manager/database_manager/SQLite/SQLiteManager.h
+	node_resource_manager/database_manager/SQLite/SQLiteManager.cc
+	node_resource_manager/database_manager/SQLite/SQLiteManager_constants.h
+
+	node_resource_manager/security_manager/security_manager.cc
+	node_resource_manager/security_manager/security_manager.h
 
 	utils/logger.h
 	utils/logger.c
@@ -271,52 +329,32 @@ SET(SOURCES
 
 IF(VSWITCH_IMPLEMENTATION_INDEX EQUAL 0)
     SET(SOURCES2
-    ${SOURCES}
+    ${SOURCES1}
 	network_controller/switch_manager/plugins/xdpd/xdpd_manager.h
 	network_controller/switch_manager/plugins/xdpd/xdpd_manager.cc
 	network_controller/switch_manager/plugins/xdpd/xdpd_constants.h
     )
 ENDIF(VSWITCH_IMPLEMENTATION_INDEX EQUAL 0)
 
-IF(VSWITCH_IMPLEMENTATION_INDEX EQUAL 1)
+IF((VSWITCH_IMPLEMENTATION_INDEX EQUAL 1) OR (VSWITCH_IMPLEMENTATION_INDEX EQUAL 2))
     SET(SOURCES2
-    ${SOURCES}
-	network_controller/switch_manager/plugins/ovs-ofconfig/commands.h
-	network_controller/switch_manager/plugins/ovs-ofconfig/commands.cc
-	network_controller/switch_manager/plugins/ovs-ofconfig/ofconfig_constants.h
-	network_controller/switch_manager/plugins/ovs-ofconfig/ofconfig_manager.h
-	network_controller/switch_manager/plugins/ovs-ofconfig/ofconfig_manager.cc
-    )
-ENDIF(VSWITCH_IMPLEMENTATION_INDEX EQUAL 1)
-
-IF(VSWITCH_IMPLEMENTATION_INDEX EQUAL 2)
-    SET(SOURCES2
-    ${SOURCES}
-	network_controller/switch_manager/plugins/ovs-dpdk/ovsdpdk_manager.h
-	network_controller/switch_manager/plugins/ovs-dpdk/ovsdpdk_manager.cc
-	network_controller/switch_manager/plugins/ovs-dpdk/ovsdpdk_constants.h
-    )
-ENDIF(VSWITCH_IMPLEMENTATION_INDEX EQUAL 2)
-
-IF(VSWITCH_IMPLEMENTATION_INDEX EQUAL 3)
-    SET(SOURCES2
-    ${SOURCES}
+    ${SOURCES1}
 	network_controller/switch_manager/plugins/ovs-ovsdb/commands.h
 	network_controller/switch_manager/plugins/ovs-ovsdb/commands.cc
 	network_controller/switch_manager/plugins/ovs-ovsdb/ovsdb_constants.h
 	network_controller/switch_manager/plugins/ovs-ovsdb/ovsdb_manager.h
     network_controller/switch_manager/plugins/ovs-ovsdb/ovsdb_manager.cc
     )
-ENDIF(VSWITCH_IMPLEMENTATION_INDEX EQUAL 3)
+ENDIF((VSWITCH_IMPLEMENTATION_INDEX EQUAL 1) OR (VSWITCH_IMPLEMENTATION_INDEX EQUAL 2))
 
-IF(VSWITCH_IMPLEMENTATION_INDEX EQUAL 4)
+IF(VSWITCH_IMPLEMENTATION_INDEX EQUAL 3)
     SET(SOURCES2
-    ${SOURCES}
+    ${SOURCES1}
 	network_controller/switch_manager/plugins/erfs/manager.h
 	network_controller/switch_manager/plugins/erfs/manager.cc
 	network_controller/switch_manager/plugins/erfs/constants.h
     )
-ENDIF(VSWITCH_IMPLEMENTATION_INDEX EQUAL 4)
+ENDIF(VSWITCH_IMPLEMENTATION_INDEX EQUAL 3)
 
 IF(ENABLE_KVM)
     SET(SOURCES3
@@ -345,22 +383,9 @@ ELSE()
     	)
 ENDIF(ENABLE_DOCKER)
 
-
-IF(VIRTUALIZER_NFFG)
-	SET(SOURCES5
-    ${SOURCES4}
-    node_resource_manager/virtualizer/virtualizer.cc
-    node_resource_manager/virtualizer/virtualizer.h
-	)
-ELSE()
-	SET(SOURCES5
-    	${SOURCES4}
-	)
-ENDIF(VIRTUALIZER_NFFG)
-
 IF(ENABLE_DPDK_PROCESSES)
-    SET(SOURCES6
-    ${SOURCES5}
+    SET(SOURCES5
+    ${SOURCES4}
 	compute_controller/plugins/dpdk/dpdk.h
 	compute_controller/plugins/dpdk/dpdk.cc
 	compute_controller/plugins/dpdk/dpdk_constants.h
@@ -368,14 +393,14 @@ IF(ENABLE_DPDK_PROCESSES)
 	compute_controller/plugins/dpdk/dpdk_description.h
 	)
 ELSE()
-     SET(SOURCES6
-         ${SOURCES5}
+     SET(SOURCES5
+         ${SOURCES4}
     	)
 ENDIF(ENABLE_DPDK_PROCESSES)
 
 IF(ENABLE_NATIVE)
-    SET(SOURCES7
-    ${SOURCES6}
+    SET(SOURCES6
+    ${SOURCES5}
 	compute_controller/plugins/native/native.cc
 	compute_controller/plugins/native/native.h
 	compute_controller/plugins/native/native_constants.h
@@ -385,55 +410,83 @@ IF(ENABLE_NATIVE)
 	compute_controller/plugins/native/native_description.cc
 	)
 ELSE()
-     SET(SOURCES7
-         ${SOURCES6}
+     SET(SOURCES6
+         ${SOURCES5}
     	)
 ENDIF(ENABLE_NATIVE)
 
+IF(ENABLE_DOUBLE_DECKER_CONNECTION)
+	SET(SOURCES7
+    ${SOURCES6}
+    node_resource_manager/pub_sub/pub_sub_constants.h
+    node_resource_manager/pub_sub/pub_sub.h
+    node_resource_manager/pub_sub/pub_sub.cc
+    )
+ELSE()
+	SET(SOURCES7
+    	${SOURCES6}
+    )
+ENDIF(ENABLE_DOUBLE_DECKER_CONNECTION)
+
+IF(ENABLE_RESOURCE_MANAGER)
+	SET(SOURCES8
+    ${SOURCES7}
+    node_resource_manager/resource_manager/resource_manager.h
+    node_resource_manager/resource_manager/resource_manager.cc
+    )
+ELSE()
+	SET(SOURCES8
+		${SOURCES7}
+    )
+ENDIF(ENABLE_RESOURCE_MANAGER)
 
 INCLUDE_DIRECTORIES (
+	${CMAKE_BINARY_DIR}/externals/include/
 	/usr/include/boost
 	/usr/include/libxml2
 )
 
-#Include specific for the virtualizer NF-FG model defined in WP3
-IF(VIRTUALIZER_NFFG)
-	find_package(PythonLibs REQUIRED)
-	INCLUDE_DIRECTORIES (
-		${PYTHON_INCLUDE_DIRS}
+
+SET(CMAKE_SKIP_RPATH TRUE)
+LINK_DIRECTORIES(
+	${CMAKE_BINARY_DIR}/externals/lib/
 	)
-ENDIF(VIRTUALIZER_NFFG)
 
 # Create the executable
 ADD_EXECUTABLE(
 	node-orchestrator
-	${SOURCES7}
+	${SOURCES8}
 )
 
-LINK_DIRECTORIES(
-	/usr/lib/
-	/usr/local/lib/
-	/usr/x86_64-linux-gnu/
-	/usr/lib/x86_64-linux-gnu/
-	/usr/lib/python2.7/config-x86_64-linux-gnu/
-)
+IF(BUILD_ExternalProjects)
+	ADD_DEPENDENCIES(node-orchestrator JSON_Spirit)
+	ADD_DEPENDENCIES(node-orchestrator ROFL_Common)
+	IF(ENABLE_KVM)
+		ADD_DEPENDENCIES(node-orchestrator Libvirt)
+	ENDIF(ENABLE_KVM)
+ENDIF(BUILD_ExternalProjects)
+
+ADD_DEPENDENCIES(node-orchestrator Inih)
 
 TARGET_LINK_LIBRARIES( node-orchestrator
-	libpthread.so
-	/usr/local/lib/librofl_common.so
-	libjson_spirit.so
-	libmicrohttpd.so
-	libboost_system.so
-	libxml2.so
-	-lrt
+	pthread
+	rofl_common
+	json_spirit
+	inih
+	microhttpd
+	boost_system
+	xml2
+	sqlite3
+	crypto
+	rt
 )
 
-#Links specific for ovs
-IF(VSWITCH_IMPLEMENTATION_INDEX EQUAL 1)
+IF(ENABLE_DOUBLE_DECKER_CONNECTION)
 	TARGET_LINK_LIBRARIES( node-orchestrator
-		libnetconf.so
+		libdd.so
+		libczmq.so
 	)
-ENDIF(VSWITCH_IMPLEMENTATION_INDEX EQUAL 1)
+ENDIF(ENABLE_DOUBLE_DECKER_CONNECTION)
 
 #Links specific for KVM
 IF(ENABLE_KVM)
@@ -442,15 +495,10 @@ IF(ENABLE_KVM)
 	)
 ENDIF(ENABLE_KVM)
 
-#Links specific for the virtualizer NF-FG model defined in WP3
-IF(VIRTUALIZER_NFFG)
-    TARGET_LINK_LIBRARIES( node-orchestrator
-		libpython2.7.so
-		${PYTHON_LIBRARIES}
-	)
-ENDIF(VIRTUALIZER_NFFG)
+###############################################################################
 
-# Add configuration rules to compile command line generator
+#Add configuration rules to compile command line generator
+
 IF(ENABLE-DPDK-CMDLINE-GENERATOR)
 
 	IF(NOT DEFINED ENV{RTE_SDK})
@@ -463,29 +511,91 @@ IF(ENABLE-DPDK-CMDLINE-GENERATOR)
 
 	ADD_DEPENDENCIES(node-orchestrator cmd_line_generator)
 
+	IF (IVSHMEM_RING_ALIAS)
+		SET(CMDLINEGEN_MAKE_PREARGS EXTRA_CFLAGS="-DIVSHMEM_RING_ALIAS")
+	ENDIF(IVSHMEM_RING_ALIAS)
+	  
 	ADD_CUSTOM_TARGET(
 		cmd_line_generator
-		COMMAND make
+		COMMAND ${CMDLINEGEN_MAKE_PREARGS} make
 		WORKING_DIRECTORY compute_controller/plugins/kvm-libvirt/cmdline_generator/
 		)
+
 ENDIF(ENABLE-DPDK-CMDLINE-GENERATOR)
 
 ###############################################################################
 
 #Check unsupported configurations
 
-IF(ENABLE_DPDK_PROCESSES AND ( (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 1) OR (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 3) ) )
-	#This configuration (ovs (ofconfig/ovsdb) + dpdk processes) is not supported
-	message(FATAL_ERROR "OvS not supported with Dpdk processes")
-ENDIF(ENABLE_DPDK_PROCESSES AND ( (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 1) OR (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 3) ) )
+IF(ENABLE_RESOURCE_MANAGER AND (NOT ENABLE_DOUBLE_DECKER_CONNECTION))
+	#The resource manager requires the DD connection
+	message(FATAL_ERROR "Resource manager requires to enable the double decker connection")
+ENDIF(ENABLE_RESOURCE_MANAGER AND (NOT ENABLE_DOUBLE_DECKER_CONNECTION))
 
-IF(ENABLE-DPDK-CMDLINE-GENERATOR AND (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 1) )
-	#This configuration (ovs-ofconfig + kvm-ivshmem) is not supported
-	message(FATAL_ERROR "OVS-OFCONFIG not supported with KVM-IVSHMEM")
-ENDIF(ENABLE-DPDK-CMDLINE-GENERATOR AND (${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 1) )
+IF(ENABLE_DPDK_PROCESSES AND ( ${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 2) )
+	#This configuration (ovsdb + dpdk processes) is not supported
+	message(FATAL_ERROR "OvS not supported with Dpdk processes")
+ENDIF(ENABLE_DPDK_PROCESSES AND ( ${VSWITCH_IMPLEMENTATION_INDEX} EQUAL 2) )
 
 IF( (NOT ENABLE_DOCKER) AND (NOT ENABLE_NATIVE) AND (NOT ENABLE_DPDK_PROCESSES) AND (NOT ENABLE_KVM) )
 	#No execution environment is selected
 	message(FATAL_ERROR "At least one execution environmnet must be enabled")
 ENDIF( (NOT ENABLE_DOCKER) AND (NOT ENABLE_NATIVE) AND (NOT ENABLE_DPDK_PROCESSES) AND (NOT ENABLE_KVM) )
+
+###############################################################################
+
+# Build external projects
+
+include (ExternalProject)
+IF(BUILD_ExternalProjects)
+
+	# rofl-common: extract, build, install (locally in build-dir):
+	ExternalProject_Add(
+		ROFL_Common
+		URL ${CMAKE_SOURCE_DIR}/contrib/rofl-common.zip
+		URL_MD5 5127f286f96010ec9e85dcf4c712599d
+		BUILD_IN_SOURCE 1
+		CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=${CMAKE_BINARY_DIR}/externals
+	)
+
+	IF(ENABLE_KVM)
+		# libvirt - specific revision
+		ExternalProject_Add( Libvirt
+
+			## this refers to the specific revision from README_COMPILE.md
+			# GIT_REPOSITORY git://libvirt.org/libvirt.git
+			# GIT_TAG f57842ecfda1ece8c59718e62464e17f75a27062
+
+			# try a regular release instead:
+			URL http://libvirt.org/sources/libvirt-1.2.17.tar.gz
+			URL_MD5 a1f49050223be3cbd7678c32b1ee2756
+
+			BUILD_IN_SOURCE 1
+			CONFIGURE_COMMAND ./autogen.sh --prefix=${CMAKE_BINARY_DIR}/externals
+			UPDATE_COMMAND ""
+			ALWAYS 0
+		)
+	ENDIF(ENABLE_KVM)
+
+ENDIF(BUILD_ExternalProjects)
+
+# inih - https://github.com/benhoyt/inih
+ExternalProject_Add(
+	Inih
+	# GIT_REPOSITORY https://github.com/benhoyt/inih
+	# GIT_TAG r35
+	# URL https://github.com/benhoyt/inih/archive/r35.zip
+	URL ${CMAKE_SOURCE_DIR}/contrib/inih-r35.zip
+	URL_MD5 e131365d1ca20cfa687e3d9284e59d39
+	BUILD_IN_SOURCE 1
+	PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/contrib/inih.patch
+	CONFIGURE_COMMAND ""
+	BUILD_COMMAND cd extra && make -f Makefile.static
+	INSTALL_COMMAND
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/externals/lib/
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/externals/include/
+	COMMAND ${CMAKE_COMMAND} -E copy extra/libinih.a ${CMAKE_BINARY_DIR}/externals/lib/
+	COMMAND ${CMAKE_COMMAND} -E copy ini.h ${CMAKE_BINARY_DIR}/externals/include/
+	COMMAND ${CMAKE_COMMAND} -E copy cpp/INIReader.h ${CMAKE_BINARY_DIR}/externals/include/
+)
 

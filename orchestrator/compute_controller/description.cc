@@ -27,13 +27,13 @@ Description::Description(string type, string uri, std::map<unsigned int, PortTyp
 		this->type = DOCKER;
 		return;
 	}
-#endif	
+#endif
 #ifdef ENABLE_KVM
 	else if(type == "kvm")
 	{
 		this->type = KVM;
 		return;
-	} 
+	}
 #endif
 #ifdef ENABLE_NATIVE
 	else if(type == "native")
@@ -41,7 +41,7 @@ Description::Description(string type, string uri, std::map<unsigned int, PortTyp
 		this->type = NATIVE;
 		return;
 	}
-#endif	
+#endif
 
 	//[+] Add here other implementations for the execution environment
 

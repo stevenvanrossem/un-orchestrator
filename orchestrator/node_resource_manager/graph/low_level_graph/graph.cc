@@ -1,35 +1,37 @@
 #include "graph.h"
 
+static const char LOG_MODULE_NAME[] = "Low-Level-Graph";
+
 namespace lowlevel
-{	
+{
 
 void Graph::addRules(list<Rule> rules)
 {
 	for(list<Rule>::iterator r = rules.begin(); r != rules.end(); r++)
 		addRule(*r);
 }
-	
+
 void Graph::addRule(Rule rule)
 {
-	logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Looking for rule: %s",rule.getID().c_str());
+	ULOG_DBG("Looking for rule: %s",rule.getID().c_str());
 
 	rules.push_back(rule);
 
-	logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "The graph contains the following rules: ");	
+	ULOG_DBG("The graph contains the following rules: ");
 	for(list<Rule>::iterator it = rules.begin(); it != rules.end(); it++)
 	{
-		logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\t%s",it->getID().c_str());
+		ULOG_DBG("\t%s",it->getID().c_str());
 	}
 }
 
 Rule Graph::getRule(string ID)
 {
-	logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Looking for rule: %s",ID.c_str());
-	logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "The graph contains the following rules: ");
+	ULOG_DBG("Looking for rule: %s",ID.c_str());
+	ULOG_DBG("The graph contains the following rules: ");
 	list<Rule>::iterator it  = rules.begin();
 	for(; it != rules.end(); it++)
 	{
-		logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\t%s",it->getID().c_str());
+		ULOG_DBG("\t%s",it->getID().c_str());
 	}
 
 	for(list<Rule>::iterator it = rules.begin(); it != rules.end(); it++)
@@ -37,7 +39,7 @@ Rule Graph::getRule(string ID)
 		if(it->getID() == ID)
 			return *it;
 	}
-	
+
 	//The rule searched does not exist in this graph
 	throw new GraphException();
 }
@@ -50,11 +52,11 @@ void Graph::removeRules(list<Rule> rules)
 
 void Graph::removeRule(Rule rule)
 {
-	logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Removing rule: %s",rule.getID().c_str());
-	logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "The graph contains the following rules: ");	
+	ULOG_DBG("Removing rule: %s",rule.getID().c_str());
+	ULOG_DBG("The graph contains the following rules: ");
 	for(list<Rule>::iterator it = rules.begin(); it != rules.end(); it++)
 	{
-		logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\t%s",it->getID().c_str());
+		ULOG_DBG("\t%s",it->getID().c_str());
 	}
 
 	for(list<Rule>::iterator it = rules.begin(); it != rules.end(); it++)
@@ -71,13 +73,13 @@ void Graph::removeRule(Rule rule)
 
 bool Graph::removeRuleFromID(string ID)
 {
-	logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Removing rule: %s",ID.c_str());
-	logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "The graph contains the following rules: ");	
+	ULOG_DBG("Removing rule: %s",ID.c_str());
+	ULOG_DBG("The graph contains the following rules: ");
 	for(list<Rule>::iterator it = rules.begin(); it != rules.end(); it++)
 	{
-		logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\t%s",it->getID().c_str());
+		ULOG_DBG("\t%s",it->getID().c_str());
 	}
-	
+
 	bool retVal = false;
 	for(list<Rule>::iterator it = rules.begin(); it != rules.end(); it++)
 	{
@@ -97,11 +99,11 @@ bool Graph::removeRuleFromID(string ID)
 					}
 				}
 			}
-			rules.erase(it);			
+			rules.erase(it);
 			break;
 		}
 	}
-	
+
 	return retVal;
 }
 

@@ -16,12 +16,13 @@ using namespace std;
 class Dpdk : public NFsManager
 {
 public:
-	
+
 	bool isSupported(Description&);
 
-	
+
 	bool startNF(StartNFIn sni);
 	bool stopNF(StopNFIn sni);
+	bool updateNF(UpdateNFIn uni);
 
 	string getCores();
 };

@@ -16,17 +16,20 @@ class Docker : public NFsManager
 {
 private:
 
+#if 0
 	/**
 	*	@brief: starting from a netmask, returns the /
 	*
 	*	@param:	netmask	Netmask to be converted
 	*/
 	unsigned int convertNetmask(string netmask);
+#endif
 
 public:
 	bool isSupported(Description&);
-	
+
 	bool startNF(StartNFIn sni);
+	bool updateNF(UpdateNFIn uni);
 	bool stopNF(StopNFIn sni);
 };
 

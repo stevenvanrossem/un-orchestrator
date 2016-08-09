@@ -4,7 +4,7 @@ namespace highlevel
 {
 
 Match::Match() :
-	graph::Match(),input(NULL), nf_port(0), type(MATCH_GENERIC)
+	graph::Match(), nf_port(0), type(MATCH_GENERIC)
 {
 
 }
@@ -13,11 +13,11 @@ bool Match::setInputPort(string input_port)
 {
 	if(type != MATCH_GENERIC)
 		return false;
-		
+
 	input = (char*)malloc(sizeof(char)*(input_port.length()+1));
 	strcpy(input,input_port.c_str());
 	type = MATCH_PORT;
-	
+
 	return true;
 }
 
@@ -30,20 +30,52 @@ bool Match::setNFport(string network_function, int port)
 	strcpy(input,network_function.c_str());
 	this->nf_port = port;
 	type = MATCH_NF;
-	
+
 	return true;
 }
 
-bool Match::setEndPoint(string graphID, unsigned int endpoint)
+bool Match::setEndPointInternal(/*string graphID, unsigned int endpoint*/string group)
 {
 	if(type != MATCH_GENERIC)
 		return false;
 
-	input = (char*)malloc(sizeof(char)*(graphID.length()+1));
-	strcpy(input,graphID.c_str());
-	this->endpoint = endpoint;
-	type = MATCH_ENDPOINT;
-	
+	/*input = (char*)malloc(sizeof(char)*(graphID.length()+1));
+	strcpy(input,graphID.c_str());*/
+	//this->endpoint = endpoint;
+
+	sscanf(group.c_str(), "%u", &this->endpointInternalGroup);
+	type = MATCH_ENDPOINT_INTERNAL;
+
+	return true;
+}
+
+bool Match::setEndPointGre(string endpointGreID)
+{
+	if(type != MATCH_GENERIC)
+		return false;
+
+	this->endpointGreID = endpointGreID;
+	type = MATCH_ENDPOINT_GRE;
+
+	return true;
+}
+
+bool Match::setInputEndpoint(string input_endpoint)
+{
+	this->input_endpoint = (char*)malloc(sizeof(char)*(input_endpoint.length()+1));
+	strcpy(this->input_endpoint,input_endpoint.c_str());
+
+	input = (char*)malloc(sizeof(char)*(input_endpoint.length()+1));
+	strcpy(input,input_endpoint.c_str());
+
+	return true;
+}
+
+bool Match::setNFEndpointPort(string nf_endpoint_port)
+{
+	this->nf_endpoint_port = (char*)malloc(sizeof(char)*(nf_endpoint_port.length()+1));
+	strcpy(this->nf_endpoint_port,nf_endpoint_port.c_str());
+
 	return true;
 }
 
@@ -61,9 +93,16 @@ bool Match::matchOnNF()
 	return false;
 }
 
-bool Match::matchOnEndPoint()
+bool Match::matchOnEndPointInternal()
 {
-	if(type == MATCH_ENDPOINT)
+	if(type == MATCH_ENDPOINT_INTERNAL)
+		return true;
+	return false;
+}
+
+bool Match::matchOnEndPointGre()
+{
+	if(type == MATCH_ENDPOINT_GRE)
 		return true;
 	return false;
 }
@@ -88,63 +127,74 @@ int Match::getPortOfNF()
 
 string Match::getGraphID()
 {
-	assert(type == MATCH_ENDPOINT);
+	assert(type == MATCH_ENDPOINT_INTERNAL);
 	return input;
 }
 
-unsigned int Match::getEndPoint()
+string Match::getEndPointGre()
 {
-	assert(type == MATCH_ENDPOINT);
-		
-	return endpoint;
+	assert(type == MATCH_ENDPOINT_GRE);
+
+	return endpointGreID;
 }
 
-void Match::print()
+unsigned int Match::getEndPointInternal()
 {
-	if(LOGGING_LEVEL <= ORCH_DEBUG_INFO)
+	assert(type == MATCH_ENDPOINT_INTERNAL);
+
+	return endpointInternalGroup;
+}
+
+char *Match::getInputEndpoint()
+{
+	assert(type == MATCH_ENDPOINT_GRE);
+
+	//Check the name of port
+	char delimiter[] = ":";
+	char * pnt;
+
+	string str;
+
+	char tmp[BUFFER_SIZE];
+	strcpy(tmp,(char *)input_endpoint);
+	pnt=strtok(tmp, delimiter);
+	int i = 0;
+
+	while( pnt!= NULL )
 	{
-		cout << "\t\tmatch:" << endl << "\t\t{" << endl;
-	
-		if(type == MATCH_NF)
+		switch(i)
 		{
-			cout << "\t\t\tNF port: "<< input << ":" << nf_port << endl;
+			case 1:
+				str = string(pnt);
 		}
-		else if(type == MATCH_PORT)
-			cout << "\t\t\tport: " << input << endl;
-		else
-		{
-			assert(type == MATCH_ENDPOINT);
-			cout << "\t\t\tendpoint: " << input << ":" << endpoint << endl;
-		}
-		
-		graph::Match::print();
-	
-		cout << "\t\t}" << endl;
+
+		pnt = strtok( NULL, delimiter );
+		i++;
 	}
+
+	return (char *)str.c_str();
+}
+
+bool Match::checkVlanPresence()
+{
+	return isVlanID || isAnyVlan || isVlanPCP;
 }
 
 Object Match::toJSON()
 {
-	Object match;	
-	
-	if(type == MATCH_PORT)
-		match[PORT]  = input;
+	Object match;
+
+	if(type == MATCH_PORT || type == MATCH_ENDPOINT_GRE || type == MATCH_ENDPOINT_INTERNAL)
+		match[PORT_IN]  = input_endpoint;
 	else if(type == MATCH_NF)
 	{
 		stringstream nf;
 		nf << input << ":" << nf_port;
-		match[VNF_ID] = nf.str().c_str();
+		match[PORT_IN] = nf_endpoint_port;
 	}
-	else
-	{
-		assert(type == MATCH_ENDPOINT);
-		stringstream ep;
-		ep << input << ":" << endpoint;
-		match[ENDPOINT_ID] = ep.str().c_str();
-	}
-	
+
 	graph::Match::toJSON(match);
-	
+
 	return match;
 }
 

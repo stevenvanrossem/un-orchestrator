@@ -96,11 +96,11 @@ int parse_command_line(int argc, char *argv[])
 	   					fprintf(stderr,"[%s] The parameter '--s' appear too many times in the command line\n",NAME);
 	   					return -1;
 	   				}
-	   				
+
 #ifdef ENABLE_SEMAPHORE
 	   				nf_params.sem_name = (char*)malloc(sizeof(char)*(strlen(optarg)+1));
 	   				strcpy(nf_params.sem_name,optarg);
-#endif	   				
+#endif
 	   				arg_s++;
 	   			}
 	   			else if (!strcmp(lgopts[option_index].name, "l"))/* file to log */
@@ -110,10 +110,10 @@ int parse_command_line(int argc, char *argv[])
 	   					fprintf(stderr,"[%s] The parameter '--l' appear too many times in the command line\n",NAME);
 	   					return -1;
 	   				}
-	   				
+
 	   				logfilename = (char*)malloc(sizeof(char)*(strlen(optarg)+1));
 	   				strcpy(logfilename,optarg);
-	   				
+
 	   				arg_l++;
 	   			}
 				else if (!strcmp(lgopts[option_index].name, "h"))/* help */
@@ -135,13 +135,13 @@ int parse_command_line(int argc, char *argv[])
 	if (
 #ifdef ENABLE_SEMAPHORE
 		(arg_s == 0)||
-#endif		
+#endif
 		(arg_p < 2)||(arg_l == 0))
 	{
 		fprintf(stderr,"[%s] Not all mandatory arguments are present in the command line\n",NAME);
 		return -1;
 	}
-	
+
 	if(arg_p > 2)
 	{
 		fprintf(stderr,"[%s] Exactly two ports must be specified\n",NAME);
@@ -173,7 +173,7 @@ int parse_command_line(int argc, char *argv[])
 
 	ret = optind - 1;
 	optind = 0; /* reset getopt lib */
-	
+
 	return ret;
 }
 
@@ -185,7 +185,7 @@ void init_shared_resources(void)
 {
 	unsigned int i;
 	char queue_name[NAME_LENGTH];
-	
+
 	/*
 	*	Connect to the rte_rings
 	*/
@@ -199,7 +199,7 @@ void init_shared_resources(void)
 			exit(1);
 		}
 		fprintf(logFile,"[%s] Attached to rte_ring '%s'\n", NAME,queue_name);
-	
+
 		snprintf(queue_name, NAME_LENGTH, "%s-to-xdpd", nf_params.ports[i].name);
 		nf_params.ports[i].to_xdpd_queue = rte_ring_lookup(queue_name);
 		if (nf_params.ports[i].to_xdpd_queue == NULL)
@@ -207,11 +207,11 @@ void init_shared_resources(void)
 			fprintf(logFile,"[%s] Cannot get rte_ring '%s'\n",NAME, queue_name);
 			exit(1);
 		}
-		
+
 		fprintf(logFile,"[%s] Attached to rte_ring '%s'\n", NAME,queue_name);
 	}
-	
-#ifdef ENABLE_SEMAPHORE	
+
+#ifdef ENABLE_SEMAPHORE
 	/*
 	*	Connect to the POSIX named semaphore
 	*/
@@ -251,6 +251,6 @@ int init(int argc, char *argv[])
 	* Set the signal handler and global variables for termination
 	*/
 	signal(SIGINT, sig_handler);
-	
+
 	return 0;
 }

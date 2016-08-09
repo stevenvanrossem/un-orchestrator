@@ -12,6 +12,9 @@
 #include "addVirtualLink_out.h"
 #include "destroyVirtualLink_in.h"
 #include "checkPhysicalPorts_in.h"
+#include "addEndpoint_in.h"
+#include "addEndpoint_out.h"
+#include "destroyEndpoint_in.h"
 
 #include <stdio.h>
 
@@ -42,7 +45,15 @@ public:
 	*	@return:		Information related to the ports created
 	*/
 	virtual AddNFportsOut *addNFPorts(AddNFportsIn anpi) = 0;
-
+#ifdef VSWITCH_IMPLEMENTATION_OVSDB
+	/**
+	*	@brief: Create endpoint, on a specific lsi
+	*
+	*	@brief: aepi	Description of the endpoint to be created
+	*	@return:		Information related to the endpoint created
+	*/
+	virtual AddEndpointOut *addEndpoint(AddEndpointIn aepi) = 0;
+#endif
 	/**
 	*	@brief: Connect together two lsis
 	*
@@ -64,7 +75,14 @@ public:
 	*	@brief: dnpi	Information related to the ports to be destroyed
 	*/
 	virtual void destroyNFPorts(DestroyNFportsIn dnpi) = 0;
-
+#ifdef VSWITCH_IMPLEMENTATION_OVSDB
+	/**
+	*	@brief: Destroy endpoint of a specific lsi
+	*
+	*	@brief: depi	Information related to the endpoint to be destroyed
+	*/
+	virtual void destroyEndpoint(DestroyEndpointIn depi) = 0;
+#endif
 	/**
 	*	@brief: Destroy a connection between two lsis
 	*
@@ -79,7 +97,7 @@ public:
 	*					by the node orchestrator through the virtual switch
 	*/
 	virtual void checkPhysicalInterfaces(set<CheckPhysicalPortsIn> cppi) = 0;
-	
+
 	/**
 	 * virtual destructor is needed
 	 */

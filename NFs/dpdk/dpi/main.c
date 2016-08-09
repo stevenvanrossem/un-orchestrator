@@ -7,8 +7,8 @@ int MAIN(int argc, char *argv[])
 	//Check for root privileges
 	if(geteuid() != 0)
 	{
-		fprintf(stderr,"[%s] Root permissions are required to run %s\n",NAME,argv[0]);	
-		exit(EXIT_FAILURE);	
+		fprintf(stderr,"[%s] Root permissions are required to run %s\n",NAME,argv[0]);
+		exit(EXIT_FAILURE);
 	}
 
 	uint32_t lcore;

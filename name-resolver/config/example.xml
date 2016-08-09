@@ -81,17 +81,20 @@
 
 	<network-function name="ivshmem-nat" num-ports="2" summary="Network function based on IVSHMEM">
 		<!-- Point to a Libvirt XML domain template -->
-		<implementation type="kvm" uri="../NFs/kvm/example-ivshmem/nat-ivshmem.xml"/>
+		<kvm uri="../NFs/kvm/example-ivshmem/nat-ivshmem.xml">
+			<port port-id="1" port-type="ivshmem"/>
+			<port port-id="2" port-type="ivshmem"/>
+		</kvm>
 	</network-function>
 
 	<network-function name="lsi-bng" num-ports="1" summary="Type 5 BNG">
 		<!-- Point to a Libvirt XML domain template -->
-		<implementation type="docker" uri="bng-cp"/>
+		<docker uri="bng-cp"/>
 	</network-function>
 
 	<network-function name="lsi-router" num-ports="3" summary="Type 5 router">
 		<!-- Point to a Libvirt XML domain template -->
-		<implementation type="docker" uri="router-cp"/>
+		<docker uri="router-cp"/>
 	</network-function>
 	
 </network-functions>

@@ -34,24 +34,24 @@ public:
 #ifdef ENABLE_NATIVE
 		if(type == NATIVE)
 			return string("native");
-#endif		
+#endif
 
 		//[+] Add here other implementations for the execution environment
 
 		assert(0);
 		return "";
 	}
-	
+
 	static bool isValid(string type)
 	{
 #ifdef ENABLE_DPDK_PROCESSES
 		if(type == "dpdk")
 			return true;
 #endif
-#ifdef ENABLE_DOCKER		
+#ifdef ENABLE_DOCKER
 		if(type == "docker")
 			return true;
-#endif		
+#endif
 #ifdef ENABLE_KVM
 		if(type == "kvm")
 			return true;
@@ -60,9 +60,9 @@ public:
 		if(type == "native")
 			return true;
 #endif
-	
+
 		//[+] Add here other implementations for the execution environment
-	
+
 		return false;
 	}
 };

@@ -1,1277 +1,1269 @@
 #include "rest_server.h"
+#include "../database_manager/SQLite/SQLiteManager.h"
+
+static const char LOG_MODULE_NAME[] = "Rest-Server";
 
 GraphManager *RestServer::gm = NULL;
-#ifdef UNIFY_NFFG
-	bool RestServer::firstTime = true;
-#endif
+SQLiteManager *dbmanager = NULL;
 
-bool RestServer::init(char *nffg_filename,int core_mask, char *ports_file_name)
-{	
+SecurityManager *secmanager = NULL;
 
-#ifdef UNIFY_NFFG
-	if(nffg_filename != NULL)
-	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "You are using the NF-FG defined in the Unify project.");
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "The NF-FG from configuration file is not supported in this case!",nffg_filename);
-		return false;
-	}
-#endif
+bool client_auth = false;
+
+bool RestServer::init(SQLiteManager *dbm, bool cli_auth, map<string,string> &boot_graphs,int core_mask,set<string> physical_ports, string un_address, bool orchestrator_in_band, char *un_interface, char *ipsec_certificate, string name_resolver_ip, int name_resolver_port)
+{
 
 	try
 	{
-		gm = new GraphManager(core_mask,string(ports_file_name));
-		
-	}catch (...)
-	{
-		return false;		
+		gm = new GraphManager(core_mask,physical_ports,un_address,orchestrator_in_band,string(un_interface),string(ipsec_certificate), name_resolver_ip, name_resolver_port);
+
+	} catch (...) {
+		return false;
 	}
 
-	//Handle the file containing the first graph to be deployed
-	if(nffg_filename != NULL)
-	{	
-		sleep(2); //XXX This give time to the controller to be initialized
-		
-		if(!readGraphFromFile(nffg_filename))
-		{
+	client_auth = cli_auth;
+
+	if (client_auth) {
+		dbmanager = dbm;
+		dbmanager->cleanTables();
+		secmanager = new SecurityManager(dbmanager);
+	}
+
+	sleep(2); //XXX This give time to the controller to be initialized
+
+	//Handle the file containing the graphs to be deployed
+	for(map<string,string>::iterator iter = boot_graphs.begin(); iter!=boot_graphs.end(); iter++)
+	{
+		if (!readGraphFromFile(iter->first,iter->second)) {
 			delete gm;
 			return false;
 		}
 	}
-			
+
 	return true;
 }
 
-bool RestServer::readGraphFromFile(char *nffg_filename)
-{
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Considering the graph described in file '%s'",nffg_filename);
-	
+bool RestServer::readGraphFromFile(const string &nffgResourceName, string &nffgFileName) {
+	ULOG_INFO("Considering the graph described in file '%s'", nffgFileName.c_str());
+
 	std::ifstream file;
-	file.open(nffg_filename);
-	if(file.fail())
-	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot open the file %s",nffg_filename);
+	file.open(nffgFileName.c_str());
+	if (file.fail()) {
+		ULOG_ERR("Cannot open the file %s", nffgFileName.c_str());
 		return false;
 	}
 
 	stringstream stream;
 	string str;
 	while (std::getline(file, str))
-	    stream << str << endl;
-	
-	if(createGraphFromFile(stream.str()) == 0)
+		stream << str << endl;
+
+	if (createGraphFromFile(nffgResourceName,stream.str()) == 0)
 		return false;
-		
+
 	return true;
 }
 
-#ifdef UNIFY_NFFG
-bool RestServer::toBeRemovedFromFile(char *filename)
-{
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Removing NFs and rules defined in file '%s'",filename);
-	
-	std::ifstream file;
-	file.open(filename);
-	if(file.fail())
-	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot open the file %s",filename);
-		return false;
-	}
-
-	stringstream stream;
-	string str;
-	while (std::getline(file, str))
-	    stream << str << endl;
-	
-	list<string> vnfsToBeRemoved;
-	list<string> rulesToBeRemoved;
-	
-	//Parse the content of the file
-	Value value;
-	read(stream.str(), value);
-	try
-	{
-		Object obj = value.getObject();
-		
-	  	bool foundFlowGraph = false;
-		
-		//Identify the flow rules
-		for( Object::const_iterator i = obj.begin(); i != obj.end(); ++i )
-		{
-	 	    const string& name  = i->first;
-		    const Value&  value = i->second;
-		
-		    if(name == FLOW_GRAPH)
-		    {
-		    	foundFlowGraph = true;
-		    	
-		    	bool foundVNFs = false;
-		    	bool foundFlowRules = false;
-		    	
-		  		Object flow_graph = value.getObject();
-		    	for(Object::const_iterator fg = flow_graph.begin(); fg != flow_graph.end(); fg++)
-		    	{
-		    		const string& fg_name  = fg->first;
-				    const Value&  fg_value = fg->second;
-				    if(fg_name == VNFS)
-				    {
-				    	foundVNFs = true;
-				    	const Array& vnfs_array = fg_value.getArray();
-				    					    	
-				    	//Iterate on the VNFs
-				    	for( unsigned int vnf = 0; vnf < vnfs_array.size(); ++vnf )
-						{
-							//This is a VNF, with an ID and a template
-							Object network_function = vnfs_array[vnf].getObject();
-							bool foundID = false;
-							//Parse the rule
-							for(Object::const_iterator nf = network_function.begin(); nf != network_function.end(); nf++)
-							{
-								const string& nf_name  = nf->first;
-								const Value&  nf_value = nf->second;
-					
-								if(nf_name == _ID)
-								{
-									foundID = true;
-									string theID = nf_value.getString();
-									vnfsToBeRemoved.push_back(theID);
-								}
-								else
-								{
-									logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key \"%s\" in a VNF of \"%s\"",nf_name.c_str(),VNFS);
-									return false;
-								}
-							}
-							if(!foundID)
-							{
-								logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in an element of \"%s\"",_ID,VNFS);
-								return false;
-							}
-						}
-				    }//end if(fg_name == VNFS)
-				    else if (fg_name == FLOW_RULES)
-				    {
-				    	const Array& ids_array = fg_value.getArray();
-						foundFlowRules = true;
-					
-						//Iterate on the IDs
-						for( unsigned int id = 0; id < ids_array.size(); ++id )
-						{
-							Object id_object = ids_array[id].getObject();
-					
-							bool foundID = false;
-					
-							for( Object::const_iterator currentID = id_object.begin(); currentID != id_object.end(); ++currentID )
-							{
-								const string& idName  = currentID->first;
-								const Value&  idValue = currentID->second;
-						
-								if(idName == _ID)
-								{
-									foundID = true;
-									string theID = idValue.getString();
-									rulesToBeRemoved.push_back(theID);
-								}
-								else	
-								{
-									logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key \"%s\"",name.c_str());
-									return false;
-								}
-							}
-							if(!foundID)
-							{
-								logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"id\" not found in an elmenet of \"%s\"",FLOW_RULES);
-								return false;
-							}
-						}
-				    }// end  if (fg_name == FLOW_RULES)
-				    else
-					{
-					    logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key \"%s\" in \"%s\"",fg_name.c_str(),FLOW_GRAPH);
-						return false;
-					}
-		    	}
-		    	if(!foundFlowRules)
-				{
-					logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in \"%s\"",FLOW_RULES,FLOW_GRAPH);
-					return false;
-				}
-				if(!foundVNFs)
-					logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in \"%s\"",VNFS,FLOW_GRAPH);
-		    }
-		    else
-		    {
-				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key: %s",name.c_str());
-				return false;
-		    }
-		}
-		if(!foundFlowGraph)
-		{
-			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found",FLOW_GRAPH);
-			return false;
-		}
-	}catch(exception& e)
-	{
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The content does not respect the JSON syntax: ",e.what());
-		return false;
-	}
-	
-	for(list<string>::iterator tbr = rulesToBeRemoved.begin(); tbr != rulesToBeRemoved.end(); tbr++)
-	{
-		if(!gm->deleteFlow(GRAPH_ID,*tbr))
-			return false;
-	}
-	
-	for(list<string>::iterator tbr = vnfsToBeRemoved.begin(); tbr != vnfsToBeRemoved.end(); tbr++)
-	{
-		if(!gm->stopNetworkFunction(GRAPH_ID,*tbr))
-			return false;
-	}
-	
-	return true;
-}
-#endif
-
-void RestServer::terminate()
-{
-	delete(gm);
+void RestServer::terminate() {
+	delete (gm);
 }
 
-void RestServer::request_completed (void *cls, struct MHD_Connection *connection,
-						void **con_cls, enum MHD_RequestTerminationCode toe)
-{
-	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
+bool RestServer::isLoginRequest(const char *method, const char *url) {
+	/*
+	 * Checking method name and url is enough because the REST server
+	 * already verifies that the request is well-formed.
+	 */
+	return (strcmp(method, POST) == 0 && url[0] == '/'
+			&& strncmp(url + sizeof(char), BASE_URL_LOGIN,
+					sizeof(char) * strlen(BASE_URL_LOGIN)) == 0);
+}
+
+void RestServer::request_completed(void *cls, struct MHD_Connection *connection,
+		void **con_cls, enum MHD_RequestTerminationCode toe) {
+	struct connection_info_struct *con_info =
+			(struct connection_info_struct *) (*con_cls);
 
 	if (NULL == con_info)
 		return;
 
-	if(con_info->length != 0)
-	{
+	if (con_info->length != 0) {
 		free(con_info->message);
 		con_info->message = NULL;
 	}
-	
-	free (con_info);
+
+	free(con_info);
 	*con_cls = NULL;
 }
 
-int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connection,
-			const char *url, const char *method, const char *version,
-			const char *upload_data,
-			size_t *upload_data_size, void **con_cls)
-{
-	
-	if(NULL == *con_cls)
-	{
-		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "New %s request for %s using version %s", method, url, version);
-		if(LOGGING_LEVEL <= ORCH_DEBUG)
-			MHD_get_connection_values (connection, MHD_HEADER_KIND, &print_out_key, NULL);
-	
+int RestServer::answer_to_connection(void *cls,
+		struct MHD_Connection *connection, const char *url, const char *method,
+		const char *version, const char *upload_data, size_t *upload_data_size,
+		void **con_cls) {
+
+	if (NULL == *con_cls) {
+		ULOG_INFO("New %s request for %s using version %s", method, url, version);
+
+		if (LOGGING_LEVEL <= ORCH_DEBUG)
+			MHD_get_connection_values(connection, MHD_HEADER_KIND, &print_out_key, NULL);
+
 		struct connection_info_struct *con_info;
-		con_info = (struct connection_info_struct*)malloc (sizeof (struct connection_info_struct));
-		
-		assert(con_info != NULL);		
+		con_info = (struct connection_info_struct*) malloc(
+				sizeof(struct connection_info_struct));
+
+		assert(con_info != NULL);
 		if (NULL == con_info)
 			return MHD_NO;
-		
-		if ((0 == strcmp (method, PUT)) || (0 == strcmp (method, DELETE)) )
-		{
-			con_info->message = (char*)malloc(REQ_SIZE * sizeof(char));
+
+		if ((0 == strcmp(method, PUT)) || (0 == strcmp(method, POST))
+				|| (0 == strcmp(method, DELETE))) {
+			con_info->message = (char*) malloc(REQ_SIZE * sizeof(char));
+			con_info->length = 0;
+		} else if (0 == strcmp(method, GET))
+			con_info->length = 0;
+		else {
+			con_info->message = (char*) malloc(REQ_SIZE * sizeof(char));
 			con_info->length = 0;
 		}
-		else if (0 == strcmp (method, GET))
-			con_info->length = 0;
-		else
-		{
-			con_info->message = (char*)malloc(REQ_SIZE * sizeof(char));
-			con_info->length = 0;
-		}
-	
+
 		*con_cls = (void*) con_info;
 		return MHD_YES;
 	}
 
-#ifdef UNIFY_NFFG
-	
-	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
-	assert(con_info != NULL);
-	if (0 != strcmp (method, GET))
-	{
-        //Extract the body of the HTTP request		
-		if (*upload_data_size != 0)
-		{
-			strcpy(&con_info->message[con_info->length],upload_data);
+	// Process request
+
+	if (0 == strcmp(method, GET))
+		return doOperation(connection, con_cls, GET, url);
+
+	if ((0 == strcmp(method, PUT)) || (0 == strcmp(method, POST))
+			|| (0 == strcmp(method, DELETE))) {
+
+		struct connection_info_struct *con_info =
+				(struct connection_info_struct *) (*con_cls);
+		assert(con_info != NULL);
+		if (*upload_data_size != 0) {
+			strcpy(&con_info->message[con_info->length], upload_data);
 			con_info->length += *upload_data_size;
 			*upload_data_size = 0;
 			return MHD_YES;
-		}
-		else if (NULL != con_info->message)
-		{
+
+		} else if (NULL != con_info->message) {
 			con_info->message[con_info->length] = '\0';
+			if (0 == strcmp(method, PUT))
+				return doOperation(connection, con_cls, PUT, url);
+			else if (0 == strcmp(method, POST))
+				return doOperation(connection, con_cls, POST, url);
+			else
+				return doOperation(connection, con_cls, DELETE, url);
 		}
-	}
-	
-	/**
-	*	"answer" is handled as described here:
-	*	http://stackoverflow.com/questions/2838038/c-programming-malloc-inside-another-function
-	*/
-	char *answer;
-	handleRequest_status_t retVal = Virtualizer::handleRestRequest(con_info->message, &answer,url,method);
-	
-	if(retVal == HR_INTERNAL_ERROR)
-	{
-		struct MHD_Response *response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-		int ret = MHD_queue_response (connection, MHD_HTTP_INTERNAL_SERVER_ERROR, response);
-		MHD_destroy_response (response);
-		return ret;
-	}
-	else
-	{
-		if(retVal == HR_EDIT_CONFIG)
-		{
-			//Handle the graph received from the network
-			//Handle the rules to be removed as required
-			if(!readGraphFromFile(NEW_GRAPH_FILE) || !toBeRemovedFromFile(REMOVE_GRAPH_FILE))
-			{
-				//Something wrong happened during the manipulation of the graph
-				logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "An error occurred during the manipulation of the graph!");
-				logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "Please, reboot the orchestrator (and the vSwitch) in order to avoid inconsist state in the universal node");
-				
-				struct MHD_Response *response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-				int ret = MHD_queue_response (connection, MHD_HTTP_INTERNAL_SERVER_ERROR, response);
-				MHD_destroy_response (response);
-				return ret;
-			}
+	} else {
+		// Methods not implemented
+		struct connection_info_struct *con_info =
+				(struct connection_info_struct *) (*con_cls);
+		assert(con_info != NULL);
+		if (*upload_data_size != 0) {
+			strcpy(&con_info->message[con_info->length], upload_data);
+			con_info->length += *upload_data_size;
+			*upload_data_size = 0;
+			return MHD_YES;
+		} else {
+			con_info->message[con_info->length] = '\0';
+			ULOG_INFO("Method \"%s\" not implemented",method);
+			return httpResponse(connection, MHD_HTTP_NOT_IMPLEMENTED);
 		}
-	
-		struct MHD_Response *response = MHD_create_response_from_buffer (strlen(answer),(void*)answer, MHD_RESPMEM_PERSISTENT);
-	    stringstream absolute_url;
-		absolute_url << REST_URL << ":" << REST_PORT << url;
-		MHD_add_response_header (response, "Cache-Control",NO_CACHE);
-		MHD_add_response_header (response, "Location", absolute_url.str().c_str());
-		int ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-		return ret;
 	}
 
-#else
-	if (0 == strcmp (method, GET))
-		return doGet(connection,url);
-	else if( (0 == strcmp (method, PUT)) || (0 == strcmp (method, DELETE)) )
-	{	
-		struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
-		assert(con_info != NULL);
-		if (*upload_data_size != 0)
-		{
-			strcpy(&con_info->message[con_info->length],upload_data);
-			con_info->length += *upload_data_size;
-			*upload_data_size = 0;
-			return MHD_YES;
-		}
-		else if (NULL != con_info->message)
-		{
-			con_info->message[con_info->length] = '\0';
-			return (0 == strcmp (method, PUT))? doPut(connection,url,con_cls) : doDelete(connection,url,con_cls);
-		}
-	}
-	else
-	{
-		//Methods not implemented
-		struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
-		assert(con_info != NULL);
-		if (*upload_data_size != 0)
-		{
-			strcpy(&con_info->message[con_info->length],upload_data);
-			con_info->length += *upload_data_size;
-			*upload_data_size = 0;
-			return MHD_YES;
-		}
-		else
-		{
-			con_info->message[con_info->length] = '\0';
-			logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Method \"%s\" not implemented",method);
-			struct MHD_Response *response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-			int ret = MHD_queue_response (connection, MHD_HTTP_NOT_IMPLEMENTED, response);
-			MHD_destroy_response (response);
-			return ret;
-		}
-	}
-#endif	
-	
 	//Just to remove a warning in the compiler
 	return MHD_YES;
 }
 
-
-int RestServer::print_out_key (void *cls, enum MHD_ValueKind kind, const char *key, const char *value)
-{
-	logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "%s: %s", key, value);
+int RestServer::print_out_key(void *cls, enum MHD_ValueKind kind,
+		const char *key, const char *value) {
+	ULOG_DBG("%s: %s", key, value);
 	return MHD_YES;
 }
 
-int RestServer::doPut(struct MHD_Connection *connection, const char *url, void **con_cls)
-{
+int RestServer::login(struct MHD_Connection *connection, void **con_cls) {
+
+	int ret = 0, rc = 0;
 	struct MHD_Response *response;
-	
-	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
+	char username[BUFFER_SIZE], password[BUFFER_SIZE];
+	unsigned char hash_token[HASH_SIZE], temp[BUFFER_SIZE];
+	char hash_pwd[BUFFER_SIZE], nonce[BUFFER_SIZE], timestamp[BUFFER_SIZE], tmp[BUFFER_SIZE], user_tmp[BUFFER_SIZE];
+
+	struct connection_info_struct *con_info = (struct connection_info_struct *) (*con_cls);
 	assert(con_info != NULL);
 
-	//Check the URL
-	char delimiter[] = "/";
- 	char * pnt;
+	if (dbmanager == NULL) {
+		con_info->message[con_info->length] = '\0';
+		ULOG_INFO("Login can be performed only if authentication is required.");
+		return httpResponse(connection, MHD_HTTP_NOT_IMPLEMENTED);
+	}
 
-	char graphID[BUFFER_SIZE];
-	
-	char tmp[BUFFER_SIZE];
-	strcpy(tmp,url);
-	pnt=strtok(tmp, delimiter);
-	int i = 0;
-	while( pnt!= NULL )
-	{
-		switch(i)
-		{
-			case 0:
-				if(strcmp(pnt,BASE_URL_GRAPH) != 0)
-				{
-put_malformed_url:
-					logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Resource \"%s\" does not exist", url);
-					response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-					int ret = MHD_queue_response (connection, MHD_HTTP_NOT_FOUND, response);
-					MHD_destroy_response (response);
-					return ret;
-				}
-				break;
-			case 1:
-				strcpy(graphID,pnt);
-		}
-		
-		pnt = strtok( NULL, delimiter );
-		i++;
-	}
-	if(i != 2)
-	{
-		//the URL is malformed
-		goto put_malformed_url;
-	}
-	
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Resource to be created/updated: %s",graphID);
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Content:");
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "%s",con_info->message);
-	
-	if(MHD_lookup_connection_value (connection,MHD_HEADER_KIND, "Host") == NULL)
-	{
-		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "\"Host\" header not present in the request");
-		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-		int ret = MHD_queue_response (connection, MHD_HTTP_BAD_REQUEST, response);
-		MHD_destroy_response (response);
-		return ret;
-	}
-	
-	/*	const char *c_type = MHD_lookup_connection_value (connection,MHD_HEADER_KIND, "Content-Type");
-	if(strcmp(c_type,JSON_C_TYPE) != 0)
-	{
-		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Content-Type must be: "JSON_C_TYPE);
-		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-		int ret = MHD_queue_response (connection, MHD_HTTP_UNSUPPORTED_MEDIA_TYPE, response);
-		MHD_destroy_response (response);
-		return ret;
-	}*/
-	
-	bool newGraph = !(gm->graphExists(graphID));
-	
-	string gID(graphID);
-	highlevel::Graph *graph = new highlevel::Graph(gID);
-	
-	if(!parsePutBody(*con_info,*graph,newGraph))
-	{
-		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Malformed content");
-		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-		int ret = MHD_queue_response (connection, MHD_HTTP_BAD_REQUEST, response);
-		MHD_destroy_response (response);
-		return ret;
-	}
-	
-		graph->print();
-	try
-	{
+	ULOG_INFO("User login");
+	ULOG_INFO("Content:");
+	ULOG_INFO("%s", con_info->message);
 
-		if(newGraph)
-		{
-			logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "A new graph must be created");		
-			if(!gm->newGraph(graph))
-			{
-				logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The graph description is not valid!");
-				response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-				int ret = MHD_queue_response (connection, MHD_HTTP_BAD_REQUEST, response);
-				MHD_destroy_response (response);
-				return ret;
-			}
-		}
-		else
-		{
-			logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "An existing graph must be updated");
-			if(!gm->updateGraph(graphID,graph))
-			{
-				delete(graph);
-				logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The graph description is not valid!");
-				response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-				int ret = MHD_queue_response (connection, MHD_HTTP_BAD_REQUEST, response);
-				MHD_destroy_response (response);
-				return ret;		
-			}	
-		}
-	}catch (...)
-	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An error occurred during the %s of the graph!",(newGraph)? "creation" : "update");
-		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-		int ret = MHD_queue_response (connection, MHD_HTTP_INTERNAL_SERVER_ERROR, response);
-		MHD_destroy_response (response);
-		return ret;
+	if (MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Host") == NULL) {
+		ULOG_INFO("\"Host\" header not present in the request");
+		return httpResponse(connection, MHD_HTTP_BAD_REQUEST);
 	}
-	
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The graph has been properly %s!",(newGraph)? "created" : "updated");
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "");
-	
-	//TODO: put the proper content in the answer
-	response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-	stringstream absolute_url;
-	absolute_url << REST_URL << ":" << REST_PORT << url;
-	MHD_add_response_header (response, "Location", absolute_url.str().c_str());
-	int ret = MHD_queue_response (connection, MHD_HTTP_CREATED, response);
 
-	MHD_destroy_response (response);
-	return ret;	
+	if (!parsePostBody(*con_info, username, password)) {
+		ULOG_INFO("Login error: Malformed content");
+		return httpResponse(connection, MHD_HTTP_BAD_REQUEST);
+	}
+
+	try {
+
+		SHA256((const unsigned char*) password, strlen(password), hash_token);
+
+		strcpy(tmp, "");
+		strcpy(hash_pwd, "");
+		strcpy(nonce, "");
+
+		for (int i = 0; i < HASH_SIZE; i++) {
+			sprintf(tmp, "%.2x", hash_token[i]);
+			strcat(hash_pwd, tmp);
+		}
+
+		strcpy(user_tmp, username);
+
+		if(!dbmanager->userExists(user_tmp, hash_pwd)) {
+			ULOG_ERR("Login failed: wrong username or password!");
+			return httpResponse(connection, MHD_HTTP_UNAUTHORIZED);
+		}
+
+		if(dbmanager->isLogged(user_tmp)) {
+			char *token = NULL;
+			user_info_t *pUI = NULL;
+
+			pUI = dbmanager->getLoggedUserByName(user_tmp);
+			token = pUI->token;
+
+			response = MHD_create_response_from_buffer (strlen(token),(void*) token, MHD_RESPMEM_PERSISTENT);
+			MHD_add_response_header (response, "Content-Type",TOKEN_TYPE);
+			MHD_add_response_header (response, "Cache-Control",NO_CACHE);
+			ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+			MHD_destroy_response (response);
+
+			return ret;
+		}
+
+		rc = RAND_bytes(temp, sizeof(temp));
+		if (rc != 1) {
+			ULOG_ERR("An error occurred while generating nonce!");
+			return httpResponse(connection, MHD_HTTP_INTERNAL_SERVER_ERROR);
+		}
+
+		strcpy(tmp, "");
+		strcpy(hash_pwd, "");
+
+		for (int i = 0; i < HASH_SIZE; i++) {
+			sprintf(tmp, "%.2x", temp[i]);
+			strcat(nonce, tmp);
+		}
+
+		time_t now = time(0);
+		tm *ltm = localtime(&now);
+
+		strcpy(timestamp, "");
+		sprintf(timestamp, "%d/%d/%d %d:%d", ltm->tm_mday, 1 + ltm->tm_mon, 1900 + ltm->tm_year, ltm->tm_hour, 1 + ltm->tm_min);
+
+		// Insert login information into the database
+		dbmanager->insertLogin(user_tmp, nonce, timestamp);
+
+		response = MHD_create_response_from_buffer (strlen((char *)nonce),(void*) nonce, MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header (response, "Content-Type",TOKEN_TYPE);
+		MHD_add_response_header (response, "Cache-Control",NO_CACHE);
+		ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+		MHD_destroy_response (response);
+
+		return ret;
+
+	} catch (...) {
+		ULOG_ERR("An error occurred during user login!");
+		return httpResponse(connection, MHD_HTTP_INTERNAL_SERVER_ERROR);
+	}
 }
 
-int RestServer::createGraphFromFile(string toBeCreated)
-{
-	char graphID[BUFFER_SIZE];
-	strcpy(graphID,GRAPH_ID);
-	
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Graph ID: %s",graphID);
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Graph content:");
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "%s",toBeCreated.c_str());
-	
-	string gID(graphID);
-	highlevel::Graph *graph = new highlevel::Graph(gID);
-	
-	if(!parseGraphFromFile(toBeCreated,*graph,true))
-	{
-		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Malformed content");
+int RestServer::createUser(char *username, struct MHD_Connection *connection, connection_info_struct *con_info) {
+	char *group, *password;
+
+	unsigned char *hash_token = new unsigned char[HASH_SIZE]();
+	char *hash_pwd = new char[BUFFER_SIZE]();
+	char *tmp = new char[HASH_SIZE]();
+	char *pwd = new char[HASH_SIZE]();
+
+	assert(con_info != NULL);
+
+	ULOG_INFO("User creation:");
+	ULOG_INFO("%s", con_info->message);
+
+	if (MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Host") == NULL) {
+		ULOG_INFO("\"Host\" header not present in the request");
+		return httpResponse(connection, MHD_HTTP_BAD_REQUEST);
+	}
+
+	if (!parsePostBody(*con_info, NULL, &password, &group)) {
+		ULOG_INFO("Create user error: Malformed content");
+		return httpResponse(connection, MHD_HTTP_BAD_REQUEST);
+	}
+
+	char *t_group = new char[strlen(group)+1]();
+	strncpy(t_group, group, strlen(group));
+
+	try {
+		if (username == NULL || group == NULL || password == NULL) {
+			ULOG_ERR("Client unathorized!");
+			return httpResponse(connection, MHD_HTTP_UNAUTHORIZED);
+		}
+
+		strncpy(pwd, password, strlen(password));
+
+		SHA256((const unsigned char*)pwd, strlen(pwd), hash_token);
+
+		for (int i = 0; i < HASH_SIZE; i++) {
+			sprintf(tmp, "%.2x", hash_token[i]);
+			strcat(hash_pwd, tmp);
+		}
+
+		if(dbmanager->userExists(username, hash_pwd)) {
+			ULOG_ERR("User creation failed: already existing!");
+			return httpResponse(connection, MHD_HTTP_UNAUTHORIZED);
+		}
+
+		if(!dbmanager->resourceExists(BASE_URL_GROUP, t_group)) {
+			ULOG_ERR("User creation failed! The group '%s' cannot be recognized!", t_group);
+			return httpResponse(connection, MHD_HTTP_UNAUTHORIZED);
+		}
+
+		char *token = (char *) MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "X-Auth-Token");
+
+		if(token == NULL) {
+			ULOG_INFO("\"Token\" header not present in the request");
+			return false;
+		}
+
+		user_info_t *creator = dbmanager->getUserByToken(token);
+
+		dbmanager->insertUser(username, hash_pwd, t_group);
+
+		dbmanager->insertResource(BASE_URL_USER, username, creator->user);
+
+		/* TODO: This is just a provisional solution for handling
+		 * user creation permissions for those users that are
+		 * dynamically created via a POST request
+		 */
+		dbmanager->insertUserCreationPermission(username, BASE_URL_GRAPH, ALLOW);
+		dbmanager->insertUserCreationPermission(username, BASE_URL_USER, ALLOW);
+		dbmanager->insertUserCreationPermission(username, BASE_URL_GROUP, ALLOW);
+
+		delete t_group;
+
+		return httpResponse(connection, MHD_HTTP_ACCEPTED);
+
+	} catch (...) {
+		ULOG_ERR("An error occurred during user login!");
+		return httpResponse(connection, MHD_HTTP_INTERNAL_SERVER_ERROR);
+	}
+}
+
+
+bool RestServer::parsePostBody(struct connection_info_struct &con_info,
+		char *user, char *pwd) {
+	Value value;
+	read(con_info.message, value);
+	return parseLoginForm(value, user, pwd);
+}
+
+bool RestServer::parsePostBody(struct connection_info_struct &con_info,
+		char **user, char **pwd, char **group) {
+	Value value;
+	read(con_info.message, value);
+	return parseUserCreationForm(value, pwd, group);
+}
+
+bool RestServer::parseLoginForm(Value value, char *user, char *pwd) {
+	try {
+		Object obj = value.getObject();
+
+		bool foundUser = false, foundPwd = false;
+
+		//Identify the flow rules
+		for (Object::const_iterator i = obj.begin(); i != obj.end(); ++i) {
+			const string& name = i->first;
+			const Value& value = i->second;
+
+			if (name == USER) {
+				foundUser = true;
+				strcpy(user,value.getString().c_str());
+			} else if (name == PASS) {
+				foundPwd = true;
+				strcpy(pwd, value.getString().c_str());
+			} else {
+				ULOG_DBG_INFO("Invalid key: %s", name.c_str());
+				return false;
+			}
+		}
+		if (!foundUser) {
+			ULOG_DBG_INFO("Key \"%s\" not found", USER);
+			return false;
+		} else if (!foundPwd) {
+			ULOG_DBG_INFO("Key \"%s\" not found", PASS);
+			return false;
+		}
+	} catch (exception& e) {
+		ULOG_DBG_INFO("The content does not respect the JSON syntax: ", e.what());
+		return false;
+	}
+
+	return true;
+}
+
+bool RestServer::parseUserCreationForm(Value value, char **pwd, char **group) {
+	try {
+		Object obj = value.getObject();
+
+		bool foundPwd = false, foundGroup = false;
+
+		//Identify the flow rules
+		for (Object::const_iterator i = obj.begin(); i != obj.end(); ++i) {
+			const string& name = i->first;
+			const Value& value = i->second;
+
+			if (name == PASS) {
+				foundPwd = true;
+				(*pwd) = (char *) value.getString().c_str();
+				ULOG_DBG_INFO("\tPwd: %s", *pwd);
+
+			} else if (name == GROUP) {
+				foundGroup = true;
+				(*group) = (char *) value.getString().c_str();
+				ULOG_DBG_INFO("\tGrp: %s", *group);
+			} else {
+				ULOG_DBG_INFO("Invalid key: %s", name.c_str());
+				return false;
+			}
+		}
+
+		if (!foundPwd) {
+			ULOG_DBG_INFO("Key \"%s\" not found", PASS);
+			return false;
+		} else if (!foundGroup) {
+			ULOG_DBG_INFO("Key \"%s\" not found", GROUP);
+		}
+	} catch (exception& e) {
+		ULOG_DBG_INFO("The content does not respect the JSON syntax: ", e.what());
+		return false;
+	}
+
+	return true;
+}
+
+
+int RestServer::createGraphFromFile(const string &graphID, string toBeCreated) {
+
+	ULOG_INFO("Graph ID: %s", graphID.c_str());
+	ULOG_INFO("Graph content:");
+	ULOG_INFO("%s",
+			toBeCreated.c_str());
+
+	highlevel::Graph *graph = new highlevel::Graph(graphID);
+
+	if (!parseGraphFromFile(toBeCreated, *graph, true)) {
+		ULOG_INFO("Malformed content");
 		return 0;
 	}
-	
+
 	graph->print();
-	try
-	{
-#ifndef UNIFY_NFFG
-		if(!gm->newGraph(graph))
-#else
-		//In case of NF-FG defined in the Unify project, only the first time a new graph must be created
-		//In fact, all the rules refer to a single NF-FG, and then the following times we simply update
-		//the graph already created.
-		if((firstTime && !gm->newGraph(graph)) || (!firstTime && !gm->updateGraph(graphID,graph)) )
-#endif
-		{
-			logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The graph description is not valid!");
+	try {
+		if (!gm->newGraph(graph)) {
+			ULOG_INFO("The graph description is not valid!");
 			return 0;
 		}
-#ifdef UNIFY_NFFG
-		firstTime = false;
-#endif
-	}catch (...)
-	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An error occurred during the creation of the graph!");
+		// If security is required, update database
+		if(dbmanager != NULL)
+			dbmanager->insertResource(BASE_URL_GRAPH, graphID.c_str(), ADMIN);
+	} catch (...) {
+		ULOG_ERR("An error occurred during the creation of the graph!");
 		return 0;
 	}
 
 	return 1;
 }
 
-bool RestServer::parseGraphFromFile(string toBeCreated,highlevel::Graph &graph, bool newGraph) //startup. cambiare nome alla funzione
-{
+bool RestServer::parseGraphFromFile(string toBeCreated, highlevel::Graph &graph,
+		bool newGraph) //startup. cambiare nome alla funzione
+		{
 	Value value;
 	read(toBeCreated, value);
-	return parseGraph(value, graph, newGraph);
+	return GraphParser::parseGraph(value, graph, newGraph, gm);
 }
 
-bool RestServer::parsePutBody(struct connection_info_struct &con_info,highlevel::Graph &graph, bool newGraph)
-{
+bool RestServer::parsePutBody(struct connection_info_struct &con_info,
+		highlevel::Graph &graph, bool newGraph) {
 	Value value;
 	read(con_info.message, value);
-	return parseGraph(value, graph, newGraph);
+	return GraphParser::parseGraph(value, graph, newGraph, gm);
 }
 
-bool RestServer::parseGraph(Value value, highlevel::Graph &graph, bool newGraph)
-{
-	//for each NF, contains the set of ports it requires
-	map<string,set<unsigned int> > nfs_ports_found;
+/*
+ * Version on generic resources
+ */
+int RestServer::doOperationOnResource(struct MHD_Connection *connection, struct connection_info_struct *con_info, user_info_t *usr, const char *method, const char *generic_resource) {
 
-	try
-	{
-		Object obj = value.getObject();
-		
-	  	bool foundFlowGraph = false;
-		
-		//Identify the flow rules
-		for( Object::const_iterator i = obj.begin(); i != obj.end(); ++i )
-		{
-	 	    const string& name  = i->first;
-		    const Value&  value = i->second;
-		
-		    if(name == FLOW_GRAPH)
-		    {
-		    	foundFlowGraph = true;
-		    	
-		    	bool foundVNFs = false;
-		    	bool foundFlowRules = false;
-		    	
-		  		Object flow_graph = value.getObject();
-		    	for(Object::const_iterator fg = flow_graph.begin(); fg != flow_graph.end(); fg++)
-		    	{
-		    		const string& fg_name  = fg->first;
-				    const Value&  fg_value = fg->second;
-				    if(fg_name == VNFS)
-				    {
-				    	const Array& vnfs_array = fg_value.getArray();
+	// If security is required, check that the generic resource exist
+	if (dbmanager != NULL && !dbmanager->resourceExists(generic_resource)) {
+		ULOG_INFO("Resource \"%s\" does not exist", generic_resource);
+		return httpResponse(connection, MHD_HTTP_NOT_FOUND);
+	}
 
-						//XXX We may have no VNFs in the following cases:
-						//*	graph with only physical ports
-						//*	update of a graph that only adds new flows
-						//However, when there are no VNFs, we provide a warning
-				    	if(vnfs_array.size() != 0)
-					    	foundVNFs = true;
-				    	
-				    	//Itearate on the VNFs
-				    	for( unsigned int vnf = 0; vnf < vnfs_array.size(); ++vnf )
-						{
-							//This is a VNF, with an ID and a template
-							Object network_function = vnfs_array[vnf].getObject();
-#ifdef POLITO_MESSAGE							
-							bool foundTemplate = false;
-#endif					
-							bool foundID = false;
-							
-							map<string,string> ipv4_addresses; 	//port name,ipv4 address
-							map<string,string> ipv4_masks;				//port name, ipv4 address
-
-							//Parse the rule
-							for(Object::const_iterator nf = network_function.begin(); nf != network_function.end(); nf++)
-							{
-								const string& nf_name  = nf->first;
-								const Value&  nf_value = nf->second;
-					
-								if(nf_name == _ID)
-								{
-									logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",VNFS,_ID,nf_value.getString().c_str());
-									foundID = true;
-									if(!graph.addNetworkFunction(nf_value.getString()))
-									{
-										logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Two VNFs with the same ID \"%s\" in \"%s\"",nf_value.getString().c_str(),VNFS);
-										return false;
-									}
-								}
-								else if(nf_name == TEMPLATE)
-								{
-									logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",VNFS,TEMPLATE,nf_value.getString().c_str());
-#ifdef POLITO_MESSAGE
-									foundTemplate = true;
-									//XXX: currently, this information is ignored
-#endif
-								}
-								else
-								{
-									logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key \"%s\" in a VNF of \"%s\"",nf_name.c_str(),VNFS);
-									return false;
-								}
-							}
-							if(
-#ifdef POLITO_MESSAGE							
-							!foundTemplate ||
-#endif							
-							!foundID)
-							{
-								logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\", or key \"%s\", or both not found in an element of \"%s\"",_ID,TEMPLATE,VNFS);
-								return false;
-							}
-						}					
-
-				    }//end if(fg_name == VNFS)
-				    else if (fg_name == FLOW_RULES)
-				    {
-				    	
-				    	const Array& flow_rules_array = fg_value.getArray();
-
-
-						foundFlowRules = true;
-#ifndef UNIFY_NFFG
-						//FIXME: put the flowrules optional also in case of "standard| nffg?
-				    	if(flow_rules_array.size() == 0)
-				    	{
-					    	logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" without rules",FLOW_RULES);
-							return false;
-				    	}
-#endif
-				    	
-				    	//Iterate on the flow rules
-				    	for( unsigned int fr = 0; fr < flow_rules_array.size(); ++fr )
-						{	
-							//This is a rule, with a match, an action, and an ID
-							Object flow_rule = flow_rules_array[fr].getObject();
-							highlevel::Action *action = NULL;
-							list<GenericAction*> genericActions;
-							highlevel::Match match;
-							string ruleID;
-							uint64_t priority = 0;
-					
-							bool foundAction = false;
-							bool foundMatch = false;
-							bool foundID = false;
-						
-							//Parse the rule
-							for(Object::const_iterator afr = flow_rule.begin(); afr != flow_rule.end(); afr++)
-							{
-								const string& fr_name  = afr->first;
-								const Value&  fr_value = afr->second;
-					
-								if(fr_name == _ID)
-								{
-									foundID = true;
-									ruleID = fr_value.getString();
-								}
-								else if(fr_name == PRIORITY)
-								{
-									if(sscanf(fr_value.getString().c_str(),"%"SCNd64,&priority) != 1)
-									{
-										logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" with wrong value \"%s\"",PRIORITY,value.getString().c_str());
-										return false;
-									}
-								}
-								else if(fr_name == MATCH)
-								{
-									foundMatch = true;
-									if(!MatchParser::parseMatch(fr_value.getObject(), match, nfs_ports_found, graph))
-									{
-										return false;
-									}
-								}
-								else if(fr_name == ACTION)
-								{
-									foundAction = true;
-									Object theAction = fr_value.getObject();
-
-									bool foundOne = false;
-
-									for(Object::const_iterator a = theAction.begin(); a != theAction.end(); a++)
-									{
-										const string& a_name  = a->first;
-										const Value&  a_value = a->second;
-	
-										if(a_name == PORT)
-										{
-											if(foundOne)
-											{
-												logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Only one between keys \"%s\", \"%s\" and \"%s\" are allowed in \"%s\"",PORT,VNF_ID,ENDPOINT_ID,ACTION);
-												return false;
-											}
-											foundOne = true;
-											
-#ifdef UNIFY_NFFG
-											//In this case, the virtualized port name must be translated into the real one.
-											try
-											{
-												string realName = Virtualizer::getRealName(a_value.getString());											
-#else
-												string realName = a_value.getString();
-#endif
-												action = new highlevel::ActionPort(realName);
-												graph.addPort(realName);
-#ifdef UNIFY_NFFG
-											}catch(exception e)
-											{
-												logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Error while translating the virtualized port '%s': %s",value.getString().c_str(),e.what());
-												return false;
-											}
-#endif		
-										}
-										else if(a_name == VNF_ID)
-										{
-											if(foundOne)
-											{
-												logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Only one between keys \"%s\", \"%s\" and \"%s\" are allowed in \"%s\"",PORT,VNF_ID,ENDPOINT_ID,ACTION);
-												return false;
-											}
-											foundOne = true;
-										
-											logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",ACTION,VNF_ID,a_value.getString().c_str());
-										
-											string name = MatchParser::nfName(a_value.getString());
-											unsigned int port = MatchParser::nfPort(a_value.getString());
-											if(name == "" || port == 0)
-											{
-												logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Network function \"%s\" is not valid. It must be in the form \"name:port\"",a_value.getString().c_str());
-												return false;	
-											}
-											action = new highlevel::ActionNetworkFunction(name, port);
-										
-											set<unsigned int> ports_found;
-											if(nfs_ports_found.count(name) != 0)
-												ports_found = nfs_ports_found[name];
-											ports_found.insert(port);
-											nfs_ports_found[name] = ports_found;
-										}
-										else if(a_name == ENDPOINT_ID)
-										{
-											if(foundOne)
-											{
-												logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Only one between keys \"%s\", \"%s\" and \"%s\" are allowed in \"%s\"",PORT,VNF_ID,ENDPOINT_ID,ACTION);
-												return false;
-											}
-											foundOne = true;
-										
-											logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\"%s\"->\"%s\": \"%s\"",ACTION,ENDPOINT_ID,a_value.getString().c_str());
-										
-											string graph_id = MatchParser::graphID(a_value.getString());
-											unsigned int endPoint = MatchParser::graphEndPoint(a_value.getString());
-											if(graph_id == "" || endPoint == 0)
-											{
-												logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Graph end point \"%s\" is not valid. It must be in the form \"graphID:endpoint\"",value.getString().c_str());
-												return false;	
-											}
-											action = new highlevel::ActionEndPoint(graph_id, endPoint);
-											graph.addEndPoint(graph_id,action->toString());
-										}
-										else if(a_name == VLAN)
-										{
-											//A vlan push/pop action is required
-											
-											bool foundOperation = false;
-											bool foundVlanID = false;
-											
-											vlan_action_t actionType;
-											unsigned int vlanID = 0;
-																					
-											Object vlanAction = a_value.getObject();
-											for(Object::const_iterator vl = vlanAction.begin(); vl != vlanAction.end(); vl++)
-											{
-												const string& vl_name  = vl->first;
-												const Value&  vl_value = vl->second;
-												
-												if(vl_name == VLAN_OP)
-												{
-													foundOperation = true;
-													string theOperation = vl_value.getString();
-													if(theOperation == VLAN_PUSH)
-														actionType = ACTION_VLAN_PUSH;
-													else if(theOperation == VLAN_POP)
-														actionType = ACTION_VLAN_POP;
-													else
-													{
-														logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid value \"%s\" for key \"%s\"",theOperation.c_str(),VLAN_OP);
-														return false;		
-													}
-												}
-												else if(vl_name == VLAN_ID)
-												{
-													foundVlanID = true;
-													string strVlanID = vl_value.getString();
-													sscanf(strVlanID.c_str(),"%u",&vlanID);													
-												}
-												else
-												{
-													logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key \"%s\" in \"%s\"",vl_name.c_str(),VLAN);
-													return false;
-												}
-											}
-											
-											if(!foundOperation)
-											{
-												logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in \"%s\"",VLAN_OP,VLAN);
-												return false;
-											}
-											if(actionType == ACTION_VLAN_PUSH && !foundVlanID)
-											{
-												logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in \"%s\"",VLAN_ID,VLAN);
-												return false;
-											}
-											if(actionType == ACTION_VLAN_POP && foundVlanID)
-											{
-												logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" found in \"%s\", but it is not required for specified \"%s\": \"%s\"",VLAN_ID,VLAN,VLAN_OP,VLAN_POP);
-												return false;
-											}
-											//Finally, we are sure that the command is correct!
-											
-											GenericAction *ga = new VlanAction(actionType,vlanID);
-											genericActions.push_back(ga);
-											
-										}//end if(a_name == VLAN)
-										else
-										{
-											logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key \"%s\" in \"%s\"",a_name.c_str(),ACTION);
-											return false;
-										}
-									}
-	
-									if(!foundOne)
-									{
-										logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Neither Key \"%s\", nor key \"%s\" found in \"%s\"",PORT,VNF_ID,ACTION);
-										return false;
-									}
-									
-									for(list<GenericAction*>::iterator ga = genericActions.begin(); ga != genericActions.end(); ga++)
-									{
-										action->addGenericAction(*ga);
-									}
-							
-								}//end if(fr_name == ACTION)
-								else
-								{
-									logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key \"%s\" in a rule of \"%s\"",name.c_str(),FLOW_RULES);
-									return false;
-								}
-							}
-						
-							if(!foundAction || !foundMatch || !foundID)
-							{
-								logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\", or key \"%s\", or key \"%s\", or all of them not found in an elmenet of \"%s\"",_ID,MATCH,ACTION,FLOW_RULES);
-								return false;
-							}
-						
-							highlevel::Rule rule(match,action,ruleID,priority);
-							
-							if(!graph.addRule(rule))
-							{
-								logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The graph has at least two rules with the same ID: %s",ruleID.c_str());
-								return false;
-							}
-					
-						}//for( unsigned int fr = 0; fr < flow_rules_array.size(); ++fr )
-				    }// end  if (fg_name == FLOW_RULES)
-				    else
-					{
-					    logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key \"%s\" in \"%s\"",fg_name.c_str(),FLOW_GRAPH);
-						return false;
-					}
-		    	}
-		    	if(!foundFlowRules)
-				{
-					logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in \"%s\"",FLOW_RULES,FLOW_GRAPH);
-					return false;
-				}
-				if(!foundVNFs)
-					logger(ORCH_WARNING, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found in \"%s\"",VNFS,FLOW_GRAPH);
-		    }
-		    else
-		    {
-				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Invalid key: %s",name.c_str());
-				return false;
-		    }
+	if(strcmp(method, GET) == 0) {
+		// If security is required, check READ permission on the generic resource
+		if (dbmanager != NULL && !secmanager->isAuthorized(usr, _READ, generic_resource)) {
+			ULOG_INFO("User not authorized to execute %s \"%s\"", method, generic_resource);
+			return httpResponse(connection, MHD_HTTP_UNAUTHORIZED);
 		}
-		if(!foundFlowGraph)
-		{
-			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Key \"%s\" not found",FLOW_GRAPH);
+
+		// Case currently implemented: read a graph
+		if (strcmp(generic_resource, BASE_URL_GRAPH) == 0)
+			return readMultipleGraphs(connection, usr);
+		else if (strcmp(generic_resource, BASE_URL_USER) == 0)
+			return readMultipleUsers(connection, usr);
+		else if (strcmp(generic_resource, BASE_URL_GROUP) == 0)
+			return readMultipleGroups(connection, usr);
+
+		return httpResponse(connection, MHD_HTTP_NOT_IMPLEMENTED);
+	} else if(strcmp(method, PUT) == 0) {
+		ULOG_INFO("There are no operations using PUT with generic resources");
+		return httpResponse(connection, MHD_HTTP_NOT_IMPLEMENTED);
+	} else if(strcmp(method, DELETE) == 0) {
+		ULOG_INFO("There are no operations using DELETE with generic resources");
+		return httpResponse(connection, MHD_HTTP_NOT_IMPLEMENTED);
+	} else if(strcmp(method, POST) == 0) {
+		ULOG_INFO("There are no operations using POST with generic resources");
+		return httpResponse(connection, MHD_HTTP_NOT_IMPLEMENTED);
+	}
+
+	ULOG_INFO("Method %s is currently not supported to operate on generic resources", method);
+	return httpResponse(connection, MHD_HTTP_NOT_IMPLEMENTED);
+}
+
+/*
+ * Version for single resources
+ */
+int RestServer::doOperationOnResource(struct MHD_Connection *connection, struct connection_info_struct *con_info, user_info_t *usr, const char *method, const char *generic_resource, const char *resource) {
+
+	// GET: can be only read... at the moment!
+	if(strcmp(method, GET) == 0) {
+
+		// If security is required, check READ authorization
+		if (dbmanager != NULL && !secmanager->isAuthorized(usr, _READ, generic_resource, resource)) {
+			ULOG_INFO("User not authorized to execute %s on %s", method, resource);
+			return httpResponse(connection, MHD_HTTP_UNAUTHORIZED);
+		}
+
+		// Cases currently implemented
+		if(strcmp(generic_resource, BASE_URL_GRAPH) == 0)
+			return readGraph(connection, (char *) resource);
+		else if(strcmp(generic_resource, BASE_URL_USER) == 0)
+			return readUser(connection, (char *) resource);
+
+	// PUT: for single resource, it can be only creation... at the moment!
+	} else if(strcmp(method, PUT) == 0) {
+
+		// If security is required, check CREATE authorization
+		if (dbmanager != NULL && !secmanager->isAuthorized(usr, _CREATE, generic_resource, resource)) {
+			ULOG_ERR("User not authorized to execute %s on %s", method, resource);
+			return httpResponse(connection, MHD_HTTP_UNAUTHORIZED);
+		}
+		if(strcmp(generic_resource, BASE_URL_GRAPH) == 0)
+			return deployNewGraph(connection, con_info, (char *) resource, usr);
+		else if(strcmp(generic_resource, BASE_URL_GROUP) == 0)
+			return createGroup(connection, con_info, (char *) resource, usr);;
+
+	// DELETE: for single resource, it can be only deletion... at the moment!
+	} else if(strcmp(method, DELETE) == 0) {
+
+		// Check authorization for deleting the single resource
+		if (dbmanager != NULL && !secmanager->isAuthorized(usr, _DELETE, generic_resource, resource)) {
+			ULOG_ERR("User not authorized to execute %s on %s", method, resource);
+			return httpResponse(connection, MHD_HTTP_UNAUTHORIZED);
+		}
+
+		if(strcmp(generic_resource, BASE_URL_GRAPH) == 0)
+			return deleteGraph(connection, (char *) resource);
+		else if(strcmp(generic_resource, BASE_URL_USER) == 0)
+			return deleteUser(connection, (char *) resource);
+		else if(strcmp(generic_resource, BASE_URL_GROUP) == 0)
+			return deleteGroup(connection, (char *) resource);
+
+	} else if(strcmp(method, POST) == 0) {
+
+		if(strcmp(generic_resource, BASE_URL_USER) == 0) {
+			// Check authorization
+			if (dbmanager != NULL && !secmanager->isAuthorized(usr, _CREATE, generic_resource, resource)) {
+				ULOG_ERR("User not authorized to execute %s on %s", method, resource);
+				return httpResponse(connection, MHD_HTTP_UNAUTHORIZED);
+			}
+			return createUser((char *) resource, connection, con_info);
+		}
+
+		return httpResponse(connection, MHD_HTTP_NOT_IMPLEMENTED);
+	}
+
+	ULOG_ERR("Error: %s on /%s/%s not implemented!", method, generic_resource, resource);
+	return httpResponse(connection, MHD_HTTP_NOT_IMPLEMENTED);
+}
+
+int RestServer::doOperationOnResource(struct MHD_Connection *connection, struct connection_info_struct *con_info, user_info_t *usr, const char *method, const char *generic_resource, const char *resource, const char *extra_info) {
+
+	// GET: can be only read... at the moment!
+	if(strcmp(method, GET) == 0) {
+
+		// If security is required, check READ authorization
+		if (dbmanager != NULL && !secmanager->isAuthorized(usr, _READ, generic_resource, resource)) {
+			ULOG_INFO("User not authorized to execute %s on %s", method, resource);
+			return httpResponse(connection, MHD_HTTP_UNAUTHORIZED);
+		}
+		if(strcmp(generic_resource,BASE_URL_GRAPH)==0 && strcmp(resource,URL_STATUS)==0)
+			return doGetStatus(connection,extra_info);
+	}
+	// PUT, POST, DELETE: currently not supported
+	else if(strcmp(method, POST) == 0) {
+		ULOG_ERR("Error: POST on /%s/%s/%s not implemented!", generic_resource, resource, extra_info);
+		return httpResponse(connection, MHD_HTTP_NOT_IMPLEMENTED);
+	}
+
+	ULOG_ERR("Error: %s on /%s/%s/%s not implemented!", method, generic_resource, resource, extra_info);
+	return httpResponse(connection, MHD_HTTP_NOT_IMPLEMENTED);
+}
+
+
+int RestServer::httpResponse(struct MHD_Connection *connection, int code) {
+	struct MHD_Response *response;
+
+	response = MHD_create_response_from_buffer(0, (void*) "", MHD_RESPMEM_PERSISTENT);
+	int ret = MHD_queue_response(connection, code, response);
+	MHD_destroy_response(response);
+	return ret;
+}
+
+int RestServer::doOperation(struct MHD_Connection *connection, void **con_cls, const char *method, const char *url) {
+	int ret = 0;
+
+	user_info_t *usr = NULL;
+
+	struct connection_info_struct *con_info = (struct connection_info_struct *) (*con_cls);
+	assert(con_info != NULL);
+
+	// The stuff below is a sequence of routing checks for HTTP requests (both header and body)
+
+	// Check Host field in HTTP header
+	if (MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Host") == NULL) {
+		ULOG_INFO("\"Host\" header not present in the request");
+		return httpResponse(connection, MHD_HTTP_BAD_REQUEST);
+	}
+
+	// HTTP body must be empty in GET and DELETE requests
+	if(strcmp(method, GET) == 0 || strcmp(method, DELETE) == 0) {
+		if (con_info->length != 0) {
+			ULOG_INFO("%s with body is not allowed", method);
+			return httpResponse(connection, MHD_HTTP_BAD_REQUEST);
+		}
+
+	// PUT and POST requests must contain JSON data in their body
+	} else if(strcmp(method, PUT) == 0 || strcmp(method, POST) == 0) {
+		const char *c_type = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Content-Type");
+		if ((c_type == NULL) || (strcmp(c_type, JSON_C_TYPE) != 0)) {
+			ULOG_INFO("Content-Type must be: "JSON_C_TYPE);
+			return httpResponse(connection, MHD_HTTP_UNSUPPORTED_MEDIA_TYPE);
+		}
+	}
+
+	// ...end of routine HTTP requests checks
+
+	// If security is required, check whether the current message is a login request
+	if(dbmanager != NULL && isLoginRequest(method, url)) {
+		ULOG_INFO("Received a login request!");
+		// execute login routine
+		return login(connection, con_cls);
+	}
+
+	// If security is required, try to authenticate the client
+	char *token = NULL;
+	if (dbmanager != NULL) {
+		token = (char *) MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "X-Auth-Token");
+
+		if(token == NULL) {
+			ULOG_INFO("\"Token\" header not present in the request");
 			return false;
 		}
-	}catch(exception& e)
-	{
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "The content does not respect the JSON syntax: ",e.what());
-		return false;
+
+		if(!secmanager->isAuthenticated(connection, token)) {
+			ULOG_DBG_INFO("Token: %s",token);
+			ULOG_ERR("User not authenticated: request rejected!");
+			return httpResponse(connection, MHD_HTTP_UNAUTHORIZED);
+		}
 	}
 
-#ifndef UNIFY_NFFG
-	//XXX The number of ports is provided by the name resolver, and should not depend on the flows inserted. In fact,
-	//it should be possible to start VNFs without setting flows related to such a function!
-    for(map<string,set<unsigned int> >::iterator it = nfs_ports_found.begin(); it != nfs_ports_found.end(); it++)
-	{
-		set<unsigned int> ports = it->second;
-		assert(ports.size() != 0);
-		
-		for(set<unsigned int>::iterator p = ports.begin(); p != ports.end(); p++)
-		{
-			if(!graph.updateNetworkFunction(it->first,*p))
-			{
-				if(newGraph)
-					return false;
-				else
-				{
-					//The message does not describe the current NF into the section "VNFs". However, this NF could be
-					//already part of the graph, and in this case the match/action using it is valid. On the contrary,
-					//if the NF is no longer part of the graph, there is an error, and the graph cannot be updated.
-					if(gm->graphContainsNF(graph.getID(),it->first))
-					{
-						graph.addNetworkFunction(it->first);
-						graph.updateNetworkFunction(it->first,*p);
-					}
-					else
-						return false;
-				}
-			}
-		}
-		
-		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "NF \"%s\" requires ports:",it->first.c_str());
-		for(set<unsigned int>::iterator p = ports.begin(); p != ports.end(); p++)
-			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "\t%d",*p);
+	// check for invalid URL
+	assert(url && url[0]=='/'); // neither NULL nor empty
+
+	// Fetch from URL the generic resource name, resource name and extra info
+	std::string generic_resource, resource, extra;
+	std::stringstream urlstream(url+1); // +1 to skip first "/"
+	if (getline(urlstream, generic_resource, '/'))
+		if (getline(urlstream, resource, '/'))
+			if (getline(urlstream, extra, '/')) {}
+
+	// Fetch user information
+	if(dbmanager != NULL)
+		usr = dbmanager->getUserByToken(token);
+
+	// If operation on a generic resource (e.g. /NF-FG)
+	if(!generic_resource.empty() && resource.empty() && extra.empty())
+		ret = doOperationOnResource(connection, con_info, usr, method,
+				generic_resource.c_str());
+
+	// If operation on a single resource (e.g. /NF-FG/myGraph)
+	else if(!generic_resource.empty() && !resource.empty() && extra.empty())
+		ret = doOperationOnResource(connection, con_info, usr, method,
+				generic_resource.c_str(), resource.c_str());
+
+	// If operation on a specific feature of a single resource (e.g. /NF-FG/myGraph/flowID)
+	else if(!generic_resource.empty() && !resource.empty() && !extra.empty())
+		ret = doOperationOnResource(connection, con_info, usr, method,
+				generic_resource.c_str(), resource.c_str(), extra.c_str());
+
+	// all other requests (e.g. a request to "/") --> 404
+	else {
+		ULOG_INFO("Returning 404 for %s request on %s", method, url);
+		return httpResponse(connection, MHD_HTTP_NOT_FOUND);
 	}
-#endif	
-	
-	return true;
+
+	/*
+	 * The usr variable points to a memory space that is allocated inside the getUserByToken() method,
+	 * by using malloc(), so I have to free that memory.
+	 * FIXME, this needs to be changed, as the struct
+	 * members of usr are only valid because we leak that
+	 * sqlite statment there...
+	 */
+	if(usr != NULL)
+		free(usr);
+
+	return ret;
 }
 
-int RestServer::doGet(struct MHD_Connection *connection, const char *url)
+int RestServer::readGraph(struct MHD_Connection *connection, char *graphID)
 {
 	struct MHD_Response *response;
 	int ret;
-	
-	bool request = false; //false->graph - true->interfaces
-	
-	//Check the URL
-	char delimiter[] = "/";
- 	char * pnt;
 
-	char graphID[BUFFER_SIZE];
-	char tmp[BUFFER_SIZE];
-	strcpy(tmp,url);
-	pnt=strtok(tmp, delimiter);
-	int i = 0;
-	while( pnt!= NULL )
-	{
-		switch(i)
-		{
-			case 0:
-				if(strcmp(pnt,BASE_URL_GRAPH) == 0)
-					request = false;
-				else if(strcmp(pnt,BASE_URL_IFACES) == 0)
-					request = true;
-				else
-				{
-get_malformed_url:
-					logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Resource \"%s\" does not exist", url);
-					response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-					ret = MHD_queue_response (connection, MHD_HTTP_NOT_FOUND, response);
-					MHD_destroy_response (response);
-					return ret;
-				}
-				break;
-			case 1:
-				strcpy(graphID,pnt);
-		}
-		
-		pnt = strtok( NULL, delimiter );
-		i++;
-	}
-	if( (!request && i != 2) || (request && i != 1) )
-	{
-		//the URL is malformed
-		goto get_malformed_url;
-	}
-	
-	if(MHD_lookup_connection_value (connection,MHD_HEADER_KIND, "Host") == NULL)
-	{
-		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "\"Host\" header not present in the request");
-		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-		int ret = MHD_queue_response (connection, MHD_HTTP_BAD_REQUEST, response);
-		MHD_destroy_response (response);
+	ULOG_INFO("Required resource: %s", graphID);
+
+	// Check whether the graph exists in the local database and in the graph manager
+	if ( (dbmanager != NULL && !dbmanager->resourceExists(BASE_URL_GRAPH, graphID)) || (dbmanager == NULL && !gm->graphExists(graphID))) {
+		ULOG_INFO("Method GET is not supported for this resource (i.e. it does not exist)");
+		response = MHD_create_response_from_buffer(0, (void*) "",
+				MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header(response, "Allow", PUT);
+		ret = MHD_queue_response(connection, MHD_HTTP_METHOD_NOT_ALLOWED,
+				response);
+		MHD_destroy_response(response);
 		return ret;
 	}
-	
-	if(!request)
-		//request for a graph description
-		return doGetGraph(connection,graphID);
-	else
-		//request for interfaces description
-		return doGetInterfaces(connection);
-}
 
-int RestServer::doGetGraph(struct MHD_Connection *connection,char *graphID)
-{
-	struct MHD_Response *response;
-	int ret;
-	
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Required resource: %s",graphID);
-	
-	if(!gm->graphExists(graphID))
-	{	
-		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Method GET is not supported for this resource");
-		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-		MHD_add_response_header (response, "Allow", PUT);
-		ret = MHD_queue_response (connection, MHD_HTTP_METHOD_NOT_ALLOWED, response);
-		MHD_destroy_response (response);
-		return ret;
-	}
-	
-	try
-	{
+	try {
 		Object json = gm->toJSON(graphID);
 		stringstream ssj;
- 		write_formatted(json, ssj );
- 		string sssj = ssj.str();		
- 		char *aux = (char*)malloc(sizeof(char) * (sssj.length()+1));
- 		strcpy(aux,sssj.c_str());
-		response = MHD_create_response_from_buffer (strlen(aux),(void*) aux, MHD_RESPMEM_PERSISTENT);		
-		MHD_add_response_header (response, "Content-Type",JSON_C_TYPE);
-		MHD_add_response_header (response, "Cache-Control",NO_CACHE);
-		ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-		MHD_destroy_response (response);
+		write_formatted(json, ssj);
+		string sssj = ssj.str();
+		char *aux = (char*) malloc(sizeof(char) * (sssj.length() + 1));
+		strcpy(aux, sssj.c_str());
+		response = MHD_create_response_from_buffer(strlen(aux), (void*) aux,
+				MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header(response, "Content-Type", JSON_C_TYPE);
+		MHD_add_response_header(response, "Cache-Control", NO_CACHE);
+		ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+		MHD_destroy_response(response);
 		return ret;
-	}catch(...)
-	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An error occurred while retrieving the graph description!");
-		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-		ret = MHD_queue_response (connection, MHD_HTTP_INTERNAL_SERVER_ERROR, response);
-		MHD_destroy_response (response);
-		return ret;
+	} catch (...) {
+		ULOG_ERR("An error occurred while retrieving the graph description!");
+		return httpResponse(connection, MHD_HTTP_INTERNAL_SERVER_ERROR);
 	}
 }
 
-int RestServer::doGetInterfaces(struct MHD_Connection *connection)
-{
+int RestServer::readUser(struct MHD_Connection *connection, char *username) {
+	assert(dbmanager != NULL);
+
 	struct MHD_Response *response;
 	int ret;
-	
-	try
-	{
-		Object json = gm->toJSONPhysicalInterfaces();
+
+	ULOG_INFO("Required resource: %s", username);
+
+	// Check whether the user exists
+	if (!dbmanager->resourceExists(BASE_URL_USER, username)) {
+		ULOG_INFO("Method GET is not supported for this resource (i.e. it does not exist)");
+		response = MHD_create_response_from_buffer(0, (void*) "",
+				MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header(response, "Allow", PUT);
+		ret = MHD_queue_response(connection, MHD_HTTP_METHOD_NOT_ALLOWED,
+				response);
+		MHD_destroy_response(response);
+		return ret;
+	}
+
+	try {
+		json_spirit::Object json;
+
+		user_info_t *usr = dbmanager->getUserByName(username);
+
+		json["username"] = usr->user;
+		json["group"] = usr->group;
+
 		stringstream ssj;
- 		write_formatted(json, ssj );
- 		string sssj = ssj.str();
- 		char *aux = (char*)malloc(sizeof(char) * (sssj.length()+1));
- 		strcpy(aux,sssj.c_str());
-		response = MHD_create_response_from_buffer (strlen(aux),(void*) aux, MHD_RESPMEM_PERSISTENT);		
-		MHD_add_response_header (response, "Content-Type",JSON_C_TYPE);
-		MHD_add_response_header (response, "Cache-Control",NO_CACHE);
-		ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-		MHD_destroy_response (response);
+		write_formatted(json, ssj);
+		string sssj = ssj.str();
+		char *aux = (char*) malloc(sizeof(char) * (sssj.length() + 1));
+		strcpy(aux, sssj.c_str());
+		response = MHD_create_response_from_buffer(strlen(aux), (void*) aux,
+				MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header(response, "Content-Type", JSON_C_TYPE);
+		MHD_add_response_header(response, "Cache-Control", NO_CACHE);
+		ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+		MHD_destroy_response(response);
 		return ret;
-	}catch(...)
-	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An error occurred while retrieving the description of the physical interfaces!");
-		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-		ret = MHD_queue_response (connection, MHD_HTTP_INTERNAL_SERVER_ERROR, response);
-		MHD_destroy_response (response);
-		return ret;
+	} catch (...) {
+		ULOG_ERR("An error occurred while retrieving the user description!");
+		return httpResponse(connection, MHD_HTTP_INTERNAL_SERVER_ERROR);
 	}
 }
 
-int RestServer::doDelete(struct MHD_Connection *connection, const char *url, void **con_cls)
-{
+int RestServer::readMultipleGroups(struct MHD_Connection *connection, user_info_t *usr) {
+	assert(usr != NULL && dbmanager != NULL);
+
 	struct MHD_Response *response;
 	int ret;
-	
-	//Check the URL
-	char delimiter[] = "/";
- 	char * pnt;
 
-	char graphID[BUFFER_SIZE];
-	char flowID[BUFFER_SIZE];
-	bool specificFlow = false;
-	
-	char tmp[BUFFER_SIZE];
-	strcpy(tmp,url);
-	pnt=strtok(tmp, delimiter);
-	int i = 0;
-	while( pnt!= NULL )
-	{
-		switch(i)
-		{
-			case 0:
-				if(strcmp(pnt,BASE_URL_GRAPH) != 0)
-				{
-delete_malformed_url:
-					logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Resource \"%s\" does not exist", url);
-					response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-					ret = MHD_queue_response (connection, MHD_HTTP_NOT_FOUND, response);
-					MHD_destroy_response (response);
-					return ret;
-				}
-				break;
-			case 1:
-				strcpy(graphID,pnt);
-				break;
-			case 2:
-				strcpy(flowID,pnt);
-				specificFlow = true;
+	ULOG_INFO("Required resource: %s", BASE_URL_GROUP);
+
+	// Check whether groups exists as a generic resourse in the local database
+	if (!dbmanager->resourceExists(BASE_URL_GROUP)) {
+		ULOG_INFO("The generic resource %s does not exist in the local database", BASE_URL_GROUP);
+		response = MHD_create_response_from_buffer(0, (void*) "",
+				MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header(response, "Allow", PUT);
+		ret = MHD_queue_response(connection, MHD_HTTP_METHOD_NOT_ALLOWED,
+				response);
+		MHD_destroy_response(response);
+		return ret;
+	}
+
+	try {
+		Object groups;
+		Array groups_array;
+		std::list<std::string> names;
+
+		// search the names in the database
+		dbmanager->getAllowedResourcesNames(usr, _READ, BASE_URL_GROUP, &names);
+
+		std::list<std::string>::iterator i;
+
+		for(i = names.begin(); i != names.end(); ++i) {
+			Object obj;
+			obj["name"] = *i;
+			groups_array.push_back(obj);
 		}
-		
-		pnt = strtok( NULL, delimiter );
-		i++;
-	}
-	if((i != 2) && (i != 3))
-	{
-		//the URL is malformed
-		goto delete_malformed_url;
-	}
-	
-	if(MHD_lookup_connection_value (connection,MHD_HEADER_KIND, "Host") == NULL)
-	{
-		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "\"Host\" header not present in the request");
-		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-		int ret = MHD_queue_response (connection, MHD_HTTP_BAD_REQUEST, response);
-		MHD_destroy_response (response);
-		return ret;
-	}
-	
-	struct connection_info_struct *con_info = (struct connection_info_struct *)(*con_cls);
-	assert(con_info != NULL);
-	if(con_info->length != 0)
-	{
-		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "DELETE with body is not allowed");
-		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-		int ret = MHD_queue_response (connection, MHD_HTTP_BAD_REQUEST, response);
-		MHD_destroy_response (response);
-		return ret;
-	}
-	
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Deleting resource: %s/%s",graphID,(specificFlow)?flowID:"");
 
-	if(!gm->graphExists(graphID) || (specificFlow && !gm->flowExists(graphID,flowID)))
-	{
-		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Method DELETE is not supported for this resource");
+		groups[BASE_URL_GROUP] = groups_array;
+
+		stringstream ssj;
+		write_formatted(groups, ssj);
+		string sssj = ssj.str();
+		char *aux = (char*) malloc(sizeof(char) * (sssj.length() + 1));
+		strcpy(aux, sssj.c_str());
+		response = MHD_create_response_from_buffer(strlen(aux), (void*) aux,
+				MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header(response, "Content-Type", JSON_C_TYPE);
+		MHD_add_response_header(response, "Cache-Control", NO_CACHE);
+		ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+		MHD_destroy_response(response);
+		return ret;
+	} catch (...) {
+		ULOG_ERR("An error occurred while retrieving the graph description!");
+		return httpResponse(connection, MHD_HTTP_INTERNAL_SERVER_ERROR);
+	}
+}
+
+int RestServer::readMultipleUsers(struct MHD_Connection *connection, user_info_t *usr) {
+	assert(usr != NULL && dbmanager != NULL);
+
+	struct MHD_Response *response;
+	int ret;
+
+	ULOG_INFO("Required resource: %s", BASE_URL_USER);
+
+	// Check whether NF-FG exists as a generic resourse in the local database
+	if (!dbmanager->resourceExists(BASE_URL_USER)) {
+		ULOG_INFO("The generic resource %s does not exist in the local database", BASE_URL_GRAPH);
+		response = MHD_create_response_from_buffer(0, (void*) "",
+				MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header(response, "Allow", PUT);
+		ret = MHD_queue_response(connection, MHD_HTTP_METHOD_NOT_ALLOWED,
+				response);
+		MHD_destroy_response(response);
+		return ret;
+	}
+
+	try {
+		Object users;
+		Array users_array;
+		std::list<std::string> names;
+		user_info_t *user = NULL;
+
+		// If security is required, search the names in the database
+		dbmanager->getAllowedResourcesNames(usr, _READ, BASE_URL_USER, &names);
+
+		std::list<std::string>::iterator i;
+
+		for(i = names.begin(); i != names.end(); ++i) {
+			user = dbmanager->getUserByName((*i).c_str());
+			Object u;
+			u["username"] = user->user;
+			u["group"] = user->group;
+			users_array.push_back(u);
+		}
+
+		users[BASE_URL_USER] = users_array;
+
+		stringstream ssj;
+		write_formatted(users, ssj);
+		string sssj = ssj.str();
+		char *aux = (char*) malloc(sizeof(char) * (sssj.length() + 1));
+		strcpy(aux, sssj.c_str());
+		response = MHD_create_response_from_buffer(strlen(aux), (void*) aux,
+				MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header(response, "Content-Type", JSON_C_TYPE);
+		MHD_add_response_header(response, "Cache-Control", NO_CACHE);
+		ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+		MHD_destroy_response(response);
+		return ret;
+	} catch (...) {
+		ULOG_ERR("An error occurred while retrieving the graph description!");
+		return httpResponse(connection, MHD_HTTP_INTERNAL_SERVER_ERROR);
+	}
+}
+
+int RestServer::readMultipleGraphs(struct MHD_Connection *connection, user_info_t *usr) {
+	assert(usr != NULL);
+
+	struct MHD_Response *response;
+	int ret;
+
+	ULOG_INFO("Required resource: %s", BASE_URL_GRAPH);
+
+	// Check whether NF-FG exists as a generic resourse in the local database
+	if (!dbmanager->resourceExists(BASE_URL_GRAPH)) {
+		ULOG_INFO("The generic resource %s does not exist in the local database", BASE_URL_GRAPH);
+		response = MHD_create_response_from_buffer(0, (void*) "",
+				MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header(response, "Allow", PUT);
+		ret = MHD_queue_response(connection, MHD_HTTP_METHOD_NOT_ALLOWED,
+				response);
+		MHD_destroy_response(response);
+		return ret;
+	}
+
+	try {
+		Object nffg;
+		Array nffg_array;
+		std::list<std::string> names;
+
+		// If security is required, search the names in the database
+		if(dbmanager != NULL)
+			dbmanager->getAllowedResourcesNames(usr, _READ, BASE_URL_GRAPH, &names);
+		else
+			// Otherwise, retrieve all the NF-FGs
+			gm->getGraphsNames(&names);
+
+		std::list<std::string>::iterator i;
+
+		for(i = names.begin(); i != names.end(); ++i)
+			nffg_array.push_back(gm->toJSON(*i));
+
+		nffg[BASE_URL_GRAPH] = nffg_array;
+
+		stringstream ssj;
+		write_formatted(nffg, ssj);
+		string sssj = ssj.str();
+		char *aux = (char*) malloc(sizeof(char) * (sssj.length() + 1));
+		strcpy(aux, sssj.c_str());
+		response = MHD_create_response_from_buffer(strlen(aux), (void*) aux,
+				MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header(response, "Content-Type", JSON_C_TYPE);
+		MHD_add_response_header(response, "Cache-Control", NO_CACHE);
+		ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+		MHD_destroy_response(response);
+		return ret;
+	} catch (...) {
+		ULOG_ERR("An error occurred while retrieving the graph description!");
+		return httpResponse(connection, MHD_HTTP_INTERNAL_SERVER_ERROR);
+	}
+}
+
+int RestServer::createGroup(struct MHD_Connection *connection, struct connection_info_struct *con_info, char *resource, user_info_t *usr) {
+
+	assert(dbmanager != NULL);
+
+	int ret = 0;
+	struct MHD_Response *response;
+
+	ULOG_INFO("Received request for deploying %s/%s", BASE_URL_GROUP, resource);
+
+	// Check whether the group already exists in the database
+	if(dbmanager->resourceExists(BASE_URL_GROUP, resource)) {
+		ULOG_ERR("Error: cannot create an already existing group in the database!");
+		return httpResponse(connection, MHD_HTTP_FORBIDDEN);
+	}
+
+	ULOG_INFO("Resource to be created/updated: %s/%s", BASE_URL_GROUP, resource);
+	ULOG_INFO("Content:");
+	ULOG_INFO("%s", con_info->message);
+
+	// Update database
+	dbmanager->insertResource(BASE_URL_GROUP, resource, usr->user);
+
+	ULOG_INFO("The group has been properly created!");
+	ULOG_INFO("");
+
+	//TODO: put the proper content in the answer
+	response = MHD_create_response_from_buffer(0, (void*) "", MHD_RESPMEM_PERSISTENT);
+	stringstream absolute_url;
+	absolute_url << REST_URL << ":" << REST_PORT << "/" << BASE_URL_GROUP << "/" << resource;
+	MHD_add_response_header(response, "Location", absolute_url.str().c_str());
+	ret = MHD_queue_response(connection, MHD_HTTP_CREATED, response);
+
+	MHD_destroy_response(response);
+	return ret;
+}
+
+int RestServer::deployNewGraph(struct MHD_Connection *connection, struct connection_info_struct *con_info, char *resource, user_info_t *usr) {
+
+	int ret = 0;
+	struct MHD_Response *response;
+
+	ULOG_INFO("Received request for deploying %s/%s", BASE_URL_GRAPH, resource);
+	// If security is required, check whether the graph already exists in the database
+
+	/* this check prevent updates!
+	if(dbmanager != NULL && dbmanager->resourceExists(BASE_URL_GRAPH, resource)) {
+		ULOG_ERR("Error: cannot deploy an already existing graph in the database!");
+		return httpResponse(connection, MHD_HTTP_FORBIDDEN);
+	}
+
+	// The same check within the graph manager
+	if(gm->graphExists(resource)) {
+		ULOG_ERR("Error: cannot deploy an already existing graph in the manager!");
+		return httpResponse(connection, MHD_HTTP_FORBIDDEN);
+	}*/
+
+	string gID(resource);
+
+	highlevel::Graph *graph = new highlevel::Graph(gID);
+
+	ULOG_INFO("Resource to be created/updated: %s/%s", BASE_URL_GRAPH, resource);
+	ULOG_INFO("Content:");
+	ULOG_INFO("%s", con_info->message);
+
+	bool newGraph = true;
+
+	// Check whether the body is well formed
+	if (!parsePutBody(*con_info, *graph, newGraph)) {
+		ULOG_INFO("Malformed content");
+		return httpResponse(connection, MHD_HTTP_BAD_REQUEST);
+	}
+
+	graph->print();
+
+	try {
+		if(gm->graphExists(resource)) {
+			ULOG_INFO("An existing graph must be updated");
+			if (!gm->updateGraph(gID,graph)) {
+				ULOG_INFO("The graph description is not valid!");
+				return httpResponse(connection, MHD_HTTP_BAD_REQUEST);
+			}
+			ULOG_INFO("The graph has been properly updated!");
+			ULOG_INFO("");
+		}else{
+			ULOG_INFO("A new graph must be created");
+			if (!gm->newGraph(graph)) {
+				ULOG_INFO("The graph description is not valid!");
+				return httpResponse(connection, MHD_HTTP_BAD_REQUEST);
+			}
+			ULOG_INFO("The graph has been properly created!");
+			ULOG_INFO("");
+		}
+	}
+	catch (...) {
+		ULOG_ERR("An error occurred during the creation of the graph!");
+		return httpResponse(connection, MHD_HTTP_INTERNAL_SERVER_ERROR);
+	}
+
+	// If security is required, update database
+	if(dbmanager != NULL)
+		dbmanager->insertResource(BASE_URL_GRAPH, resource, usr->user);
+
+	//TODO: put the proper content in the answer
+	response = MHD_create_response_from_buffer(0, (void*) "", MHD_RESPMEM_PERSISTENT);
+	stringstream absolute_url;
+	absolute_url << REST_URL << ":" << REST_PORT << "/" << BASE_URL_GRAPH << "/" << resource;
+	MHD_add_response_header(response, "Location", absolute_url.str().c_str());
+	ret = MHD_queue_response(connection, MHD_HTTP_CREATED, response);
+
+	MHD_destroy_response(response);
+	return ret;
+}
+
+int RestServer::deleteGraph(struct MHD_Connection *connection, char *resource) {
+
+	int ret = 0;
+	struct MHD_Response *response;
+
+	ULOG_INFO("Received request for deleting %s/%s", BASE_URL_GRAPH, resource);
+
+	// If security is required, check whether the graph does exist in the database
+	if(dbmanager != NULL && !dbmanager->resourceExists(BASE_URL_GRAPH, resource)) {
+		ULOG_INFO("Cannot delete a non-existing graph in the database!");
 		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
 		MHD_add_response_header (response, "Allow", PUT);
 		ret = MHD_queue_response (connection, MHD_HTTP_METHOD_NOT_ALLOWED, response);
 		MHD_destroy_response (response);
 		return ret;
 	}
-	
-	try
-	{	
-		if(!specificFlow)
-		{
-			//The entire graph must be deleted
-			if(!gm->deleteGraph(graphID))
-			{
-				response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-				int ret = MHD_queue_response (connection, MHD_HTTP_BAD_REQUEST, response);
-				MHD_destroy_response (response);
-				return ret;
-			}
-			else
-				logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The graph has been properly deleted!");
-				logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "");
-		}
-		else
-		{
-			//A specific flow must be deleted
-			if(!gm->deleteFlow(graphID,flowID))
-			{
-				response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-				int ret = MHD_queue_response (connection, MHD_HTTP_BAD_REQUEST, response);
-				MHD_destroy_response (response);
-				return ret;
-			}
-			else
-				logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The flow has been properly deleted!");
-		}
-		
-		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);		
-		ret = MHD_queue_response (connection, MHD_HTTP_NO_CONTENT, response);
-		MHD_destroy_response (response);
-		return ret;
-	}catch(...)
-	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An error occurred during the destruction of the graph!");
+
+	// Check whether the graph does exist in the graph manager
+	if (!gm->graphExists(resource)) {
+		ULOG_INFO("Cannot delete a non-existing graph in the manager!");
 		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
-		ret = MHD_queue_response (connection, MHD_HTTP_INTERNAL_SERVER_ERROR, response);
+		MHD_add_response_header (response, "Allow", PUT);
+		ret = MHD_queue_response (connection, MHD_HTTP_METHOD_NOT_ALLOWED, response);
 		MHD_destroy_response (response);
 		return ret;
-	}	
+	}
+
+	try {
+
+		// Delete the graph
+		if (!gm->deleteGraph(resource)) {
+			ULOG_ERR("deleteGraph returns false!");
+			return httpResponse(connection, MHD_HTTP_BAD_REQUEST);
+		}
+
+		// If security is required, update database
+		if(dbmanager != NULL)
+			dbmanager->deleteResource(BASE_URL_GRAPH, resource);
+
+	} catch (...) {
+		ULOG_ERR("An error occurred during the destruction of the graph!");
+		return httpResponse(connection, MHD_HTTP_INTERNAL_SERVER_ERROR);
+	}
+
+	ULOG_INFO("The graph has been properly deleted!");
+
+	return httpResponse(connection, MHD_HTTP_NO_CONTENT);
 }
 
+int RestServer::deleteGroup(struct MHD_Connection *connection, char *group) {
+	assert(dbmanager != NULL);
+
+	int ret = 0;
+	struct MHD_Response *response;
+
+	ULOG_INFO("Received request for deleting %s/%s", BASE_URL_GROUP, group);
+
+	// Check whether the user does exist in the database
+	if(!dbmanager->resourceExists(BASE_URL_GROUP, group)) {
+		ULOG_INFO("Cannot delete a non-existing group in the database!");
+		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header (response, "Allow", PUT);
+		ret = MHD_queue_response (connection, MHD_HTTP_METHOD_NOT_ALLOWED, response);
+		MHD_destroy_response (response);
+		return ret;
+	}
+
+	if(!dbmanager->usersExistForGroup(group)) {
+			dbmanager->deleteGroup(group);
+			ULOG_INFO("The group has been properly deleted!");
+			return httpResponse(connection, MHD_HTTP_ACCEPTED);
+	} else {
+		ULOG_INFO("Cannot remove a group having one or more members!");
+		return httpResponse(connection, MHD_HTTP_FORBIDDEN);
+	}
+}
+
+int RestServer::deleteUser(struct MHD_Connection *connection, char *username) {
+
+	int ret = 0;
+	struct MHD_Response *response;
+
+	ULOG_INFO("Received request for deleting %s/%s", BASE_URL_USER, username);
+
+	// If security is required, check whether the user does exist in the database
+	if(dbmanager != NULL && !dbmanager->resourceExists(BASE_URL_USER, username)) {
+		ULOG_INFO("Cannot delete a non-existing user in the database!");
+		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header (response, "Allow", PUT);
+		ret = MHD_queue_response (connection, MHD_HTTP_METHOD_NOT_ALLOWED, response);
+		MHD_destroy_response (response);
+		return ret;
+	}
+
+	try {
+		// If security is required, update database
+		if(dbmanager != NULL) {
+			dbmanager->deleteResource(BASE_URL_USER, username);
+			dbmanager->deleteUser(username);
+		}
+	} catch (...) {
+		ULOG_ERR("An error occurred during the deletion of the user!");
+		return httpResponse(connection, MHD_HTTP_INTERNAL_SERVER_ERROR);
+	}
+
+	ULOG_INFO("The user has been properly deleted!");
+
+	return httpResponse(connection, MHD_HTTP_NO_CONTENT);
+}
+
+int RestServer::doGetStatus(struct MHD_Connection *connection,const char *graphID)
+{
+	struct MHD_Response *response;
+	int ret;
+
+	ULOG_INFO("Required get status for resource: %s",graphID);
+
+	if(!gm->graphExists(graphID))
+	{
+		ULOG_INFO("Resource \"%s\" does not exist", graphID);
+		response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
+		ret = MHD_queue_response (connection, MHD_HTTP_NOT_FOUND, response);
+		MHD_destroy_response (response);
+		return ret;
+	}
+
+	Object json;
+	json["status"]="complete";
+	json["percentage_completed"]=100;
+	stringstream ssj;
+	write_formatted(json, ssj );
+	string sssj = ssj.str();
+	char *aux = (char*)malloc(sizeof(char) * (sssj.length()+1));
+	strcpy(aux,sssj.c_str());
+	response = MHD_create_response_from_buffer (strlen(aux),(void*) aux, MHD_RESPMEM_PERSISTENT);
+	MHD_add_response_header (response, "Content-Type",JSON_C_TYPE);
+	MHD_add_response_header (response, "Cache-Control",NO_CACHE);
+	ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+	MHD_destroy_response (response);
+	return ret;
+
+}

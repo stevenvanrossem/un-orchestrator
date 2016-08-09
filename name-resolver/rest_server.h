@@ -32,20 +32,20 @@
 
 #include "constants.h"
 #include "logger.h"
-			
-using namespace json_spirit;			
-using namespace std;			
-			
+
+using namespace json_spirit;
+using namespace std;
+
 class RestServer
 {
-private:	
-	
+private:
+
 	struct connection_info_struct
 	{
 	};
-	
+
 	static void freeXMLResources(xmlSchemaParserCtxtPtr parser_ctxt, xmlSchemaValidCtxtPtr valid_ctxt, xmlDocPtr schema_doc, xmlSchemaPtr schema, xmlDocPtr doc);
-	
+
 	/**
 	*	Names of the available NFs
 	**/
@@ -56,16 +56,16 @@ private:
 	static int print_out_key (void *cls, enum MHD_ValueKind kind, const char *key, const char *value);
 
 	static int doGet(struct MHD_Connection *connection,const char *url);
-	
+
 public:
 	static bool init(string nf_file_description);
 
 	static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 						const char *url, const char *method, const char *version,
 						const char *upload_data,size_t *upload_data_size, void **con_cls);
-						
+
 	static void request_completed (void *cls, struct MHD_Connection *connection, void **con_cls,
-						enum MHD_RequestTerminationCode toe);						
+						enum MHD_RequestTerminationCode toe);
 };
 
 #endif //REST_SERVER_H_

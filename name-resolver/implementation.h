@@ -26,7 +26,7 @@ class Implementation
 protected:
 	nf_t type;
 	string uri;
-	
+
 public:
 	static Implementation* create(const char* type, xmlNodePtr xmlDetails);
 

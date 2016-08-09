@@ -4,8 +4,8 @@
 #pragma once
 
 #include "../../../utils/constants.h"
-#include "../generic_action.h"
-#include "../vlan_action.h"
+#include "../generic_actions/generic_action.h"
+#include "../generic_actions/vlan_action.h"
 
 #include <string>
 #include <iostream>
@@ -21,7 +21,7 @@ using namespace std;
 namespace highlevel
 {
 
-enum action_t {INVALID,ACTION_ON_PORT,ACTION_ON_NETWORK_FUNCTION,ACTION_ON_ENDPOINT};
+enum action_t {INVALID,ACTION_ON_PORT,ACTION_ON_NETWORK_FUNCTION,ACTION_ON_ENDPOINT_GRE,ACTION_ON_ENDPOINT_INTERNAL};
 
 class Action
 {
@@ -32,8 +32,7 @@ private:
 public:
 	action_t getType();
 	virtual string getInfo() = 0;
-	
-	virtual void print() = 0;
+
 	virtual Object toJSON() = 0;
 	virtual string toString() = 0;
 
@@ -41,17 +40,17 @@ public:
 	*	Associate a generic action with this output action
 	*/
 	void addGenericAction(GenericAction *ga);
-	
+
 	/**
 	*	Return the generic actions associated with this output action
 	*/
 	list<GenericAction*> getGenericActions();
 
 	virtual ~Action();
-	
+
 protected:
 	Action(action_t type);
-	
+
 	/**
 	*	The outuput action contains a list of generic actions!
 	*	The code is organized in this way, because the output action is

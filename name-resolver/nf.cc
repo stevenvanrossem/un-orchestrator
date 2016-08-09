@@ -19,12 +19,12 @@ string NF::getName()
 
 Object NF::toJSON()
 {
-	Object nf;	
-	
+	Object nf;
+
 	nf["name"]  = name;
 	nf["nports"]  = nports;
 	nf["summary"] = summary;
-	
+
 	Array impl_ary;
 	for(list<Implementation*>::iterator i = implementations.begin(); i != implementations.end();i++)
 	{
@@ -32,8 +32,8 @@ Object NF::toJSON()
 		(*i)->toJSON(impl);
 		impl_ary.push_back(impl);
 	}
-	
+
 	nf["implementations"] = impl_ary;
-	
+
 	return nf;
 }

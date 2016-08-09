@@ -32,7 +32,7 @@ bool RestServer::init(string fileName)
 			freeXMLResources(parser_ctxt, valid_ctxt, schema_doc, schema, doc);
 			return false;
 		}
-	
+
 		schema = xmlSchemaParse(parser_ctxt);
 		if (schema == NULL)
 		{
@@ -41,7 +41,7 @@ bool RestServer::init(string fileName)
 			freeXMLResources(parser_ctxt, valid_ctxt, schema_doc, schema, doc);
 			return false;
 		}
-	
+
 		valid_ctxt = xmlSchemaNewValidCtxt(schema);
 		if (valid_ctxt == NULL)
 		{
@@ -59,7 +59,7 @@ bool RestServer::init(string fileName)
 			freeXMLResources(parser_ctxt, valid_ctxt, schema_doc, schema, doc);
 			return false;
 		}
-	
+
 		if(xmlSchemaValidateDoc(valid_ctxt, doc) != 0)
 		{
 			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Configuration file '%s' is not valid", fileName.c_str());
@@ -67,10 +67,10 @@ bool RestServer::init(string fileName)
 			freeXMLResources(parser_ctxt, valid_ctxt, schema_doc, schema, doc);
 			return false;
 		}
-		
+
 		///Retrieve the names of the NFs
 		xmlNodePtr root = xmlDocGetRootElement(doc);
-	
+
 		//Load the file describing NFs
 		for(xmlNodePtr cur_root_child=root->xmlChildrenNode; cur_root_child!=NULL; cur_root_child=cur_root_child->next)
 		{
@@ -93,7 +93,7 @@ bool RestServer::init(string fileName)
 				string name((const char*)attr_name);
 				string summary((const char*)attr_summary);
 				NF *nf = new NF(name,nports,summary);
-	
+
 				xmlNodePtr nf_elem = cur_root_child;
 				for(xmlNodePtr cur_descr = nf_elem->xmlChildrenNode; cur_descr != NULL; cur_descr = cur_descr->next)
 				{
@@ -115,7 +115,7 @@ bool RestServer::init(string fileName)
 	catch (...) {
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "An error occurred while loading configuration");
 	}
-	
+
 	freeXMLResources(parser_ctxt, valid_ctxt, schema_doc, schema, doc);
 	return false;
 }
@@ -127,7 +127,7 @@ void RestServer::request_completed (void *cls, struct MHD_Connection *connection
 
 	if (NULL == con_info)
 		return;
-	
+
 	free (con_info);
 	*con_cls = NULL;
 }
@@ -137,19 +137,19 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 			const char *upload_data,
 			size_t *upload_data_size, void **con_cls)
 {
-	
+
 	if(NULL == *con_cls)
 	{
 		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "New %s request for %s using version %s", method, url, version);
 		if(LOGGING_LEVEL <= ORCH_DEBUG)
 			MHD_get_connection_values (connection, MHD_HEADER_KIND, &print_out_key, NULL);
-	
+
 		struct connection_info_struct *con_info;
 		con_info = (struct connection_info_struct*)malloc (sizeof (struct connection_info_struct));
-		
+
 		if (NULL == con_info)
 			return MHD_NO;
-		
+
 		if (0 != strcmp (method, GET))
 		{
 			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Method \"%s\" not implemented",method);
@@ -158,14 +158,14 @@ int RestServer::answer_to_connection (void *cls, struct MHD_Connection *connecti
 			MHD_destroy_response (response);
 			return ret;
 		}
-			
+
 		*con_cls = (void*) con_info;
 		return MHD_YES;
 	}
 
 	if (0 == strcmp (method, GET))
 		return doGet(connection,url);
-		
+
 	//XXX: just for the compiler
 	return MHD_YES;
 }
@@ -182,7 +182,7 @@ int RestServer::doGet(struct MHD_Connection *connection, const char *url)
 	struct MHD_Response *response;
 	int ret;
 	bool digest = false;
-	
+
 	//Check the URL
 	char delimiter[] = "/";
  	char * pnt;
@@ -212,7 +212,7 @@ int RestServer::doGet(struct MHD_Connection *connection, const char *url)
 				else
 					strcpy(nf_name,pnt);
 		}
-		
+
 		pnt = strtok( NULL, delimiter );
 		i++;
 	}
@@ -224,7 +224,7 @@ int RestServer::doGet(struct MHD_Connection *connection, const char *url)
 		MHD_destroy_response (response);
 		return ret;
 	}
-	
+
 	if(MHD_lookup_connection_value (connection,MHD_HEADER_KIND, "Host") == NULL)
 	{
 		logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "\"Host\" header not present in the request");
@@ -233,16 +233,16 @@ int RestServer::doGet(struct MHD_Connection *connection, const char *url)
 		MHD_destroy_response (response);
 		return ret;
 	}
-	
+
 	try
 	{
 		Object json ;
-		
+
 		//Create the json according to the request
 		if(i == 1)
 		{
 			logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Required all the resources");
-		
+
 			Array networkFunctions;
 			for(set<NF*>::iterator nf = nfs.begin(); nf != nfs.end(); nf++)
 				networkFunctions.push_back((*nf)->toJSON());
@@ -253,7 +253,7 @@ int RestServer::doGet(struct MHD_Connection *connection, const char *url)
 			if(digest)
 			{
 				logger(ORCH_DEBUG_INFO, MODULE_NAME, __FILE__, __LINE__, "Required a summary of the resources");
-				
+
 				Array networkFunctions;
 				for(set<NF*>::iterator nf = nfs.begin(); nf != nfs.end(); nf++)
 				{
@@ -278,17 +278,17 @@ int RestServer::doGet(struct MHD_Connection *connection, const char *url)
 				response = MHD_create_response_from_buffer (0,(void*) "", MHD_RESPMEM_PERSISTENT);
 				ret = MHD_queue_response (connection, MHD_HTTP_METHOD_NOT_ALLOWED, response);
 				MHD_destroy_response (response);
-				return ret;	
+				return ret;
 			}
 		}
-		
-ok:		
+
+ok:
 		stringstream ssj;
  		write_formatted(json, ssj );
  		string sssj = ssj.str();
  		char *aux = (char*)malloc(sizeof(char) * (sssj.length()+1));
  		strcpy(aux,sssj.c_str());
-		response = MHD_create_response_from_buffer (strlen(aux),(void*) aux, MHD_RESPMEM_PERSISTENT);		
+		response = MHD_create_response_from_buffer (strlen(aux),(void*) aux, MHD_RESPMEM_PERSISTENT);
 		MHD_add_response_header (response, "Content-Type",JSON_C_TYPE);
 		MHD_add_response_header (response, "Cache-Control",NO_CACHE);
 		ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
@@ -301,7 +301,7 @@ ok:
 		ret = MHD_queue_response (connection, MHD_HTTP_INTERNAL_SERVER_ERROR, response);
 		MHD_destroy_response (response);
 		return ret;
-	}	
+	}
 }
 
 

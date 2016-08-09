@@ -19,8 +19,8 @@
 
 #ifdef ENABLE_SEMAPHORE
 	#include <semaphore.h>
-#endif	
-	
+#endif
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -56,7 +56,7 @@ typedef struct mbuf_array
 	*	@brief: packets received / to be sent
 	*/
 	struct rte_mbuf *array[PKT_TO_NF_THRESHOLD];
-	
+
 	/**
 	*	@brief: number of packets received / to be sent
 	*/
@@ -69,12 +69,12 @@ struct nf_port_t
 	*	@brief: queue used to receive packets
 	*/
 	struct rte_ring *to_nf_queue;
-	
+
 	/**
 	*	@brief: queue used to transmit packets
 	*/
 	struct rte_ring *to_xdpd_queue;
-	
+
 	/**
 	*	@brief: name of the port
 	*/
@@ -82,7 +82,7 @@ struct nf_port_t
 };// __rte_cache_aligned;
 
 struct nf_params_t
-{	
+{
 	/**
 	*	@brief: ports to be used to transmit/receive packets
 	*/
@@ -100,7 +100,7 @@ struct nf_params_t
 	*/
 	sem_t *semaphore;
 #endif
-	
+
 	/* mbuf pools */
 	//FIXME: currently it is not used - to be linked to the pool
 	//used by xDPD in order to create new packets

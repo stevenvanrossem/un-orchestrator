@@ -24,7 +24,7 @@ enum PortType {
 	USVHOST_PORT,			//user space vhost port
 	IVSHMEM_PORT,			//ivshmem port
 	VHOST_PORT,				//(in kernel) vhost port
-	//Ports used fro Docker containers 
+	//Ports used fro Docker containers
 	VETH_PORT,				//veth pair port
 	//Ports used for DPDK processes executed in the host
 	DPDKR_PORT				//dpdkr port
@@ -37,6 +37,7 @@ struct nf_port_info
 {
 	string port_name;
 	PortType port_type;
+	unsigned int port_id;
 };
 bool operator==(const nf_port_info& lhs, const nf_port_info& rhs);
 
@@ -53,7 +54,7 @@ public:
 	Description(nf_t type, string uri, std::map<unsigned int, PortType>& port_types);
 	Description(string type, string uri, std::map<unsigned int, PortType>& port_types);
 	virtual ~Description();
-	
+
 	string getURI() const;
 	nf_t getType() const;
 	void setSupported(bool supported);

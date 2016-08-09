@@ -24,27 +24,27 @@ int main(int argc, char *argv[])
 {
 	//Check for root privileges
 	if(geteuid() != 0)
-	{	
+	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Root permissions are required to run %s\n",argv[0]);
-		exit(EXIT_FAILURE);	
+		exit(EXIT_FAILURE);
 	}
 
 	char *file_name = NULL;
 	if(!parse_command_line(argc,argv,&file_name))
-		exit(EXIT_FAILURE);	
-	
+		exit(EXIT_FAILURE);
+
 	string file(file_name);
 
 	if(!RestServer::init(file))
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot start the database");
-		exit(EXIT_FAILURE);	
+		exit(EXIT_FAILURE);
 	}
-	
+
 	http_daemon = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, REST_PORT, NULL, NULL,
 		&RestServer::answer_to_connection, NULL, MHD_OPTION_NOTIFY_COMPLETED, &RestServer::request_completed, NULL,
 		MHD_OPTION_END);
-	
+
 	if (NULL == http_daemon)
 	{
 		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error when starting the HTTP deamon");
@@ -56,9 +56,9 @@ int main(int argc, char *argv[])
 
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The REST server is properly started!");
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Waiting for commands on TCP port \"%d\"",REST_PORT);
-	
+
 	pause();
-	
+
 	return 0;
 }
 
@@ -88,7 +88,7 @@ bool parse_command_line(int argc, char *argv[], char **file_name)
 				if (!strcmp(lgopts[option_index].name, "f"))/* port */
 	   			{
 	   				*file_name = optarg;
-	   				
+
 	   				arg_f++;
 	   			}
 	   			else if (!strcmp(lgopts[option_index].name, "h"))/* help */
@@ -136,7 +136,7 @@ bool usage(void)
 	"  sudo ./name-resolver --f ./config/example.xml                                          \n\n";
 
 	fprintf(stderr,"\n\n[%s] %s\n",MODULE_NAME,message);
-	
+
 	return false;
 }
 
@@ -145,7 +145,7 @@ void singint_handler(int sig)
     logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The '%s' is terminating...",MODULE_NAME);
 
 	MHD_stop_daemon(http_daemon);
-	
+
 	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Bye :D");
 	exit(EXIT_SUCCESS);
 }

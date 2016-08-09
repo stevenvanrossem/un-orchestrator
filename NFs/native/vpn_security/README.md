@@ -16,11 +16,14 @@ of the IPsec tunnel. All traffic sent between the networks `10.0.1.0/24` and
 
 This native network function requires the following packages:
 
-  * `ipsec-tools`  
+  * `ipsec-tools`
+  * `iptables`
   
-It can be installed with the command:
+`ipsec-tools` can be installed with the command:
 
 	$ sudo apt-get install ipsec-tools
+	
+`iptables` is installed by default on all official **Ubuntu** distributions. 
 
 ## Configuration of IPsec
 
@@ -38,8 +41,11 @@ following command:
 	
 ## Run
 
-Before running this native network function you must create a tar.gz archive
+Before running this native network function, you must create a tar.gz archive
 that contains the files `start`, `stop` and `setkey.conf` (already customized)
 with the command:
 
 	$ tar -zcf vpn_sec.tar.gz start stop setkey.conf
+	
+Note that `vpn_sec` is the name of the network function as specified in the
+NF-FG and in the name-resolver configuration file.
