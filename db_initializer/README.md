@@ -19,7 +19,7 @@ Database Initializer is the module responsible for creating and populating the d
 
 The previous command allows you to select some configuration parameters for the
 db-initializder, such as the logging level. 
-Please be sure that the option `BUILD_DBInitializer ` is `ON`.
+**Please be sure that the option `BUILD_DBInitializer ` is `ON`.**
 When you're finished, exit from the `ccmake` interface by 
 *generating the configuration files* (press 'c' and 'g')
 and type the following commands:
