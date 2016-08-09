@@ -1,5 +1,7 @@
 #include "low_level_match.h"
 
+static const char LOG_MODULE_NAME[] = "Low-Level-Match";
+
 namespace lowlevel
 {
 
@@ -17,9 +19,9 @@ Match::Match(bool is_local_port) :
 
 bool Match::operator==(const Match &other) const
 {
-	logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Matches to be compared:");
-	logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\tisInputPort %s vs %s ",(isInput_port)?"yes":"no",(other.isInput_port)?"yes":"no");
-	logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\tinput port: %d vs %d",input_port,other.input_port);
+	ULOG_DBG("Matches to be compared:");
+	ULOG_DBG("\tisInputPort %s vs %s ",(isInput_port)?"yes":"no",(other.isInput_port)?"yes":"no");
+	ULOG_DBG("\tinput port: %d vs %d",input_port,other.input_port);
 
 	if((isInput_port && !other.isInput_port) ||
 		(!isInput_port && other.isInput_port) )
@@ -28,7 +30,7 @@ bool Match::operator==(const Match &other) const
 	if(input_port != other.input_port)
 		return false;
 
-	logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Comparing other fields...");
+	ULOG_DBG("Comparing other fields...");
 
 	return this->isEqual(other);
 }
@@ -93,18 +95,18 @@ void Match::fillFlowmodMessage(rofl::openflow::cofflowmod &message)
 		else
 			message.set_match().set_ipv4_dst(caddress_in4(ipv4_dst));
 	}
-	if(isTcpSrc)
-		message.set_match().set_tcp_src(tcp_src);
-	if(isTcpDst)
-		message.set_match().set_tcp_dst(tcp_dst);
-	if(isUdpSrc)
-		message.set_match().set_udp_src(udp_src);
-	if(isUdpDst)
-		message.set_match().set_udp_dst(udp_dst);
-	if(isSctpSrc)
-		message.set_match().set_sctp_src(sctp_src);
-	if(isSctpDst)
-		message.set_match().set_sctp_dst(sctp_dst);
+	if(isTcpProtocol && transport_src_port)
+		message.set_match().set_tcp_src(transport_src_port);
+	if(isTcpProtocol && transport_dst_port)
+		message.set_match().set_tcp_dst(transport_dst_port);
+	if(isUdpProtocol && transport_src_port)
+		message.set_match().set_udp_src(transport_src_port);
+	if(isUdpProtocol && transport_dst_port)
+		message.set_match().set_udp_dst(transport_dst_port);
+	if(isSctpProtocol && transport_src_port)
+		message.set_match().set_sctp_src(transport_src_port);
+	if(isSctpProtocol && transport_dst_port)
+		message.set_match().set_sctp_dst(transport_dst_port);
 	if(isIcmpv4Type)
 		message.set_match().set_icmpv4_type(icmpv4Type);
 	if(isIcmpv4Code)
@@ -240,26 +242,26 @@ void Match::print()
 		/*
 		*	TCP
 		*/
-		if(isTcpSrc)
-			cout << "\t\t\tTCP src port: " << tcp_src << endl;
-		if(isTcpDst)
-			cout << "\t\t\tTCP dst port: " << tcp_dst << endl;
+		if(isTcpProtocol && transport_src_port)
+			cout << "\t\t\tTCP src port: " << transport_src_port << endl;
+		if(isTcpProtocol && transport_dst_port)
+			cout << "\t\t\tTCP dst port: " << transport_dst_port << endl;
 
 		/*
 		*	UDP
 		*/
-		if(isUdpSrc)
-			cout << "\t\t\tUDP src port: " << udp_src << endl;
-		if(isUdpDst)
-			cout << "\t\t\tUDP dst port: " << udp_dst << endl;
+		if(isUdpProtocol && transport_src_port)
+			cout << "\t\t\tUDP src port: " << transport_src_port << endl;
+		if(isUdpProtocol && transport_dst_port)
+			cout << "\t\t\tUDP dst port: " << transport_dst_port << endl;
 
 		/*
 		*	SCTP
 		*/
-		if(isSctpSrc)
-			cout << "\t\t\tSCTP src port: " << sctp_src << endl;
-		if(isSctpDst)
-			cout << "\t\t\tSCTP dst port: " << sctp_dst << endl;
+		if(isSctpProtocol && transport_src_port)
+			cout << "\t\t\tSCTP src port: " << transport_src_port << endl;
+		if(isSctpProtocol && transport_dst_port)
+			cout << "\t\t\tSCTP dst port: " << transport_dst_port << endl;
 
 		/*
 		*	ICMPv4

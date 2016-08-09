@@ -553,23 +553,3 @@ IF(BUILD_ExternalProjects)
 
 ENDIF(BUILD_ExternalProjects)
 
-# inih - https://github.com/benhoyt/inih
-ExternalProject_Add(
-	Inih
-	# GIT_REPOSITORY https://github.com/benhoyt/inih
-	# GIT_TAG r35
-	# URL https://github.com/benhoyt/inih/archive/r35.zip
-	URL ${CMAKE_SOURCE_DIR}/contrib/inih-r35.zip
-	URL_MD5 e131365d1ca20cfa687e3d9284e59d39
-	BUILD_IN_SOURCE 1
-	PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/contrib/inih.patch
-	CONFIGURE_COMMAND ""
-	BUILD_COMMAND cd extra && make -f Makefile.static
-	INSTALL_COMMAND
-	COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/externals/lib/
-	COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/externals/include/
-	COMMAND ${CMAKE_COMMAND} -E copy extra/libinih.a ${CMAKE_BINARY_DIR}/externals/lib/
-	COMMAND ${CMAKE_COMMAND} -E copy ini.h ${CMAKE_BINARY_DIR}/externals/include/
-	COMMAND ${CMAKE_COMMAND} -E copy cpp/INIReader.h ${CMAKE_BINARY_DIR}/externals/include/
-)
-
