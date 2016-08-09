@@ -1008,7 +1008,7 @@ string commands::add_port(string p, uint64_t dnumber, bool is_nf_port, int s, Po
 	rnumber++;
 
 	//disconnect socket
-    	cmd_disconnect(s);
+		cmd_disconnect(s);
 
 	/**
 	*	Considerations:
@@ -1026,9 +1026,9 @@ string commands::add_port(string p, uint64_t dnumber, bool is_nf_port, int s, Po
 	*	Call a bash script that brings up the interface and disebled offloads on it. The script pools untill such interface
 	*	is created, thus ensuring that, when the VNF will be created, the ports are already attached to OvS.
 	*/
-    	if(is_nf_port && ((port_type == VHOST_PORT) || (port_type == VETH_PORT)))
-    	{
-    		stringstream command;
+	if(is_nf_port && ((port_type == VHOST_PORT) || (port_type == VETH_PORT)))
+	{
+		stringstream command;
 		command << getenv("un_script_path") << ACTIVATE_INTERFACE << " " << port_name;
 		ULOG_DBG_INFO("Executing command \"%s\"",command.str().c_str());
 		int retVal = system(command.str().c_str());
