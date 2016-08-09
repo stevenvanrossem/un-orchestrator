@@ -20,7 +20,7 @@ Your are now ready to compile the name-resolver.
 
 The previous command allows you to select some configuration parameters for the
 name-resolver, such as the logging level. 
-Please be sure that the option `BUILD_NameResolver` is `ON`.
+**Please be sure that the option `BUILD_NameResolver` is `ON`.**
 When you're finished, exit from the `ccmake` interface by 
 *generating the configuration files* (press 'c' and 'g')
 and type the following commands:
