@@ -238,7 +238,7 @@ You can then build the un-orchestrator:
 The previous command allows you to select some configuration parameters for the
 un-orchestrator, such as the virtual switch used, which kind of execution environment(s)
 you want to enable, and more.
-Please be sure that the option `BUILD_Orchestrator` is `ON`.
+**Please be sure that the option `BUILD_Orchestrator` is `ON`.**
 When you're finished, exit from the `ccmake` interface by 
 *generating the configuration files* (press 'c' and 'g') and type the following commands:
 	
