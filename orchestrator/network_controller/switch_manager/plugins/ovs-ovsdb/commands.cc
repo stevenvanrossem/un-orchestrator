@@ -231,7 +231,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s)
 	row["connection_mode"] = "out-of-band";
 	row["is_connected"] = true;
 
-   	first_obj["row"] = row;
+	first_obj["row"] = row;
 
 	//create the current name of controller --> ctrl+dnumber
 	sprintf(ctr, "ctrl%" PRIu64, dnumber);
@@ -249,15 +249,15 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s)
 	first_obj["op"] = "insert";
 	first_obj["table"] = "Bridge";
 
-    row["name"] = sw;
+	row["name"] = sw;
 
-    Array port;
+	Array port;
 	Array port1;
 	Array port2;
 
 	Array i_array;
-   	Array ctrl;
-   	ctrl.push_back("set");
+	Array ctrl;
+	ctrl.push_back("set");
 
 	Array ctrl1;
 	Array ctrl2;
@@ -269,7 +269,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s)
 
 	ctrl.push_back(ctrl1);
 
-   	row["controller"] = ctrl;
+	row["controller"] = ctrl;
 
 	peer.push_back("map");
 
@@ -290,30 +290,30 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s)
 
 	row["other_config"] = peer;
 
-    row["protocols"] = of_version;
+	row["protocols"] = of_version;
 
-    first_obj["row"] = row;
+	first_obj["row"] = row;
 
-    first_obj["uuid-name"] = sw;
+	first_obj["uuid-name"] = sw;
 
-   	params.push_back(first_obj);
+	params.push_back(first_obj);
 
-   	row.clear();
-   	first_obj.clear();
+	row.clear();
+	first_obj.clear();
 	peer.clear();
-   	peer1.clear();
-   	peer2.clear();
+	peer1.clear();
+	peer2.clear();
 
-   	dnumber_new = dnumber;
+	dnumber_new = dnumber;
 
-  	/*Object with four items [op, table, where, mutations]*/
-   	Object second_obj;
-    second_obj["op"] = "mutate";
-    second_obj["table"] = "Open_vSwitch";
+	/*Object with four items [op, table, where, mutations]*/
+	Object second_obj;
+	second_obj["op"] = "mutate";
+	second_obj["table"] = "Open_vSwitch";
 
-    /*Empty array [where]*/
-   	Array where;
-    second_obj["where"] = where;
+	/*Empty array [where]*/
+	Array where;
+	second_obj["where"] = where;
 
 	/*Array with one element*/
 	Array w_array;
@@ -338,15 +338,15 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s)
 
 	i_array.push_back(s_array);
 
-   	m_array.push_back(i_array);
+	m_array.push_back(i_array);
 
-   	w_array.push_back(m_array);
+	w_array.push_back(m_array);
 
-   	second_obj["mutations"] = w_array;
+	second_obj["mutations"] = w_array;
 
-   	params.push_back(second_obj);
+	params.push_back(second_obj);
 
-    root["params"] = params;
+	root["params"] = params;
 	root["id"] = tid;
 
 	w_array.clear();
@@ -358,26 +358,26 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s)
 	//Increment transaction id
 	tid++;
 
-   	string *strr = new string[256];
+	string *strr = new string[256];
 
-   	stringstream ss;
- 	write_formatted(root, ss);
+	stringstream ss;
+	write_formatted(root, ss);
 
-    nwritten = sock_send(s, ss.str().c_str(), strlen(ss.str().c_str()), ErrBuf, sizeof(ErrBuf));
+	nwritten = sock_send(s, ss.str().c_str(), strlen(ss.str().c_str()), ErrBuf, sizeof(ErrBuf));
 	if (nwritten == sockFAILURE)
 	{
 		ULOG_ERR("Error sending data: %s", ErrBuf);
 		throw commandsException();
 	}
 
-    r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
+	r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 	if (r == sockFAILURE)
 	{
 		ULOG_ERR("Error reading data: %s", ErrBuf);
 		throw commandsException();
 	}
 
- 	ULOG_DBG("Message sent to ovs: ");
+	ULOG_DBG("Message sent to ovs: ");
 	ULOG_DBG(ss.str().c_str());
 	ULOG_DBG("Answer: ");
 	ULOG_DBG(read_buf);
@@ -624,7 +624,7 @@ CreateLsiOut* commands::cmd_editconfig_lsi (CreateLsiIn cli, int s)
 		}
 	}
 
-    	clo = new CreateLsiOut(dnumber_new, physical_ports, network_functions_ports, endpoints_ports, out_nf_ports_name_on_switch, virtual_links, out_nf_ports_name_and_id);
+	clo = new CreateLsiOut(dnumber_new, physical_ports, network_functions_ports, endpoints_ports, out_nf_ports_name_on_switch, virtual_links, out_nf_ports_name_and_id);
 
 	return clo;
 }
@@ -688,8 +688,8 @@ string commands::add_port(string p, uint64_t dnumber, bool is_nf_port, int s, Po
 	if (!is_nf_port) {
 		uuid_name = p;
 		/**
- 		* Build name that is valid as UUID: no '.', no '_' ...
- 		*/
+		* Build name that is valid as UUID: no '.', no '_' ...
+		*/
 		std::replace(uuid_name.begin(), uuid_name.end(), '.', 'p');
 		std::replace(uuid_name.begin(), uuid_name.end(), '-', 'p');
 		port_name = p;
@@ -1276,7 +1276,7 @@ void commands::add_endpoint(uint64_t dpi, char local_ip[BUF_SIZE], char remote_i
 	root["id"] = tid;
 
 	stringstream ss;
- 	write_formatted(root, ss );
+	write_formatted(root, ss );
 
 	nwritten = sock_send(s, ss.str().c_str(), strlen(ss.str().c_str()), ErrBuf, sizeof(ErrBuf));
 	if (nwritten == sockFAILURE)
@@ -1285,7 +1285,7 @@ void commands::add_endpoint(uint64_t dpi, char local_ip[BUF_SIZE], char remote_i
 		throw commandsException();
 	}
 
-    	r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
+	r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 	if (r == sockFAILURE)
 	{
 		ULOG_ERR("Error reading data: %s", ErrBuf);
@@ -1346,14 +1346,14 @@ void commands::add_endpoint(uint64_t dpi, char local_ip[BUF_SIZE], char remote_i
 	rnumber++;
 
 	//disconnect socket
-    	cmd_disconnect(s);
+	cmd_disconnect(s);
 }
 
 void commands::cmd_editconfig_lsi_delete(uint64_t dpi, int s)
 {
 	ULOG_DBG_INFO("Deleting LSI with DPI '%u' switch '%s'",dpi, switch_id[dpi].c_str());
 
-    	ssize_t nwritten = 0;
+	ssize_t nwritten = 0;
 
 	int r = 0;
 
@@ -1471,7 +1471,7 @@ void commands::cmd_editconfig_lsi_delete(uint64_t dpi, int s)
 	root["id"] = tid;
 
 	stringstream ss;
- 	write_formatted(root, ss );
+	write_formatted(root, ss );
 
 	nwritten = sock_send(s, ss.str().c_str(), strlen(ss.str().c_str()), ErrBuf, sizeof(ErrBuf));
 	if (nwritten == sockFAILURE)
@@ -1480,7 +1480,7 @@ void commands::cmd_editconfig_lsi_delete(uint64_t dpi, int s)
 		throw commandsException();
 	}
 
-    	r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
+	r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 	if (r == sockFAILURE)
 	{
 		ULOG_ERR("Error reading data: %s", ErrBuf);
@@ -1499,7 +1499,7 @@ void commands::cmd_editconfig_lsi_delete(uint64_t dpi, int s)
 	tid++;
 
 	//disconnect socket
-    	cmd_disconnect(s);
+	cmd_disconnect(s);
 }
 
 AddNFportsOut *commands::cmd_editconfig_NFPorts(AddNFportsIn anpi, int socketNumber)
@@ -1565,7 +1565,7 @@ AddEndpointOut *commands::cmd_editconfig_endpoint(AddEndpointIn aepi, int s)
 
 void commands::cmd_editconfig_NFPorts_delete(DestroyNFportsIn dnpi, int s)
 {
-    	ssize_t nwritten;
+	ssize_t nwritten;
 
 	char read_buf[BUFFER_SIZE];
 
@@ -1585,7 +1585,7 @@ void commands::cmd_editconfig_NFPorts_delete(DestroyNFportsIn dnpi, int s)
 	Array fourth_object;
 
 	//connect socket
-    	s = cmd_connect();
+	s = cmd_connect();
 
 	if(nfp.size() != 0){
 
@@ -1732,7 +1732,7 @@ void commands::cmd_editconfig_NFPorts_delete(DestroyNFportsIn dnpi, int s)
 		root["id"] = tid;
 
 		stringstream ss;
- 		write_formatted(root, ss );
+		write_formatted(root, ss );
 
 		nwritten = sock_send(s, ss.str().c_str(), strlen(ss.str().c_str()), ErrBuf, sizeof(ErrBuf));
 		if (nwritten == sockFAILURE)
@@ -1741,7 +1741,7 @@ void commands::cmd_editconfig_NFPorts_delete(DestroyNFportsIn dnpi, int s)
 			throw commandsException();
 		}
 
-    		r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
+		r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 		if (r == sockFAILURE)
 		{
 			ULOG_ERR("Error reading data: %s", ErrBuf);
@@ -1926,7 +1926,7 @@ void commands::cmd_editconfig_endpoint_delete(DestroyEndpointIn depi, int s){
 			throw commandsException();
 		}
 
-    		r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
+		r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 		if (r == sockFAILURE)
 		{
 			ULOG_ERR("Error reading data: %s", ErrBuf);
@@ -2032,7 +2032,7 @@ void commands::cmd_add_virtual_link(string vrt, string trv, char ifac[BUF_SIZE],
 	Array fourth_object;
 
 	//connect socket
-    	s = cmd_connect();
+	s = cmd_connect();
 
 	root["method"] = "transact";
 
@@ -2059,7 +2059,7 @@ void commands::cmd_add_virtual_link(string vrt, string trv, char ifac[BUF_SIZE],
 	peer1.push_back(peer2);
 	peer.push_back(peer1);
 
-    	row["options"] = peer;
+	row["options"] = peer;
 
 	first_obj["row"] = row;
 
@@ -2207,7 +2207,7 @@ void commands::cmd_add_virtual_link(string vrt, string trv, char ifac[BUF_SIZE],
 	root["id"] = tid;
 
 	stringstream ss;
- 	write_formatted(root, ss );
+	write_formatted(root, ss );
 
 	nwritten = sock_send(s, ss.str().c_str(), strlen(ss.str().c_str()), ErrBuf, sizeof(ErrBuf));
 	if (nwritten == sockFAILURE)
@@ -2216,7 +2216,7 @@ void commands::cmd_add_virtual_link(string vrt, string trv, char ifac[BUF_SIZE],
 		throw commandsException();
 	}
 
-    	r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
+	r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 	if (r == sockFAILURE)
 	{
 		ULOG_ERR("Error reading data: %s", ErrBuf);
@@ -2229,8 +2229,8 @@ void commands::cmd_add_virtual_link(string vrt, string trv, char ifac[BUF_SIZE],
 	ULOG_DBG(read_buf);
 
 	Value value;
-    	read( read_buf, value );
-   	Object rootNode = value.getObject();
+	read( read_buf, value );
+	Object rootNode = value.getObject();
 
 	for (Object::const_iterator it = rootNode.begin(); it != rootNode.end(); ++it)
 	{
@@ -2274,7 +2274,7 @@ void commands::cmd_add_virtual_link(string vrt, string trv, char ifac[BUF_SIZE],
 	rnumber++;
 
 	//disconnect socket
-    	cmd_disconnect(s);
+	cmd_disconnect(s);
 }
 
 void commands::cmd_destroyVirtualLink(DestroyVirtualLinkIn dvli, int s){
@@ -2325,7 +2325,7 @@ void commands::cmd_delete_virtual_link(uint64_t dpi, uint64_t idp, int s)
 	Array fourth_object;
 
 	//connect socket
-    	s = cmd_connect();
+	s = cmd_connect();
 
 	root["method"] = "transact";
 
@@ -2447,7 +2447,7 @@ void commands::cmd_delete_virtual_link(uint64_t dpi, uint64_t idp, int s)
 	root["id"] = tid;
 
 	stringstream ss;
- 	write_formatted(root, ss );
+	write_formatted(root, ss );
 
 	nwritten = sock_send(s, ss.str().c_str(), strlen(ss.str().c_str()), ErrBuf, sizeof(ErrBuf));
 	if (nwritten == sockFAILURE)
@@ -2456,7 +2456,7 @@ void commands::cmd_delete_virtual_link(uint64_t dpi, uint64_t idp, int s)
 		throw commandsException();
 	}
 
-    	r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
+	r = sock_recv(s, read_buf, sizeof(read_buf), SOCK_RECEIVEALL_NO, 0/*no timeout*/, ErrBuf, sizeof(ErrBuf));
 	if (r == sockFAILURE)
 	{
 		ULOG_ERR("Error reading data: %s", ErrBuf);
@@ -2475,5 +2475,5 @@ void commands::cmd_delete_virtual_link(uint64_t dpi, uint64_t idp, int s)
 	tid++;
 
 	//disconnect socket
-    cmd_disconnect(s);
+	cmd_disconnect(s);
 }
