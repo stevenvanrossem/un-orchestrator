@@ -1,23 +1,7 @@
 #! /bin/bash
 
-#This gives time to the UN to configure the network namespace of the container
-#sleep 10
-
-up=false
-
-while [ "$up" == false ]
-do
-t1=$(ifconfig | grep -o eth5)
-t2='eth5'
-
-if [ "$t1" = "$t2" ]; then
-  echo "eth5 up"
-  up=true
-else
-  echo "eth5 down, waiting for all eth ports to be up..."
-  sleep 1
-fi
-done
+#This file is executed by the UN after the docker container has been started up
+# so interface should be available at this point
 
 echo "Ubuntu started"
 echo "start ovs"
@@ -60,9 +44,4 @@ ovs-vsctl add-port $NAME ${NAME}_eth3
 #tcp:10.0.10.100:6633
 ovs-vsctl set-controller $NAME $CONTROLLER
 
-# keep container running
-while true
-do
-	sleep 1
-done
 
