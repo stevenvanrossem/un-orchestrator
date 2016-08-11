@@ -20,7 +20,7 @@
 #include <openssl/sha.h>
 #include "node_resource_manager/database_manager/SQLite/SQLiteManager.h"
 
-#include "node_resource_manager/database_manager/SQLite/INIReader.h"
+#include <INIReader.h>
 
 #include <signal.h>
 #include <execinfo.h>
@@ -31,6 +31,8 @@
 //#else
 //	#define USE_REG REG_EIP
 #endif
+
+static const char LOG_MODULE_NAME[] = "Local-Orchestrator";
 
 /**
 *	Global variables (defined in ../utils/constants.h)
@@ -53,7 +55,7 @@ SQLiteManager *dbm = NULL;
 *	Private prototypes
 */
 bool parse_command_line(int argc, char *argv[],int *core_mask,char **config_file);
-bool parse_config_file(char *config_file, int *rest_port, bool *cli_auth, char **nffg_file_name, set<string> &physical_ports, char **descr_file_name, char **client_name, char **broker_address, char **key_path, bool *orchestrator_in_band, char **un_interface, char **un_address, char **ipsec_certificate);
+bool parse_config_file(char *config_file, int *rest_port, bool *cli_auth,  map<string,string> &boot_graphs, set<string> &physical_ports, char **descr_file_name, char **client_name, char **broker_address, char **key_path, bool *orchestrator_in_band, char **un_interface, char **un_address, char **ipsec_certificate, string &name_resolver_ip, int *name_resolver_port);
 
 bool usage(void);
 void printUniversalNodeInfo();
@@ -62,13 +64,12 @@ void terminateRestServer(void);
 /**
 *	Implementations
 */
-
 void signal_handler(int sig, siginfo_t *info, void *secret)
 {
 	switch(sig)
 	{
 		case SIGINT:
-			logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The '%s' is terminating...",MODULE_NAME);
+			ULOG_INFO( "The '%s' is terminating...",MODULE_NAME);
 
 			MHD_stop_daemon(http_daemon);
 			terminateRestServer();
@@ -80,7 +81,7 @@ void signal_handler(int sig, siginfo_t *info, void *secret)
 #ifdef ENABLE_DOUBLE_DECKER_CONNECTION
 			DoubleDeckerClient::terminate();
 #endif
-			logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Bye :D");
+			ULOG_INFO( "Bye :D");
 			exit(EXIT_SUCCESS);
 		break;
 #ifdef __x86_64__
@@ -91,9 +92,9 @@ void signal_handler(int sig, siginfo_t *info, void *secret)
 			char **messages = (char **)NULL;
 			int i, trace_size = 0;
 			ucontext_t *uc = (ucontext_t *)secret;
-
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "");
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Got signal %d, faulty address is %p, from %p", sig, info->si_addr, uc->uc_mcontext.gregs[USE_REG]);
+			char *ret;
+			ULOG_ERR( "");
+			ULOG_ERR( "Got signal %d, faulty address is %p, from %p", sig, info->si_addr, uc->uc_mcontext.gregs[USE_REG]);
 
 			trace_size = backtrace(trace, 16);
 			/* overwrite sigaction with caller's address */
@@ -101,10 +102,10 @@ void signal_handler(int sig, siginfo_t *info, void *secret)
 
 			messages = backtrace_symbols(trace, trace_size);
 			/* skip first stack frame (points here) */
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Backtrace -");
+			ULOG_ERR( "Backtrace -");
 			for (i = 1; i < trace_size; ++i)
 			{
-				logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "%s ", messages[i]);
+				ULOG_ERR( "%s ", messages[i]);
 				size_t p = 0;
 				while (messages[i][p] != '(' && messages[i][p] != ' ' && messages[i][p] != 0)
 					++p;
@@ -120,14 +121,17 @@ void signal_handler(int sig, siginfo_t *info, void *secret)
 				if (fp == NULL) {
 					printf("Failed to run command %s", syscom);
 				}
-				fgets(path, sizeof(path), fp);
+				ret = fgets(path, sizeof(path), fp);
+				if (ret != path) {
+					exit(EXIT_FAILURE);
+				}
 				fclose(fp);
 
 				output = strdup(path);
 
 				if (output != NULL)
 				{
-					logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "%s", output);
+					ULOG_ERR( "%s", output);
 					free(output);
 				}
 			}
@@ -143,8 +147,8 @@ int main(int argc, char *argv[])
 	//Check for root privileges
 	if(geteuid() != 0)
 	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Root permissions are required to run %s\n",argv[0]);
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot start the %s",MODULE_NAME);
+		ULOG_ERR( "Root permissions are required to run %s\n",argv[0]);
+		ULOG_ERR( "Cannot start the %s",MODULE_NAME);
 		exit(EXIT_FAILURE);
 	}
 
@@ -159,7 +163,7 @@ int main(int argc, char *argv[])
 	bool cli_auth, t_cli_auth, orchestrator_in_band, t_orchestrator_in_band;
 	char *config_file_name = new char[BUFFER_SIZE];
 	set<string> physical_ports;
-	char *nffg_file_name = new char[BUFFER_SIZE], *t_nffg_file_name = NULL;
+	map<string,string> boot_graphs;
 	char *descr_file_name = new char[BUFFER_SIZE], *t_descr_file_name = NULL;
 #ifdef ENABLE_DOUBLE_DECKER_CONNECTION
 	char *client_name = new char[BUFFER_SIZE];
@@ -171,6 +175,9 @@ int main(int argc, char *argv[])
 	char *un_address = new char[BUFFER_SIZE], *t_un_address = NULL;
 	char *ipsec_certificate = new char[BUFFER_SIZE], *t_ipsec_certificate = NULL;
 
+	string name_resolver_ip;
+	int name_resolver_port;
+
 	string s_un_address;
 	string s_ipsec_certificate;
 
@@ -178,13 +185,13 @@ int main(int argc, char *argv[])
 
 	if(!parse_command_line(argc,argv,&core_mask,&config_file_name))
 	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot start the %s",MODULE_NAME);
+		ULOG_ERR( "Cannot start the %s",MODULE_NAME);
 		exit(EXIT_FAILURE);
 	}
 
-	if(!parse_config_file(config_file_name,&t_rest_port,&t_cli_auth,&t_nffg_file_name,physical_ports,&t_descr_file_name,&t_client_name,&t_broker_address,&t_key_path,&t_orchestrator_in_band,&t_un_interface,&t_un_address,&t_ipsec_certificate))
+	if(!parse_config_file(config_file_name,&t_rest_port,&t_cli_auth,boot_graphs,physical_ports,&t_descr_file_name,&t_client_name,&t_broker_address,&t_key_path,&t_orchestrator_in_band,&t_un_interface,&t_un_address,&t_ipsec_certificate, name_resolver_ip, &name_resolver_port))
 	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot start the %s",MODULE_NAME);
+		ULOG_ERR( "Cannot start the %s",MODULE_NAME);
 		exit(EXIT_FAILURE);
 	}
 
@@ -192,11 +199,6 @@ int main(int argc, char *argv[])
 		strcpy(descr_file_name, t_descr_file_name);
 	else
 		descr_file_name = NULL;
-
-	if(strcmp(t_nffg_file_name, "UNKNOWN") != 0)
-		strcpy(nffg_file_name, t_nffg_file_name);
-	else
-		nffg_file_name = NULL;
 
 #ifdef ENABLE_DOUBLE_DECKER_CONNECTION
 	//The following parameters ara mandatory in case of DD connection
@@ -248,9 +250,9 @@ int main(int argc, char *argv[])
 		if(ifile)
 			dbm = new SQLiteManager(DB_NAME);
 		else {
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Database does not exist!");
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Run 'db_initializer' at first.");
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot start the %s",MODULE_NAME);
+			ULOG_ERR( "Database does not exist!");
+			ULOG_ERR( "Run 'db_initializer' at first.");
+			ULOG_ERR( "Cannot start the %s",MODULE_NAME);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -258,14 +260,14 @@ int main(int argc, char *argv[])
 #ifdef ENABLE_DOUBLE_DECKER_CONNECTION
 	if(!DoubleDeckerClient::init(client_name, broker_address, key_path))
 	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot start the %s",MODULE_NAME);
+		ULOG_ERR( "Cannot start the %s",MODULE_NAME);
 		exit(EXIT_FAILURE);
 	}
 #endif
 
-	if(!RestServer::init(dbm,cli_auth,nffg_file_name,core_mask,physical_ports,s_un_address,orchestrator_in_band,un_interface,ipsec_certificate))
+	if(!RestServer::init(dbm,cli_auth,boot_graphs,core_mask,physical_ports,s_un_address,orchestrator_in_band,un_interface,ipsec_certificate, name_resolver_ip, name_resolver_port))
 	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot start the %s",MODULE_NAME);
+		ULOG_ERR( "Cannot start the %s",MODULE_NAME);
 		exit(EXIT_FAILURE);
 	}
 
@@ -278,8 +280,8 @@ int main(int argc, char *argv[])
 
 	if (NULL == http_daemon)
 	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Cannot start the HTTP deamon. The %s cannot be run.",MODULE_NAME);
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Please, check that the TCP port %d is not used (use the command \"netstat -a | grep %d\")",rest_port,rest_port);
+		ULOG_ERR( "Cannot start the HTTP deamon. The %s cannot be run.",MODULE_NAME);
+		ULOG_ERR( "Please, check that the TCP port %d is not used (use the command \"netstat -a | grep %d\")",rest_port,rest_port);
 
 		terminateRestServer();
 
@@ -311,9 +313,8 @@ int main(int argc, char *argv[])
 	sigaction(SIGINT, &sa, NULL);
 
 	printUniversalNodeInfo();
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The '%s' is started!",MODULE_NAME);
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "Waiting for commands on TCP port \"%d\"",rest_port);
-
+	ULOG_INFO( "The '%s' is started!",MODULE_NAME);
+	ULOG_INFO( "Waiting for commands on TCP port \"%d\"",rest_port);
 	rofl::cioloop::get_loop().run();
 
 	return 0;
@@ -347,7 +348,7 @@ static struct option lgopts[] = {
 				{
 					if(arg_c > 0)
 					{
-						logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Argument \"--c\" can appear only once in the command line");
+						ULOG_ERR( "Argument \"--c\" can appear only once in the command line");
 						return usage();
 					}
 					char *port = (char*)malloc(sizeof(char)*(strlen(optarg)+1));
@@ -361,7 +362,7 @@ static struct option lgopts[] = {
 				{
 					if(arg_c > 0)
 					{
-						logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Argument \"--d\" can appear only once in the command line");
+						ULOG_ERR( "Argument \"--d\" can appear only once in the command line");
 						return usage();
 					}
 
@@ -375,7 +376,7 @@ static struct option lgopts[] = {
 				}
 				else
 				{
-					logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Invalid command line parameter '%s'\n",lgopts[option_index].name);
+					ULOG_ERR( "Invalid command line parameter '%s'\n",lgopts[option_index].name);
 					return usage();
 				}
 				break;
@@ -387,9 +388,8 @@ static struct option lgopts[] = {
 	return true;
 }
 
-bool parse_config_file(char *config_file_name, int *rest_port, bool *cli_auth, char **nffg_file_name, set<string> &physical_ports, char **descr_file_name, char **client_name, char **broker_address, char **key_path, bool *orchestrator_in_band, char **un_interface, char **un_address, char **ipsec_certificate)
+bool parse_config_file(char *config_file_name, int *rest_port, bool *cli_auth, map<string,string> &boot_graphs, set<string> &physical_ports, char **descr_file_name, char **client_name, char **broker_address, char **key_path, bool *orchestrator_in_band, char **un_interface, char **un_address, char **ipsec_certificate, string &name_resolver_ip, int *name_resolver_port)
 {
-	nffg_file_name[0] = '\0';
 	*rest_port = REST_PORT;
 
 	/*
@@ -400,7 +400,7 @@ bool parse_config_file(char *config_file_name, int *rest_port, bool *cli_auth, c
 	INIReader reader(config_file_name);
 
 	if (reader.ParseError() < 0) {
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Can't load a default-config.ini file");
+		ULOG_ERR( "Can't load a default-config.ini file");
 		return false;
 	}
 
@@ -409,11 +409,11 @@ bool parse_config_file(char *config_file_name, int *rest_port, bool *cli_auth, c
 	strcpy(tmp_physical_ports, (char *)reader.Get("physical ports", "ports_name", "UNKNOWN").c_str());
 	if(strcmp(tmp_physical_ports, "UNKNOWN") != 0 && strcmp(tmp_physical_ports, "") != 0)
 	{
-		logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "Physical ports read from configuation file: %s",tmp_physical_ports);
+		ULOG_DBG( "Physical ports read from configuation file: %s",tmp_physical_ports);
 		//the string must start and terminate respectively with [ and ]
 		if((tmp_physical_ports[strlen(tmp_physical_ports)-1] != ']') || (tmp_physical_ports[0] != '[') )
 		{
-			logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Wrong list of physical ports '%s'. It must be enclosed in '[...]'",tmp_physical_ports);
+			ULOG_ERR( "Wrong list of physical ports '%s'. It must be enclosed in '[...]'",tmp_physical_ports);
 			return false;
 		}
 		tmp_physical_ports[strlen(tmp_physical_ports)-1] = '\0';
@@ -424,30 +424,53 @@ bool parse_config_file(char *config_file_name, int *rest_port, bool *cli_auth, c
 		pnt=strtok(tmp_physical_ports + 1, delimiter);
 		while(pnt!= NULL)
 		{
-			logger(ORCH_DEBUG, MODULE_NAME, __FILE__, __LINE__, "\tphysical port: %s",pnt);
+			ULOG_DBG( "\tphysical port: %s",pnt);
 			string s(pnt);
 			physical_ports.insert(pnt);
 			pnt = strtok( NULL, delimiter );
 		}
 	}
 
+	// nf-fgs : optional
+	string nffgs = reader.Get("initial graphs", "nffgs", "UNKNOWN");
+	if(nffgs != "UNKNOWN" && nffgs != "")
+	{
+		ULOG_DBG( "Initial graphs read from configuation file: %s",nffgs.c_str());
+		//the string must start and terminate respectively with [ and ]
+		if(nffgs.at(0)!='[' || nffgs.at(nffgs.length()-1)!=']')
+		{
+			ULOG_ERR( "Wrong list initial graphs '%s'. They must be enclosed in '[...]'",nffgs.c_str());
+			return false;
+		}
+		nffgs=nffgs.substr(1,nffgs.length()-2);
+
+		//the string just read must be tokenized
+		istringstream iss(nffgs);
+		string graph;
+		while (getline(iss, graph, ' '))
+		{
+			istringstream iss(graph);
+			string graphName,graphFile;
+			getline(iss, graphName, '=');
+			getline(iss, graphFile, '=');
+			ULOG_DBG_INFO( "Boot Graph: '%s' - '%s'",graphName.c_str(),graphFile.c_str());
+			boot_graphs[graphName]=graphFile;
+		}
+	}
+
 	// server_port : mandatory
 	int temp_rest_port = (int)reader.GetInteger("rest server", "server_port", -1);
+
 	if(temp_rest_port != -1)
 		*rest_port = temp_rest_port;
 	else
 	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error in configuration file '%'s. Mandatory parameter 'server_port' is missing.",config_file_name);
+		ULOG_ERR( "Error in configuration file '%'s. Mandatory parameter 'server_port' is missing.",config_file_name);
 		return false;
 	}
 
 	// user_authentication : optional - false if not specified
 	*cli_auth = reader.GetBoolean("user authentication", "user_authentication", false);
-
-	/* first nf-fg file name */
-	char *temp_nf_fg = new char[64];
-	strcpy(temp_nf_fg, (char *)reader.Get("rest server", "nf-fg", "UNKNOWN").c_str());
-	*nffg_file_name = temp_nf_fg;
 
 	/* description file to export*/
 	char *temp_descr = new char[64];
@@ -471,19 +494,19 @@ bool parse_config_file(char *config_file_name, int *rest_port, bool *cli_auth, c
 
 	if(strcmp(temp_cli, "UNKNOWN") == 0)
 	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error in configuration file '%'s. Mandatory parameter 'client_name' is missing.",config_file_name);
+		ULOG_ERR( "Error in configuration file '%'s. Mandatory parameter 'client_name' is missing.",config_file_name);
 		return false;
 	}
 
 	if(strcmp(temp_dealer, "UNKNOWN") == 0)
 	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error in configuration file '%'s. Mandatory parameter 'brocker_address' is missing.",config_file_name);
+		ULOG_ERR( "Error in configuration file '%'s. Mandatory parameter 'brocker_address' is missing.",config_file_name);
 		return false;
 	}
 
 	if(strcmp(temp_key, "UNKNOWN") == 0)
 	{
-		logger(ORCH_ERROR, MODULE_NAME, __FILE__, __LINE__, "Error in configuration file '%'s. Mandatory parameter 'key_path	' is missing.",config_file_name);
+		ULOG_ERR( "Error in configuration file '%'s. Mandatory parameter 'key_path	' is missing.",config_file_name);
 		return false;
 	}
 #endif
@@ -505,6 +528,10 @@ bool parse_config_file(char *config_file_name, int *rest_port, bool *cli_auth, c
 	char *temp_ipsec_certificate = new char[64];
 	strcpy(temp_ipsec_certificate, (char *)reader.Get("GRE over IPsec", "certificate", "UNKNOWN").c_str());
 	*ipsec_certificate = temp_ipsec_certificate;
+
+	name_resolver_ip = reader.Get("Name resolver", "ip_address", "localhost");
+
+	*name_resolver_port = (int) reader.GetInteger("Name resolver", "port", 2626);
 
 	/* Path of the script file*/
 	char script_path[64];
@@ -537,7 +564,7 @@ bool usage(void)
 	"Example:                                                                                 \n" \
 	"  sudo ./node-orchestrator --d config/default-config.ini	  							  \n";
 
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "\n\n%s",message.str().c_str());
+	ULOG_INFO( "\n\n%s",message.str().c_str());
 
 	return false;
 }
@@ -548,10 +575,10 @@ bool usage(void)
 void printUniversalNodeInfo()
 {
 
-logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "************************************");
+ULOG_INFO( "************************************");
 
 #ifdef __x86_64__
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "The %s is executed on an x86_64 machine",MODULE_NAME);
+	ULOG_INFO( "The %s is executed on an x86_64 machine",MODULE_NAME);
 #endif
 
 #ifdef VSWITCH_IMPLEMENTATION_XDPD
@@ -568,7 +595,7 @@ logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "****************************
 #ifdef VSWITCH_IMPLEMENTATION_ERFS
 	string vswitch = "ERFS";
 #endif
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "* Virtual switch used: '%s'", vswitch.c_str());
+	ULOG_INFO( "* Virtual switch used: '%s'", vswitch.c_str());
 
 	list<string> executionenvironment;
 #ifdef ENABLE_KVM
@@ -583,15 +610,15 @@ logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "****************************
 #ifdef ENABLE_NATIVE
 	executionenvironment.push_back("native functions");
 #endif
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "* Execution environments supported:");
+	ULOG_INFO( "* Execution environments supported:");
 	for(list<string>::iterator ee = executionenvironment.begin(); ee != executionenvironment.end(); ee++)
-		logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "* \t'%s'",ee->c_str());
+		ULOG_INFO( "* \t'%s'",ee->c_str());
 
 #ifdef ENABLE_DOUBLE_DECKER_CONNECTION
-	logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "* Double Decker connection is enabled");
+	ULOG_INFO( "* Double Decker connection is enabled");
 #endif
 
-logger(ORCH_INFO, MODULE_NAME, __FILE__, __LINE__, "************************************");
+ULOG_INFO( "************************************");
 }
 
 void terminateRestServer() {

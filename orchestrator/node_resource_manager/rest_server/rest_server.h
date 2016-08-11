@@ -10,22 +10,6 @@
 *
 *	Documentation on HTTP headers can be found at:
 *		http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
-*
-*	@messages:
-*		PUT /graph/graph_id
-*			Create a new graph with ID graph_id if it is does not exist yet;
-*			otherwise, the graph is updated.
-*			The graph is described into the body of the message.
-*		GET /graph/graph_id
-*			Retrieve the description of the graph with ID graph_id
-*		DELETE /graph/graph_id
-*			Delete the graph with ID graph_id
-*		DELETE /garph/graph_id/flow_id
-*			Remove the flow with ID flow_id from the graph with ID graph_id
-*
-*		GET /interfaces
-*			Retrieve information on the physical interfaces available on the
-*			node
 */
 
 
@@ -50,7 +34,7 @@
 
 #include "../graph/high_level_graph/high_level_output_action_port.h"
 #include "../graph/high_level_graph/high_level_output_action_endpoint_internal.h"
-#include "../graph/vlan_action.h"
+#include "../graph/generic_actions/vlan_action.h"
 
 #include "../graph/graph-parser/graph_parser.h"
 
@@ -107,10 +91,10 @@ private:
 
 	static int doDelete(struct MHD_Connection *connection,const char *url, void **con_cls);
 
-	static int createGraphFromFile(string toBeCreated);
+	static int createGraphFromFile(const string &graphID, string toBeCreated);
 	static bool parseGraphFromFile(string toBeCreated,highlevel::Graph &graph, bool newGraph);
 
-	static bool readGraphFromFile(char *nffg_filename);
+	static bool readGraphFromFile(const string &nffgResourceName, string &nffgFileName);
 
 	static bool isLoginRequest(const char *method, const char *url);
 
@@ -147,7 +131,7 @@ private:
 	static int httpResponse(struct MHD_Connection *connection, int code);
 
 public:
-	static bool init(SQLiteManager *dbm, bool cli_auth, char *nffg_filename,int core_mask, set<string> physical_ports, string un_address, bool orchestrator_in_band, char *un_interface, char *ipsec_certificate);
+	static bool init(SQLiteManager *dbm, bool cli_auth, map<string,string> &boot_graphs ,int core_mask, set<string> physical_ports, string un_address, bool orchestrator_in_band, char *un_interface, char *ipsec_certificate, string name_resolver_ip, int name_resolver_port);
 
 	static void terminate();
 

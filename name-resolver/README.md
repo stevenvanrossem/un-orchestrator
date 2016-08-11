@@ -13,14 +13,16 @@ page.
 
 Your are now ready to compile the name-resolver.
 
-	$ cd name-resolver
+	$ cd [un-orchestrator]
 
 	; Choose among possible compilation options
 	$ ccmake .
 
 The previous command allows you to select some configuration parameters for the
-name-resolver, such as the logging level. When you're finished, exit from the
-`ccmake` interface by *generating the configuration files* (press 'c' and 'g')
+name-resolver, such as the logging level. 
+**Please be sure that the option `BUILD_NameResolver` is `ON`.**
+When you're finished, exit from the `ccmake` interface by 
+*generating the configuration files* (press 'c' and 'g')
 and type the following commands:
 
 	; Create makefile scripts based on the previously selected options

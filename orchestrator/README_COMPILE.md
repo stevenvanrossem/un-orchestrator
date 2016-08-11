@@ -31,11 +31,8 @@ In the following we list the steps required on an **Ubuntu 14.04**.
 	; Now install the above library according to the description provided
 	; in the cloned folder
 	
-	; Install inih (a nice library used to read the configuration file)
-	$ cd [un-orchestrator]/contrib
-	$ unzip inih.zip
-	$ cd inih
-	$ cp * ../../orchestrator/node_resource_manager/database_manager/SQLite
+	; Update the dynamic libraries cache
+	$ sudo ldconfig
 
 The following libraries are required if you plan to enable the publisher/subscriber 
 mechanism, which is used by the un-orchestrator, for instance, to export the configuration
@@ -47,6 +44,9 @@ of the universal node.
 	
 	; Now install the above library according to the description provided
 	; in the cloned folder
+	
+	; Update the dynamic libraries cache
+	$ sudo ldconfig
 
 ## Install the proper virtual switch
 
@@ -185,6 +185,9 @@ You can build it from sources using the following commands:
 	$ ./autogen.sh
 	$ make
 	$ sudo make install
+	
+	; Update the dynamic libraries cache
+	$ sudo ldconfig
 
 #### QEMU/KVM
 
@@ -212,9 +215,9 @@ Here there are the required steps:
 In order to run VNFs implemented as DPDK processes, no further operations are required,
 since the DPDK library has already been installed together with the vSwitch.
 
-## Compile the un-orchestrator
+## Compile the un-orchestrator and name-resolver
 
-We are now ready to compile the un-orchestrator. If you intend to enable support for DPDK IVSHMEM-based ports, you'll need to define environment variables pointing to your build of DPDK.
+We are now ready to compile the un-orchestrator and name resolver. If you intend to enable support for DPDK IVSHMEM-based ports, you'll need to define environment variables pointing to your build of DPDK.
 If you are using xDPd (which includes its own DPDK tree and builds it), this would be:
 
 	$ export RTE_SDK=$XDPD_DIR/build/libs/dpdk
@@ -227,18 +230,20 @@ Otherwise use:
 
 You can then build the un-orchestrator:
 
-	$ cd orchestrator
-
+	$ cd [un-orchestrator]
+	
 	; Choose among possible compilation options
 	$ ccmake .
 
 The previous command allows you to select some configuration parameters for the
 un-orchestrator, such as the virtual switch used, which kind of execution environment(s)
-you want to enable, and more. When you're finished, exit from the `ccmake` interface by 
+you want to enable, and more.
+**Please be sure that the option `BUILD_Orchestrator` is `ON`.**
+When you're finished, exit from the `ccmake` interface by 
 *generating the configuration files* (press 'c' and 'g') and type the following commands:
-
+	
 	; Create makefile scripts based on the previously selected options
 	$ cmake .
 
-	; Compile and create the executable
+	; Compile and create the executables
 	$ make

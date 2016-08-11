@@ -6,8 +6,8 @@ It is possible to set up the Universal Node (UN) in two ways:
 
   * by compiling each component by hand; this allows to have the complete control on the UN set up.
     If you are interested in this way of setting up the UN, please continue to read this document;
-  * using an `ansible` script that automatically compiles and install all the components required
-    by the UN. This method allow less customization with respect to the manual set up. If you are
+  * using an `ansible` script that automatically compiles and installs all the components required
+    by the UN. This method allows less customization with respect to the manual set up. If you are
     interested in this way of setting up the UN, please refer to [./utils/README_SET_UP.md](./utils/README_SET_UP.md).
 
 ## Required libraries
@@ -34,6 +34,9 @@ In the following we list the steps required on an **Ubuntu 14.04**.
 
 	; Now install the above library according to the description provided
 	; in the cloned folder
+	
+	; Update the dynamic libraries cache
+	$ sudo ldconfig
 
 
 ## Getting the code

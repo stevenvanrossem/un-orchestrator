@@ -3,8 +3,6 @@
 
 #pragma once
 
-//#include "rest_server.h"
-
 #include <string>
 #include <json_spirit/json_spirit.h>
 #include <json_spirit/value.h>
@@ -12,6 +10,7 @@
 
 #include "../../../utils/logger.h"
 #include "../../../utils/constants.h"
+#include "address_validator.h"
 
 #include "../../graph_manager/graph_manager.h"
 
@@ -33,12 +32,6 @@ protected:
 	static unsigned int epPort(string name_port);
 
 	static bool parseMatch(Object object, highlevel::Match &match, highlevel::Action &action, map<string,string > &iface_id, map<string,string > &internal_id, map<string,pair<string,string> > &vlan_id, map<string,string> &gre_id, highlevel::Graph &graph);
-
-private:
-	static bool validateMac(const char* mac);
-	static bool validateIpv4(const string &ipAddress);
-	static bool validateIpv6(const string &ipAddress);
-	static bool validateIpv4Netmask(const string &netmask);
 
 public:
 	static string graphID(string name_port);

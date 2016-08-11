@@ -411,7 +411,7 @@ on the network through the physical port `eth1`, without any VLAN tag.
 		      		"id": "00000002",
 		      		"priority": 1,
 		      		"match": {
-		        		"port_in": "vnf:00000002:inout:1"
+		        		"port_in": "vnf:00000002:inout:1",
 		        		"vlan_id" : "0x25"
 		      		},
 		      		"actions": [
@@ -865,7 +865,7 @@ following example:
     	{
     		"id": "inout:1",
     		"name": "data-port",
-    		"mac": "11:22:33:44:55:66",
+    		"mac": "aa:bb:cc:11:22:33",
        		"unify-ip": "10.0.0.1/24"
    		}
 		]

@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(node-orchestrator)
 
@@ -8,32 +8,6 @@ ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 IF(CMAKE_COMPILER_IS_GNUCC)
         ADD_DEFINITIONS(-Wall -Werror -Wno-write-strings)
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
-
-# Rather complicated CMake code for setting the logging level
-SET(LOGGING_LEVEL "ORCH_WARNING" CACHE STRING "Orchestrator logging levels: ORCH_DEBUG, ORCH_DEBUG_INFO (recommended), ORCH_WARNING, ORCH_ERROR, ORCH_INFO")
-SET(LOGGING_LEVEL_VALUES "ORCH_DEBUG" "ORCH_DEBUG_INFO" "ORCH_WARNING" "ORCH_ERROR" "ORCH_INFO")
-SET_PROPERTY(CACHE LOGGING_LEVEL PROPERTY STRINGS ${LOGGING_LEVEL_VALUES})
-LIST(FIND LOGGING_LEVEL_VALUES ${LOGGING_LEVEL} LOGGING_LEVEL_INDEX)
-
-IF(${LOGGING_LEVEL_INDEX} EQUAL -1)
-	message(FATAL_ERROR "Option ${LOGGING_LEVEL} not supported, valid entries are ${LOGGING_LEVEL_VALUES}")
-ENDIF()
-IF(${LOGGING_LEVEL_INDEX} EQUAL 0)
-	ADD_DEFINITIONS(-DLOGGING_LEVEL=ORCH_DEBUG)
-ENDIF()
-IF(${LOGGING_LEVEL_INDEX} EQUAL 1)
-	ADD_DEFINITIONS(-DLOGGING_LEVEL=ORCH_DEBUG_INFO)
-ENDIF()
-IF(${LOGGING_LEVEL_INDEX} EQUAL 2)
-	ADD_DEFINITIONS(-DLOGGING_LEVEL=ORCH_WARNING)
-ENDIF()
-IF(${LOGGING_LEVEL_INDEX} EQUAL 3)
-	ADD_DEFINITIONS(-DLOGGING_LEVEL=ORCH_ERROR)
-ENDIF()
-IF(${LOGGING_LEVEL_INDEX} EQUAL 4)
-	ADD_DEFINITIONS(-DLOGGING_LEVEL=ORCH_INFO)
-ENDIF()
-# End of the rather complicated CMake code for setting the logging level
 
 OPTION(
 	DETAILED_LOGS
@@ -225,6 +199,10 @@ MARK_AS_ADVANCED(
 	DEBUG_KVM DEBUG_OPENFLOW LOG_1024X768 RUN_NFS STARTVNF_SINGLE_THREAD IVSHMEM_RING_ALIAS
 )
 
+# relax warning-level (unfortunately):
+# some json-spirit header files have unused typedefs
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
+
 # Set source files
 SET(SOURCES1
 	node_orchestrator.cc
@@ -243,15 +221,17 @@ SET(SOURCES1
 
 	node_resource_manager/graph/match.h
 	node_resource_manager/graph/match.cc
-	node_resource_manager/graph/generic_action.h
-	node_resource_manager/graph/generic_action.cc
-	node_resource_manager/graph/vlan_action.h
-	node_resource_manager/graph/vlan_action.cc
+	node_resource_manager/graph/generic_actions/generic_action.h
+	node_resource_manager/graph/generic_actions/generic_action.cc
+	node_resource_manager/graph/generic_actions/vlan_action.h
+	node_resource_manager/graph/generic_actions/vlan_action.cc
 
 	node_resource_manager/graph/graph-parser/graph_parser.h
 	node_resource_manager/graph/graph-parser/graph_parser.cc
 	node_resource_manager/graph/graph-parser/match_parser.h
 	node_resource_manager/graph/graph-parser/match_parser.cc
+	node_resource_manager/graph/graph-parser/address_validator.h
+	node_resource_manager/graph/graph-parser/address_validator.cc
 
 	node_resource_manager/graph/low_level_graph/output_action.h
 	node_resource_manager/graph/low_level_graph/output_action.cc
@@ -320,8 +300,6 @@ SET(SOURCES1
 	node_resource_manager/database_manager/SQLite/SQLiteManager.h
 	node_resource_manager/database_manager/SQLite/SQLiteManager.cc
 	node_resource_manager/database_manager/SQLite/SQLiteManager_constants.h
-	node_resource_manager/database_manager/SQLite/INIReader.cpp
-	node_resource_manager/database_manager/SQLite/ini.c
 
 	node_resource_manager/security_manager/security_manager.cc
 	node_resource_manager/security_manager/security_manager.h
@@ -460,9 +438,16 @@ ELSE()
 ENDIF(ENABLE_UNIFY_MONITORING_CONTROLLER)
 
 INCLUDE_DIRECTORIES (
+	${CMAKE_BINARY_DIR}/externals/include/
 	/usr/include/boost
 	/usr/include/libxml2
 )
+
+
+SET(CMAKE_SKIP_RPATH TRUE)
+LINK_DIRECTORIES(
+	${CMAKE_BINARY_DIR}/externals/lib/
+	)
 
 # Create the executable
 ADD_EXECUTABLE(
@@ -470,24 +455,27 @@ ADD_EXECUTABLE(
 	${SOURCES9}
 )
 
-LINK_DIRECTORIES(
-	/usr/lib/
-	/usr/local/lib/
-	/usr/x86_64-linux-gnu/
-	/usr/lib/x86_64-linux-gnu/
-	/usr/lib/python2.7/config-x86_64-linux-gnu/
-)
+IF(BUILD_ExternalProjects)
+	ADD_DEPENDENCIES(node-orchestrator JSON_Spirit)
+	ADD_DEPENDENCIES(node-orchestrator ROFL_Common)
+	IF(ENABLE_KVM)
+		ADD_DEPENDENCIES(node-orchestrator Libvirt)
+	ENDIF(ENABLE_KVM)
+ENDIF(BUILD_ExternalProjects)
+
+ADD_DEPENDENCIES(node-orchestrator Inih)
 
 TARGET_LINK_LIBRARIES( node-orchestrator
-	libpthread.so
-	librofl_common.so
-	libjson_spirit.so
-	libmicrohttpd.so
-	libboost_system.so
-	libxml2.so
-	libsqlite3.so
-	libcrypto.so
-	-lrt
+	pthread
+	rofl_common
+	json_spirit
+	inih
+	microhttpd
+	boost_system
+	xml2
+	sqlite3
+	crypto
+	rt
 )
 
 IF(ENABLE_DOUBLE_DECKER_CONNECTION)
@@ -504,7 +492,10 @@ IF(ENABLE_KVM)
 	)
 ENDIF(ENABLE_KVM)
 
-# Add configuration rules to compile command line generator
+###############################################################################
+
+#Add configuration rules to compile command line generator
+
 IF(ENABLE-DPDK-CMDLINE-GENERATOR)
 
 	IF(NOT DEFINED ENV{RTE_SDK})
@@ -553,4 +544,41 @@ IF( (NOT ENABLE_DOCKER) AND (NOT ENABLE_NATIVE) AND (NOT ENABLE_DPDK_PROCESSES) 
 	#No execution environment is selected
 	message(FATAL_ERROR "At least one execution environmnet must be enabled")
 ENDIF( (NOT ENABLE_DOCKER) AND (NOT ENABLE_NATIVE) AND (NOT ENABLE_DPDK_PROCESSES) AND (NOT ENABLE_KVM) )
+
+###############################################################################
+
+# Build external projects
+
+include (ExternalProject)
+IF(BUILD_ExternalProjects)
+
+	# rofl-common: extract, build, install (locally in build-dir):
+	ExternalProject_Add(
+		ROFL_Common
+		URL ${CMAKE_SOURCE_DIR}/contrib/rofl-common.zip
+		URL_MD5 5127f286f96010ec9e85dcf4c712599d
+		BUILD_IN_SOURCE 1
+		CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=${CMAKE_BINARY_DIR}/externals
+	)
+
+	IF(ENABLE_KVM)
+		# libvirt - specific revision
+		ExternalProject_Add( Libvirt
+
+			## this refers to the specific revision from README_COMPILE.md
+			# GIT_REPOSITORY git://libvirt.org/libvirt.git
+			# GIT_TAG f57842ecfda1ece8c59718e62464e17f75a27062
+
+			# try a regular release instead:
+			URL http://libvirt.org/sources/libvirt-1.2.17.tar.gz
+			URL_MD5 a1f49050223be3cbd7678c32b1ee2756
+
+			BUILD_IN_SOURCE 1
+			CONFIGURE_COMMAND ./autogen.sh --prefix=${CMAKE_BINARY_DIR}/externals
+			UPDATE_COMMAND ""
+			ALWAYS 0
+		)
+	ENDIF(ENABLE_KVM)
+
+ENDIF(BUILD_ExternalProjects)
 
