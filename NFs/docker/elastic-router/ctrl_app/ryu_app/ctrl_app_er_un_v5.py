@@ -122,8 +122,19 @@ class ElasticRouter(app_manager.RyuApp):
         if self.DD_enable:
             self.zmq_ = er_ddclient(self.monitorApp, self)
 
-        # parse the nffg from the Cf-Or
-        self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
+        #check if ctrl VNF is in the nffg, otherwise wait and poll for updated nffg
+        found_ctrl = False
+        while not found_ctrl:
+            # parse the nffg from the Cf-Or
+            self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
+            # check if ctrl is a vnf in the nffg
+            found_ctrl = er_nffg.check_vnf_in_nffg(self.nffg, 'ctrl')
+            if not found_ctrl:
+                self.logger.info("vnf name: {0} not found in nffg, polling again via cf-or...".format('ctrl'))
+                time.sleep(1)
+            else:
+                self.logger.info("vnf name: {0} found in nffg".format('ctrl'))
+
 
         # start gui web server to visualize ER topology as seen by ctrl app
         # use this pipe to communicate to the gui_server
@@ -146,6 +157,7 @@ class ElasticRouter(app_manager.RyuApp):
         # clear parsed nffg
         copyfile('gui_server/empty.json', 'gui_server/parsed_nffg.json')
         # start gui web server at port 8888
+        self.logger.info("started gui at port: {0}".format(host_port))
         self.gui_server = web_server(self.host_ip, host_port, guest_port)
 
         # start rest api to easily scale in/out
@@ -585,9 +597,17 @@ class ElasticRouter(app_manager.RyuApp):
             ovs_name = DPPort.get_datapath_name(p.name)
             self.logger.info('found OVS name:{0} port: {1}'.format(ovs_name, p.name))
             this_DP = self.DP_instances.get(ovs_name)
-            if not this_DP:
+
+            #wait until orchestrator reports this DP in the nffg
+            while not this_DP:
+                #if not this_DP:
                 self.logger.info('found OVS name:{0} not in DP_instances'.format(ovs_name))
-                continue
+                time.sleep(1)
+                # parse the nffg from the Cf-Or
+                self.nffg = er_nffg.get_nffg(self.REST_Cf_Or)
+                self.parse_nffg(self.nffg)
+                this_DP = self.DP_instances.get(ovs_name)
+                #continue
 
             # set port number assigned by orchestrator to this interface
             port = this_DP.get_port(p.name)

@@ -106,7 +106,7 @@ def get_UN_node(nffg):
     # alternatively, we can look for UUID11 (as done in UN virtualizer.py)
     for un in universal_nodes:
         un_id = un.id.get_value()
-        if un_id == NODE_ID:
+        if NODE_ID in un_id:
             return un
 
     nffg_log.error('Universal node: {0} not found'.format(NODE_ID))
@@ -125,6 +125,7 @@ def get_mapped_port(nffg_xml, vnf_name, int_port):
             for vnf_port, host_port in l4_addresses_list:
                 if vnf_port == str(int_port):
                     return host_port
+        nffg_log.error('port mapping not found for {0} port: {1}'.format(vnf_name, int_port))
 
 def process_nffg(nffg_xml):
 
@@ -613,6 +614,19 @@ def clean_nffg(nffg_xml):
 
     return new_nffg.xml()
 
+def check_vnf_in_nffg(nffg_xml, vnf_name):
+    found = False
+    nffg = get_virtualizer_nffg(nffg_xml)
+    un = get_UN_node(nffg)
+    nf_instances = un.NF_instances
+    for nf in nf_instances:
+        nf_name = nf.name.get_value()
+        nf_type = nf.type.get_value()
+        logging.debug("found NF: {0}".format(nf.name.get_value()))
+        if vnf_name == nf_name:
+            found = True
+            break
+    return found
 
 if __name__ == "__main__":
     xml = open('test.xml').read()
