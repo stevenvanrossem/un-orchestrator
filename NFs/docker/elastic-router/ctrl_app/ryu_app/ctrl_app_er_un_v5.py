@@ -49,12 +49,14 @@ class ElasticRouter(app_manager.RyuApp):
 
     # TODO: put globals in separate file
     # cf-or address set from the nnfg as ENV variable
+    un_cf_or_env = '172.17.0.1:8080'
     try:
         cfor_env = os.environ['CFOR']
     except:
-        cfor_env = '172.17.0.1:8080'
+        cfor_env = un_cf_or_env
 
     REST_Cf_Or =  'http://' + cfor_env
+    REST_UN_Cf_Or = 'http://' + un_cf_or_env
 
     # rest api port address set from the nnfg as ENV variable
     try:
@@ -72,7 +74,7 @@ class ElasticRouter(app_manager.RyuApp):
     try:
         host_ip = os.environ['HOST_IP']
     except:
-        #host_ip = '192.168.10.40'
+        #host_ip = 'durak.testbed.se'
         host_ip = 'localhost'
 
     # ip address of host machine
@@ -140,6 +142,11 @@ class ElasticRouter(app_manager.RyuApp):
         # use this pipe to communicate to the gui_server
         guest_port = self.gui_port
         host_port = er_nffg.get_mapped_port(self.nffg, 'ctrl', guest_port)
+
+        if host_port is None:
+            self.logger.info('mappped gui port not found, trying now with the local UN nffg')
+            un_nffg = er_nffg.get_nffg(self.REST_UN_Cf_Or)
+            host_port = er_nffg.get_mapped_port(un_nffg, 'ctrl', guest_port)
 
         # open zmq bus to send updated nffg's to the gui
         CTX = zmq.Context(1)
