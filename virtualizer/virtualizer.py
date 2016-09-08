@@ -95,7 +95,19 @@ class DoEditConfig:
 		global unify_monitoring
 		try:
 			LOG.info("Executing the 'edit-config' command")
+			# check if this request comes from Escape
 			content = req.stream.read()
+			if checkIfEscapeNFFG(content):
+				# this is a mapped nffg request from Escape
+				# For the ER demo we replace it by our own mapped nffg file
+				nffg_file = 'er_nffg_virtualizer5_v5.xml'
+				LOG.debug("Reading file: %s", nffg_file)
+				tmpFile = open(nffg_file, "r")
+				content = tmpFile.read()
+				tmpFile.close()
+
+
+			#content = req.stream.read()
 			#content = req
 			
 			LOG.debug("Body of the request:")
@@ -155,6 +167,40 @@ class DoEditConfig:
 		except Exception as ex:
 			LOG.exception(ex)
 			raise falcon.HTTPInternalServerError('Internal Server Error', str(ex))
+
+
+def checkIfEscapeNFFG(content):
+	'''
+	check if this content is an nffg coming from Escape
+	(identified by specific syntax)
+	:param content:
+	:return:
+	'''
+	try:
+		tree = ET.ElementTree(ET.fromstring(content))
+	except ET.ParseError as e:
+		print('ParseError: %s' % e.message)
+		raise ClientError("ParseError: %s" % e.message)
+
+	infrastructure = Virtualizer.parse(root=tree.getroot())
+	universal_node = infrastructure.nodes.node[constants.NODE_ID]
+	flowtable = universal_node.flowtable
+
+	for flowentry in flowtable:
+		f_name = flowentry.name.get_value()
+		if type(f_name) is str:
+			if 'sg_hop' in f_name:
+				# only Escape uses 'sg_hop' in the flowrule name
+				return True
+
+		if flowentry.action is not None:
+			if type(flowentry.action.data) is str:
+				if 'tag' in flowentry.action.data:
+					# these flowrules contain VLAN tag actions
+					return True
+
+	return False
+
 
 def checkCorrectness(newContent):
 	'''
@@ -704,6 +750,8 @@ def updateUniversalNodeConfig(newContent):
 	#Update the NF instances with the new NFs
 	for instance in newNfInstances:
 		if instance.get_operation() == 'delete':
+			#LOG.debug(nfInstances)
+			#LOG.debug(instance.id.get_value())
 			nfInstances[instance.id.get_value()].delete()
 		else:
 			for port_id in instance.ports.port:
